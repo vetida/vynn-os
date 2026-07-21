@@ -1,0 +1,10 @@
+{
+  "name": "vynn-os-vercel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VYNN·OS — CRM/ERP on Vercel (serverless functions) + Neon Postgres",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "ws": "^8.18.0"
+  }
+}

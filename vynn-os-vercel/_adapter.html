@@ -1,0 +1,88 @@
+<script>
+/* ============================================================
+ * VYNN·OS — server persistence adapter (Postgres via /api/state)
+ * Replaces the localStorage-only boot with a DB-backed one.
+ * The main app's save() calls window.__serverSaveDebounced().
+ * ============================================================ */
+(function () {
+  window.__VYNN_SERVER = true;
+  var saveTimer = null, saving = false, dirty = false;
+
+  function badge(stateName) {
+    var d = document.getElementById('__syncBadge');
+    if (!d) return;
+    var m = {
+      saving:  ['#B77504', '● กำลังบันทึก…'],
+      saved:   ['#2E7D46', '● บันทึกแล้ว (ฐานข้อมูล)'],
+      offline: ['#C0392B', '● ออฟไลน์ — แก้ไขยังไม่ถูกบันทึก']
+    }[stateName];
+    d.style.background = m[0];
+    d.textContent = m[1];
+    d.title = m[1];
+  }
+
+  function serverSaveNow() {
+    if (saving) { dirty = true; return; }
+    saving = true; dirty = false;
+    badge('saving');
+    fetch('/api/state', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state: state })
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      badge('saved');
+    }).catch(function (e) {
+      console.warn('save failed', e);
+      badge('offline');
+    }).then(function () {
+      saving = false;
+      if (dirty) serverSaveNow();
+    });
+  }
+  window.__serverSaveDebounced = function () {
+    dirty = true;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(serverSaveNow, 700);
+  };
+
+  function serverLoad() {
+    return fetch('/api/state').then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (j) {
+      if (j && j.state) {                 // existing data in DB
+        state = j.state; migrateState();
+        return 'server';
+      }
+      // DB reachable but empty -> seed demo data and push it up
+      state = seed(); migrateState();
+      serverSaveNow();
+      return 'seeded';
+    }).catch(function (e) {
+      console.warn('server load failed, using local cache', e);
+      load();                              // localStorage cache or seed (offline)
+      return 'offline';
+    });
+  }
+
+  function mountBadge(mode) {
+    if (document.getElementById('__syncBadge')) { badge(mode); return; }
+    var d = document.createElement('div');
+    d.id = '__syncBadge';
+    d.style.cssText = 'position:fixed;bottom:12px;right:14px;z-index:400;font-size:11px;font-weight:600;color:#fff;padding:5px 11px;border-radius:20px;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.92;pointer-events:none;font-family:inherit';
+    document.body.appendChild(d);
+    badge(mode);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    serverLoad().then(function (mode) {
+      initChrome();
+      render();
+      mountBadge(mode === 'offline' ? 'offline' : 'saved');
+    });
+  });
+})();
+</script>
+</body>
+</html>
