@@ -634,10 +634,10 @@ const SESS='vynn_os_session';
 // which view ids each role may open. 'admin' = full access.
 const ACCESS={
  admin:'*',
- manager:['overview','leads','survey','quote','vgprice','sewing','china','install','service','finance','saleshist'],
- sales_support:['overview','leads','survey','quote','vgprice','sewing','china','install','service','finance','settings'],
- sales:['overview','leads','survey','quote','vgprice','install','service','finance','saleshist'],
- hr:['overview','hr'],
+ manager:['overview','leads','survey','quote','vgprice','sewing','china','install','service','finance','expenses','saleshist'],
+ sales_support:['overview','leads','survey','quote','vgprice','sewing','china','install','service','finance','expenses','settings'],
+ sales:['overview','leads','survey','quote','vgprice','install','service','finance','expenses','saleshist'],
+ hr:['overview','expenses','hr'],
 };
 function canView(v){const a=ACCESS[role];return a==='*'||(a&&a.includes(v));}
 function firstAllowedView(){if(canView('overview'))return 'overview';const a=ACCESS[role];return (a==='*')?'overview':(a&&a[0])||'overview';}
@@ -685,8 +685,10 @@ function migrateState(){
  if(state.surveys)state.surveys.forEach(s=>s.points.forEach(migratePoint));
  if(state.quotes)state.quotes.forEach(migrateQuote);
  if(!state.travelClaims)state.travelClaims=[];
+ if(!state.expenses)state.expenses=[]; // ค่าใช้จ่ายรายวัน (พนักงานกรอกเอง)
  if(state.seq&&!state.seq.T)state.seq.T=903;
  if(state.seq&&!state.seq.TR)state.seq.TR=1;
+ if(state.seq&&!state.seq.EX)state.seq.EX=1;
  if(!state.passwords)state.passwords={}; // per-user password overrides (uid -> pw)
  if(!state.audit)state.audit=[]; // audit log
  if(!state.salesHist)state.salesHist=seedSalesHist(); // 12-month per-sales history
@@ -697,7 +699,7 @@ function migrateState(){
 function load(){try{const r=localStorage.getItem(LS);if(r){state=JSON.parse(r);}}catch(e){}if(!state)state=seed();migrateState();}
 function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}if(window.__serverSaveDebounced)window.__serverSaveDebounced();}
 function resetData(){state=seed();migrateState();save();render();}
-function emptyState(){const s=seed();s.leads=[];s.surveys=[];s.quotes=[];s.fabricOrders=[];s.sewing=[];s.chinaLots=[];s.installs=[];s.tickets=[];s.payments={};s.monthly=s.monthly.map(m=>({m:m.m,v:0}));s.attendance=[];s.advances=[];s.payroll={};s.travelClaims=[];return s;}
+function emptyState(){const s=seed();s.leads=[];s.surveys=[];s.quotes=[];s.fabricOrders=[];s.sewing=[];s.chinaLots=[];s.installs=[];s.tickets=[];s.payments={};s.monthly=s.monthly.map(m=>({m:m.m,v:0}));s.attendance=[];s.advances=[];s.payroll={};s.travelClaims=[];s.expenses=[];return s;}
 function startEmpty(){state=emptyState();migrateState();save();render();}
 function backupData(){try{const data=JSON.stringify(state);const blob=new Blob([data],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');const d=new Date();const pad=n=>String(n).padStart(2,'0');a.href=url;a.download='vynn-os-backup-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);return true;}catch(e){alert('สำรองข้อมูลไม่สำเร็จ: '+e.message);return false;}}
 function restoreData(file){const reader=new FileReader();reader.onload=e=>{let obj;try{obj=JSON.parse(e.target.result);}catch(err){alert('ไฟล์เสียหาย อ่านไม่ได้ (ไม่ใช่ไฟล์ JSON ที่ถูกต้อง)');return;}if(!obj||typeof obj!=='object'||!Array.isArray(obj.leads)||!obj.prices){alert('ไฟล์นี้ไม่ใช่ไฟล์สำรองของระบบ VYNN·OS');return;}const n=(obj.leads||[]).length;if(!confirm('นำเข้าข้อมูลจากไฟล์นี้? (ลูกค้า '+n+' ราย)\nข้อมูลปัจจุบันในเครื่องนี้จะถูกแทนที่ทั้งหมด'))return;try{state=obj;migrateState();save();render();alert('✓ นำเข้าข้อมูลสำเร็จ — ลูกค้า '+(state.leads||[]).length+' ราย');}catch(err){alert('นำเข้าไม่สำเร็จ: '+err.message);}};reader.onerror=()=>alert('อ่านไฟล์ไม่สำเร็จ');reader.readAsText(file);}
@@ -1025,6 +1027,8 @@ function spark(data,color){const w=92,h=38,max=Math.max(...data),min=Math.min(..
 /* ============ NAV ============ */
 const NAV=[
  {id:'overview',label:'ภาพรวม',icon:'grid'},
+ {grp:'ค่าใช้จ่าย'},
+ {id:'expenses',label:'ค่าใช้จ่ายรายวัน',icon:'cash',count:()=>expensesVisible().filter(e=>(e.date||'')===todayISO()).length},
  {grp:'งานขาย'},
  {id:'leads',label:'Lead Intake',icon:'inbox',count:()=>scopedLeads().filter(l=>l.stage==='new').length},
  {id:'survey',label:'วัดหน้างาน',icon:'ruler',count:()=>scopedLeads().filter(l=>l.stage==='assigned').length},
@@ -1053,6 +1057,7 @@ const NAV=[
 ];
 const META={
  overview:{t:'ภาพรวมบริษัท',s:'สรุปทุกโมดูลแบบเรียลไทม์',act:true},
+ expenses:{t:'ค่าใช้จ่ายรายวัน',s:'พนักงานพิมพ์ยอด+หมวด (เช่น "ค่าน้ำมัน 500") แนบรูปบิล → บันทึกทันที เข้าฐานข้อมูลเดียวกับทั้งระบบ',act:false},
  leads:{t:'Lead Intake',s:'รับลูกค้า 4 ช่องทาง (LINE / ออกบูธ / ลูกค้าเก่า / อินทีเรีย) แล้วมอบหมายเซลล์',act:true},
  survey:{t:'Site Survey',s:'ลงพื้นที่วัดหน้างานหลายจุด บันทึกขนาด/ผ้า/อุปกรณ์/รูป',act:false},
  quote:{t:'Quotation',s:'คำนวณผ้า+อุปกรณ์อัตโนมัติจากหน้างาน → ใบเสนอราคา → ผู้จัดการอนุมัติ',act:false},
@@ -1951,6 +1956,7 @@ function renderPnL(){
    <div class="table-wrap"><table><thead><tr><th>โปรเจค</th><th>แบรนด์</th><th class="num">รายได้</th><th class="num">ต้นทุนสินค้า</th><th class="num">ค่าส่ง</th><th class="num">ค่าแนะนำ</th><th class="num">ค่าแรง</th><th class="num">ค่าเดินทาง</th><th class="num">ต้นทุนรวม</th><th class="num">กำไรสุทธิ</th><th class="num">Margin</th></tr></thead><tbody>
    ${projects.length?projects.map(p=>`<tr class="clickable" data-lead="${p.l.id}"><td style="font-weight:600">${bn(p.l)}<div class="mini-note">${p.l.site} · ${p.q.id}</div></td><td>${brandChip(p.l.brand)}</td><td class="num">${THB(p.revenue)}</td><td class="num">${THB(p.cogs)}</td><td class="num">${p.ship?THB(p.ship):'<span style="color:var(--text-faint)">—</span>'}</td><td class="num">${p.referral?THB(p.referral):'<span style="color:var(--text-faint)">—</span>'}</td><td class="num">${THB(p.labor)}</td><td class="num">${p.travel?THB(p.travel):'<span style="color:var(--text-faint)">—</span>'}</td><td class="num" style="color:var(--warn)">${THB(p.totalCost)}</td><td class="num" style="font-weight:700;color:var(--good)">${THB(p.net)}</td><td class="num"><span class="pill ${p.margin>=.35?'good':p.margin>=.2?'warn':'crit'}">${Math.round(p.margin*100)}%</span></td></tr>`).join(''):emptyRow(11,'ยังไม่มีโปรเจคที่ปิดได้')}
    </tbody></table></div></div>`;
+ c.insertAdjacentHTML('beforeend',opexPnlCard());
  wireRows(c);
 }
 
@@ -1996,6 +2002,137 @@ function renderForecast(){
    <tr style="border-top:2px solid var(--border-strong)"><td style="font-weight:700">รวมทั้งหมด</td><td></td><td class="num" style="font-weight:700">${deals.length}</td><td class="num" style="font-weight:700">${THB(totalSales)}</td><td class="num">${THB(sum(perAcc,x=>x.a.vat?x.preVat:0))}</td><td class="num" style="font-weight:700;color:var(--warn)">${THB(sum(perAcc,x=>x.vat))}</td><td class="num" style="font-weight:700">${THB(totalPipe)}</td></tr>
    </tbody></table></div></div>`;
  wireRows(c);
+}
+
+/* ============ ค่าใช้จ่ายรายวัน (EXPENSES) ============ */
+let expMonth=new Date().toISOString().slice(0,7), expCatFilter='all', expBarPhotos=[], expLast={date:'',brand:'กลาง',method:'cash',by:''};
+function todayISO(){return new Date().toISOString().slice(0,10);}
+const EXP_CATS=[
+ {id:'fuel',label:'น้ำมัน/เดินทาง',c:'#C0392B',kw:['น้ำมัน','เดินทาง','แท็กซี่','taxi','grab','แกร็บ','ค่ารถ','ทางด่วน','วิน','ค่าเดินทาง','เติมน้ำมัน','ปั๊ม','ที่จอดรถ','จอดรถ']},
+ {id:'food',label:'อาหาร/รับรองลูกค้า',c:'#B77504',kw:['อาหาร','กาแฟ','ข้าว','เลี้ยง','รับรอง','กิน','น้ำดื่ม','ขนม','เครื่องดื่ม','ค่าอาหาร']},
+ {id:'material',label:'วัสดุ/อุปกรณ์',c:'#0E7C86',kw:['ผ้า','อุปกรณ์','วัสดุ','ราง','ตะขอ','มอเตอร์','ซื้อของ','ผ้าม่าน','เฟรม','สินค้า']},
+ {id:'shipping',label:'ขนส่ง/พัสดุ',c:'#2C6BB3',kw:['ส่งของ','ขนส่ง','พัสดุ','ไปรษณีย์','แมส','kerry','flash','เคอรี่','แฟลช','ค่าส่ง','ค่าขนส่ง']},
+ {id:'tool',label:'เครื่องมือช่าง',c:'#7A4FB5',kw:['สว่าน','ดอกสว่าน','เครื่องมือ','น็อต','สกรู','พุก','ค่าช่าง']},
+ {id:'office',label:'ออฟฟิศ/เบ็ดเตล็ด',c:'#5C6B73',kw:['กระดาษ','หมึก','เครื่องเขียน','ออฟฟิศ','เบ็ดเตล็ด','ทำความสะอาด','แม่บ้าน']},
+ {id:'marketing',label:'การตลาด/โฆษณา',c:'#0F6E68',kw:['โฆษณา','ยิงแอด','ads','การตลาด','บูธ','ป้าย','โบรชัวร์','ของแถม']},
+ {id:'utility',label:'น้ำ-ไฟ-เน็ต-โทร',c:'#B65C36',kw:['ค่าไฟ','ค่าน้ำ','ค่าเน็ต','อินเทอร์เน็ต','โทรศัพท์','ค่าโทร','wifi']},
+ {id:'other',label:'อื่นๆ',c:'#8A8078',kw:[]},
+];
+function catById(id){return EXP_CATS.find(c=>c.id===id)||EXP_CATS[EXP_CATS.length-1];}
+const EXP_METHODS=[['cash','เงินสด'],['transfer','โอน/พร้อมเพย์'],['credit','บัตรเครดิต'],['company','บิลบริษัท/เครดิตร้าน']];
+function methodLabel(m){const f=EXP_METHODS.find(x=>x[0]===m);return f?f[1]:(m||'-');}
+function parseExpense(text){
+ text=String(text||'');
+ const nums=text.match(/\d[\d,]*(?:\.\d+)?/g);
+ let amount=0,amtStr=null;
+ if(nums&&nums.length){amtStr=nums[nums.length-1];amount=parseFloat(amtStr.replace(/,/g,''))||0;}
+ let note=text;
+ if(amtStr){const i=note.lastIndexOf(amtStr);note=note.slice(0,i)+note.slice(i+amtStr.length);}
+ note=note.replace(/บาท|฿|thb/gi,'').replace(/\s+/g,' ').trim();
+ let category='other';const low=text.toLowerCase();
+ for(const cc of EXP_CATS){if(cc.kw.some(k=>low.includes(k.toLowerCase()))){category=cc.id;break;}}
+ return {amount,category,note};
+}
+function expensesVisible(){let a=state.expenses||[];const mine=myScopeId();if(mine)a=a.filter(e=>e.createdBy===mine||e.by===mine);return a;}
+function expInBrand(e){return brand==='all'||e.brand===brand||e.brand==='กลาง';}
+function catChip(id){const c=catById(id);return `<span class="pill" style="background:${c.c}1e;color:${c.c};border:1px solid ${c.c}40">${c.label}</span>`;}
+function openImg(url,name){let lb=document.getElementById('imgLightbox');if(!lb){lb=document.createElement('div');lb.id='imgLightbox';lb.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(10,8,6,.82);display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out';document.body.appendChild(lb);}lb.innerHTML=url&&(''+url).startsWith('data:')?`<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5)">`:`<div style="background:var(--surface);padding:30px;border-radius:8px;color:var(--text-muted)">ไม่มีรูป (${name||''})</div>`;lb.style.display='flex';lb.onclick=()=>{lb.style.display='none';lb.innerHTML='';};}
+function renderExpenses(){
+ const c=document.getElementById('content');
+ const meAll=expensesVisible();
+ const monthAll=meAll.filter(e=>(e.date||'').slice(0,7)===expMonth&&expInBrand(e));
+ const monthList=monthAll.filter(e=>expCatFilter==='all'||e.category===expCatFilter);
+ const sum=arr=>arr.reduce((a,e)=>a+(+e.amount||0),0);
+ const today=todayISO();
+ const todayTot=sum(meAll.filter(e=>e.date===today&&expInBrand(e)));
+ const monthTot=sum(monthAll);
+ const byCat={};monthAll.forEach(e=>byCat[e.category]=(byCat[e.category]||0)+(+e.amount||0));
+ const catRows=EXP_CATS.map(cat=>({cat,v:byCat[cat.id]||0})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+ const maxCat=Math.max(1,...catRows.map(x=>x.v));
+ const topCat=catRows[0];
+ const catOpts=`<option value="auto">🔎 เดาหมวดอัตโนมัติ</option>`+EXP_CATS.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');
+ const catFilterOpts=`<option value="all">ทุกหมวด</option>`+EXP_CATS.map(x=>`<option value="${x.id}"${expCatFilter===x.id?' selected':''}>${x.label}</option>`).join('');
+ const brandOpts=['กลาง','VYNN','Vangarde'].map(b=>`<option value="${b}"${expLast.brand===b?' selected':''}>${b==='กลาง'?'กลาง (ส่วนกลางบริษัท)':b}</option>`).join('');
+ const methodOpts=EXP_METHODS.map(m=>`<option value="${m[0]}"${expLast.method===m[0]?' selected':''}>${m[1]}</option>`).join('');
+ const defBy=expLast.by||(currentUser&&currentUser.id);
+ const byOpts=ACCOUNTS.map(a=>`<option value="${a.id}"${defBy===a.id?' selected':''}>${a.short||a.name}</option>`).join('');
+ const list=monthList.slice().sort((a,b)=>((b.date||'')+(b.createdAt||'')).localeCompare((a.date||'')+(a.createdAt||'')));
+ const canDel=e=>role!=='sales'||e.createdBy===myScopeId()||e.by===myScopeId();
+ c.innerHTML=`
+  <div class="banner-info">${svg('cash')}พิมพ์สั้นๆ เช่น <b>ค่าน้ำมัน 500</b> หรือ <b>120 กาแฟรับรองลูกค้า</b> แล้วกด Enter — ระบบแยกยอด+หมวดให้อัตโนมัติ แนบรูปบิลได้ · <span style="opacity:.85">เฟส 2: ต่อบอทไลน์กลุ่มให้พิมพ์/ส่งรูปในไลน์แล้วบันทึกอัตโนมัติ (ใช้ตัวแยกยอดตัวเดียวกันนี้)</span></div>
+  <div class="card" style="margin-bottom:16px">
+   <div class="card-head">${svg('cash')}<h3>บันทึกค่าใช้จ่ายด่วน</h3></div>
+   <div class="card-pad">
+    <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap">
+     <input id="expText" placeholder="เช่น: ค่าน้ำมัน 500   /   120 กาแฟรับรองลูกค้า" autocomplete="off" style="flex:1;min-width:220px;font-size:16px;padding:11px 13px">
+     <button class="btn primary" id="expAdd" style="padding:0 22px;font-size:15px">＋ บันทึก</button>
+    </div>
+    <div id="exp-preview" class="mini-note" style="margin-top:8px;min-height:18px"></div>
+    <div class="field-row" style="margin-top:10px">
+     <div class="field"><label>หมวด</label><select id="expCat">${catOpts}</select></div>
+     <div class="field"><label>วันที่</label><input type="date" id="expDate" value="${expLast.date||today}"></div>
+     <div class="field"><label>แบรนด์/หน่วยงาน</label><select id="expBrand">${brandOpts}</select></div>
+    </div>
+    <div class="field-row">
+     <div class="field"><label>วิธีจ่าย</label><select id="expMethod">${methodOpts}</select></div>
+     <div class="field"><label>ผู้จ่าย/ผู้บันทึก</label><select id="expBy">${byOpts}</select></div>
+     <div class="field"><label>รูปบิล/ใบเสร็จ</label><div style="display:flex;align-items:center;gap:8px"><label class="btn sm" style="cursor:pointer;margin:0">📎 แนบรูป<input type="file" id="exp-file" accept="image/*" multiple hidden></label><span id="exp-thumbs" style="display:flex;gap:5px;flex-wrap:wrap"></span></div></div>
+    </div>
+   </div>
+  </div>
+  <div class="stat-row" style="margin-bottom:16px">
+   <div class="stat"><div class="label">ยอดวันนี้</div><div class="value">${THB(todayTot)}</div><div class="mini-note" style="margin-top:8px">${fmtDate(today)}</div></div>
+   <div class="stat"><div class="label">ยอดเดือนนี้</div><div class="value" style="color:var(--warn)">${THB(monthTot)}</div><div class="mini-note" style="margin-top:8px">${monthAll.length} รายการ</div></div>
+   <div class="stat"><div class="label">หมวดที่ใช้มากสุด</div><div class="value" style="font-size:20px">${topCat?catById(topCat.cat.id).label:'—'}</div><div class="mini-note" style="margin-top:8px">${topCat?THB(topCat.v):'ยังไม่มี'}</div></div>
+   <div class="stat"><div class="label">เฉลี่ย/รายการ</div><div class="value">${THB(monthAll.length?monthTot/monthAll.length:0)}</div><div class="mini-note" style="margin-top:8px">เดือน ${monthLabel(expMonth)}</div></div>
+  </div>
+  ${catRows.length?`<div class="card" style="margin-bottom:16px"><div class="card-head">${svg('chart')}<h3>ค่าใช้จ่ายแยกหมวด · ${monthLabel(expMonth)}</h3></div><div class="card-pad">
+   ${catRows.map(x=>`<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px"><span>${catById(x.cat.id).label}</span><b class="tnum">${THB(x.v)}</b></div><div style="height:9px;background:var(--surface-2);border-radius:5px;overflow:hidden"><span style="display:block;height:100%;width:${Math.round(x.v/maxCat*100)}%;background:${x.cat.c}"></span></div></div>`).join('')}
+  </div></div>`:''}
+  <div class="card"><div class="card-head">${svg('doc')}<h3>รายการค่าใช้จ่าย</h3><span class="spacer"></span>
+    <input type="month" id="exp-month" value="${expMonth}" style="padding:6px 8px;margin-right:8px">
+    <select id="exp-catf" style="padding:6px 8px">${catFilterOpts}</select></div>
+   <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>หมวด</th><th>รายละเอียด</th><th>ผู้จ่าย</th><th>วิธี</th><th>หน่วยงาน</th><th>บิล</th><th class="num">ยอด</th><th></th></tr></thead><tbody>
+   ${list.length?list.map(e=>{const p=personById(e.by)||{};const ph=(e.photos||[])[0];return `<tr><td style="white-space:nowrap">${fmtDate(e.date)}</td><td>${catChip(e.category)}</td><td>${e.note||'<span style="color:var(--text-faint)">—</span>'}</td><td>${p.short||p.name||e.by||'—'}</td><td class="mini-note">${methodLabel(e.method)}</td><td>${e.brand==='กลาง'?'<span class="pill neutral">กลาง</span>':brandChip(e.brand)}</td><td>${ph?`<span class="clickable" data-expimg="${e.id}">${photoThumb(ph,32)}</span>`:'<span style="color:var(--text-faint)">—</span>'}</td><td class="num" style="font-weight:700">${THB(e.amount)}</td><td>${canDel(e)?`<button class="btn sm" data-expdel="${e.id}">ลบ</button>`:''}</td></tr>`;}).join(''):emptyRow(9,'ยังไม่มีค่าใช้จ่ายในเดือนนี้ — พิมพ์ในช่องด้านบนแล้วกด Enter ได้เลย')}
+   </tbody>${list.length?`<tfoot><tr style="border-top:2px solid var(--border-strong)"><td colspan="7" style="font-weight:700;padding:11px 14px">รวมเดือน ${monthLabel(expMonth)}${expCatFilter!=='all'?' · '+catById(expCatFilter).label:''}</td><td class="num" style="font-weight:700;padding:11px 14px">${THB(sum(list))}</td><td></td></tr></tfoot>`:''}</table></div></div>`;
+ const submit=()=>{
+  const inp=document.getElementById('expText');const raw=(inp.value||'').trim();const p=parseExpense(raw);
+  const amt=p.amount;const pv=document.getElementById('exp-preview');
+  if(!amt||amt<=0){pv.innerHTML='<span style="color:var(--crit)">⚠ ใส่จำนวนเงินด้วย เช่น "ค่าน้ำมัน 500"</span>';inp.focus();return;}
+  let cat=document.getElementById('expCat').value;if(cat==='auto')cat=p.category;
+  const date=document.getElementById('expDate').value||today;
+  const brandV=document.getElementById('expBrand').value;const method=document.getElementById('expMethod').value;const by=document.getElementById('expBy').value;
+  const note=p.note||catById(cat).label;
+  state.expenses.push({id:'EX-'+(state.seq.EX++),date,amount:amt,category:cat,note,by,brand:brandV,method,photos:expBarPhotos.slice(),status:'recorded',createdAt:new Date().toISOString(),createdBy:currentUser?currentUser.id:''});
+  logAudit('add_expense',THB(amt)+' · '+catById(cat).label+(note?' · '+note:''));
+  expLast={date,brand:brandV,method,by};expBarPhotos=[];save();render(false);
+  setTimeout(()=>{const i=document.getElementById('expText');if(i){i.value='';i.focus();}},0);
+ };
+ document.getElementById('expAdd').onclick=submit;
+ const et=document.getElementById('expText');
+ et.oninput=()=>{const p=parseExpense(et.value);const pv=document.getElementById('exp-preview');const cs=document.getElementById('expCat');const shownCat=cs.value==='auto'?p.category:cs.value;pv.innerHTML=et.value.trim()?`จะบันทึก: <b>${catById(shownCat).label}</b> · <b class="tnum">${p.amount?THB(p.amount):'฿0'}</b>${p.note?' · '+p.note:''}`:'';};
+ et.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();submit();}};
+ const fi=document.getElementById('exp-file');
+ if(fi)fi.onchange=e=>{const files=[...e.target.files];if(!files.length)return;Promise.all(files.map(f=>new Promise(res=>{const rd=new FileReader();rd.onload=()=>res({name:f.name,url:rd.result});rd.onerror=()=>res({name:f.name,url:''});rd.readAsDataURL(f);}))).then(imgs=>{expBarPhotos.push(...imgs);const tc=document.getElementById('exp-thumbs');if(tc)tc.innerHTML=expBarPhotos.map(x=>photoThumb(x,34)).join('');});};
+ document.getElementById('exp-month').onchange=e=>{expMonth=e.target.value;render(false);};
+ document.getElementById('exp-catf').onchange=e=>{expCatFilter=e.target.value;render(false);};
+ c.querySelectorAll('[data-expdel]').forEach(b=>b.onclick=()=>{if(confirm('ลบรายการค่าใช้จ่ายนี้?')){state.expenses=(state.expenses||[]).filter(x=>x.id!==b.dataset.expdel);save();render(false);}});
+ c.querySelectorAll('[data-expimg]').forEach(el=>el.onclick=()=>{const e=(state.expenses||[]).find(x=>x.id===el.dataset.expimg);const ph=e&&(e.photos||[])[0];if(ph)openImg(ph.url,ph.name);});
+}
+function opexPnlCard(){
+ const exps=(state.expenses||[]).filter(expInBrand);
+ const projs=brandLeads().filter(l=>['won','production','installing','done'].includes(l.stage)).map(projectPnL).filter(Boolean);
+ const netBy={};projs.forEach(p=>netBy[p.month]=(netBy[p.month]||0)+p.net);
+ const opexBy={};exps.forEach(e=>{const m=(e.date||'').slice(0,7);if(m)opexBy[m]=(opexBy[m]||0)+(+e.amount||0);});
+ const months=[...new Set([...Object.keys(netBy),...Object.keys(opexBy)])].sort();
+ if(!months.length)return '';
+ const totProj=months.reduce((a,m)=>a+(netBy[m]||0),0);
+ const totOpex=months.reduce((a,m)=>a+(opexBy[m]||0),0);
+ return `<div class="card" style="margin-top:16px"><div class="card-head">${svg('cash')}<h3>ค่าใช้จ่ายดำเนินงาน (จากบันทึกค่าใช้จ่ายรายวัน)</h3></div>
+  <div class="banner-info" style="margin:0 0 12px">${svg('trend')}“กำไรจากงาน” ด้านบนยังไม่ได้หักค่าใช้จ่ายจิปาถะรายวัน (น้ำมัน/รับรอง/ออฟฟิศ ฯลฯ) — ตารางนี้หักให้เห็น <b>กำไรบริษัทสุทธิจริง</b></div>
+  <div class="table-wrap"><table><thead><tr><th>เดือน</th><th class="num">กำไรจากงาน</th><th class="num">ค่าใช้จ่ายดำเนินงาน</th><th class="num">กำไรบริษัทสุทธิ</th></tr></thead><tbody>
+  ${months.map(m=>{const pn=netBy[m]||0,ox=opexBy[m]||0,af=pn-ox;return `<tr><td style="font-weight:600">${monthLabel(m)}</td><td class="num" style="color:var(--good)">${THB(pn)}</td><td class="num" style="color:var(--warn)">${ox?'−'+THB(ox):'—'}</td><td class="num" style="font-weight:700;color:${af>=0?'var(--good)':'var(--crit)'}">${THB(af)}</td></tr>`;}).join('')}
+  </tbody><tfoot><tr style="border-top:2px solid var(--border-strong)"><td style="font-weight:700;padding:11px 14px">รวม</td><td class="num" style="font-weight:700;color:var(--good);padding:11px 14px">${THB(totProj)}</td><td class="num" style="font-weight:700;color:var(--warn);padding:11px 14px">−${THB(totOpex)}</td><td class="num" style="font-weight:800;color:${totProj-totOpex>=0?'var(--good)':'var(--crit)'};padding:11px 14px">${THB(totProj-totOpex)}</td></tr></tfoot></table></div></div>`;
 }
 
 /* ============ HR / PAYROLL ============ */
@@ -2452,7 +2589,7 @@ function renderVgPrice(){
   ${perg}${zip}${awn}
   <div class="grid two-col" style="grid-template-columns:1fr 1fr 1fr">${addBlock('Pergola',vg.addons.pergola)}${addBlock('Zip Shade',vg.addons.zipshade)}${addBlock('Awning',vg.addons.awning)}</div>`;
 }
-function renderView(){({overview:renderOverview,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
+function renderView(){({overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
 function render(rerenderNav=true){
  if(!canView(view))view=firstAllowedView(); // block disallowed views
  const meta=META[view];

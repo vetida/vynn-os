@@ -259,6 +259,34 @@
     .slip-page:last-child{page-break-after:auto;break-after:auto}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+  /* ===== Login screen ===== */
+  .login-wrap{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(1200px 600px at 50% -10%,rgba(122,79,181,.18),transparent),var(--bg)}
+  .login-card{width:100%;max-width:390px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 20px 60px rgba(0,0,0,.28);padding:30px 28px}
+  .login-brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:22px;letter-spacing:.5px}
+  .login-brand .dot{width:11px;height:11px;border-radius:50%;background:var(--accent);display:inline-block}
+  .login-sub{color:var(--text-faint);font-size:12.5px;margin:4px 0 22px}
+  .login-field{margin-bottom:14px}
+  .login-field label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px}
+  .login-field input{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:14.5px;font-family:inherit}
+  .login-field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(122,79,181,.15)}
+  .login-btn{width:100%;padding:12px;border:none;border-radius:var(--radius-sm);background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;font-family:inherit}
+  .login-btn:hover{filter:brightness(1.06)}
+  .login-err{background:rgba(192,57,43,.12);color:#C0392B;border:1px solid rgba(192,57,43,.3);border-radius:var(--radius-sm);padding:9px 12px;font-size:12.5px;margin-bottom:14px;display:none}
+  .login-err.show{display:block}
+  .login-demo{margin-top:20px;border-top:1px solid var(--border);padding-top:14px}
+  .login-demo summary{cursor:pointer;font-size:12px;color:var(--text-faint);font-weight:600}
+  .login-demo table{width:100%;border-collapse:collapse;margin-top:10px;font-size:11.5px}
+  .login-demo td{padding:4px 6px;border-bottom:1px solid var(--border);color:var(--text-muted)}
+  .login-demo td:first-child{font-weight:600;color:var(--text)}
+  .login-demo code{background:var(--surface-2);padding:1px 5px;border-radius:4px;font-size:11px}
+  /* ===== Logged-in user chip (sidebar) ===== */
+  .user-chip{display:flex;align-items:center;gap:9px;padding:9px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm)}
+  .user-chip .uc-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0}
+  .user-chip .uc-name{font-size:12.5px;font-weight:650;line-height:1.2}
+  .user-chip .uc-role{font-size:10.5px;color:var(--text-faint);margin-top:1px}
+  .logout-btn{width:100%;margin-top:7px;padding:8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center}
+  .logout-btn:hover{background:var(--surface-2);color:var(--text)}
+  .role-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:700}
 </style>
 
 <div class="app">
@@ -269,16 +297,8 @@
     </div>
     <nav class="nav" id="nav"></nav>
     <div class="side-foot">
-      <div class="role-pick">
-        <span class="rp-label">มุมมองผู้ใช้ (เดโม)</span>
-        <div class="role-seg" id="roleSeg">
-          <button data-r="admin" class="active">แอดมิน</button>
-          <button data-r="manager">ผู้จัดการ</button>
-          <button data-r="sales">เซลล์</button>
-          <button data-r="sales_support">ซัพพอร์ต</button>
-          <button data-r="hr">HR</button>
-        </div>
-      </div>
+      <div id="userChip"></div>
+      <button class="logout-btn" id="logoutBtn">ออกจากระบบ</button>
       <button class="theme-toggle" id="themeToggle"><span id="themeLabel">โหมดสว่าง</span><span id="themeIcon"></span></button>
       <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
         <div style="font-size:10px;color:var(--text-faint);letter-spacing:.4px">ข้อมูล · สำรอง/กู้คืน</div>
@@ -313,6 +333,34 @@
 <div class="drawer" id="drawer"><div class="drawer-head" id="drawerHead"></div><div class="drawer-body" id="drawerBody"></div></div>
 <div class="modal-card" id="modal"></div>
 
+<!-- ===== Login screen ===== -->
+<div class="login-wrap" id="loginScreen" style="display:none">
+  <form class="login-card" id="loginForm" autocomplete="off">
+    <div class="login-brand"><span class="dot"></span>VYNN<span style="color:var(--text-faint);font-weight:400">·OS</span></div>
+    <div class="login-sub">เข้าสู่ระบบด้วยรหัสพนักงาน</div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-field">
+      <label for="loginId">รหัสพนักงาน (Employee ID)</label>
+      <input id="loginId" type="text" inputmode="text" placeholder="เช่น A001 / E101" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label for="loginPw">รหัสผ่าน</label>
+      <input id="loginPw" type="password" placeholder="••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" type="submit">เข้าสู่ระบบ</button>
+    <details class="login-demo">
+      <summary>รหัสสำหรับทดสอบ (เดโม) ▾</summary>
+      <table>
+        <tr><td>แอดมิน</td><td><code>A001</code></td><td><code>admin123</code></td></tr>
+        <tr><td>ผู้จัดการ</td><td><code>M001</code></td><td><code>1234</code></td></tr>
+        <tr><td>ซัพพอร์ต</td><td><code>SP01</code></td><td><code>1234</code></td></tr>
+        <tr><td>เซลล์ (ณิชา)</td><td><code>E101</code></td><td><code>1234</code></td></tr>
+        <tr><td>เซลล์ (ธนกร)</td><td><code>E102</code></td><td><code>1234</code></td></tr>
+      </table>
+    </details>
+  </form>
+</div>
+
 <script>
 /* ============ ICONS ============ */
 const ICON={
@@ -346,17 +394,22 @@ function svg(n,cls){return `<svg class="${cls||''}" viewBox="0 0 24 24" fill="no
 
 /* ============ TEAM ============ */
 const USERS=[
- {id:'a1',name:'พิมพ์ชนก (แอดมิน)',short:'พ',color:'#7A4FB5',role:'admin'},
- {id:'a2',name:'สุริยา (แอดมิน)',short:'ส',color:'#7A4FB5',role:'admin'},
- {id:'a3',name:'มนัสนันท์ (แอดมิน)',short:'ม',color:'#7A4FB5',role:'admin'},
- {id:'mg',name:'คุณวีระ (ผู้จัดการ)',short:'ว',color:'#B77504',role:'manager'},
+ {id:'a1',name:'พิมพ์ชนก (แอดมิน)',short:'พ',color:'#7A4FB5',role:'admin',login:'A001',pw:'admin123'},
+ {id:'a2',name:'สุริยา (แอดมิน)',short:'ส',color:'#7A4FB5',role:'admin',login:'A002',pw:'admin123'},
+ {id:'a3',name:'มนัสนันท์ (แอดมิน)',short:'ม',color:'#7A4FB5',role:'admin',login:'A003',pw:'admin123'},
+ {id:'mg',name:'คุณวีระ (ผู้จัดการ)',short:'ว',color:'#B77504',role:'manager',login:'M001',pw:'1234'},
+ {id:'sp1',name:'อรวรรณ (ซัพพอร์ต)',short:'อ',color:'#0E7C86',role:'sales_support',login:'SP01',pw:'1234'},
 ];
 const SALES=[
- {id:'s1',name:'ณิชา พงษ์ไพบูลย์',short:'ณิชา',color:'#0F6E68',brand:'VYNN'},
- {id:'s2',name:'ธนกร วัฒนศิริ',short:'ธนกร',color:'#B65C36',brand:'Vangarde'},
- {id:'s3',name:'ปวีณา ศรีสมบัติ',short:'ปวีณา',color:'#2C6BB3',brand:'VYNN'},
- {id:'s4',name:'กิตติพงศ์ อารีย์',short:'กิตติ',color:'#C0392B',brand:'Vangarde'},
+ {id:'s1',name:'ณิชา พงษ์ไพบูลย์',short:'ณิชา',color:'#0F6E68',brand:'VYNN',role:'sales',login:'E101',pw:'1234'},
+ {id:'s2',name:'ธนกร วัฒนศิริ',short:'ธนกร',color:'#B65C36',brand:'Vangarde',role:'sales',login:'E102',pw:'1234'},
+ {id:'s3',name:'ปวีณา ศรีสมบัติ',short:'ปวีณา',color:'#2C6BB3',brand:'VYNN',role:'sales',login:'E103',pw:'1234'},
+ {id:'s4',name:'กิตติพงศ์ อารีย์',short:'กิตติ',color:'#C0392B',brand:'Vangarde',role:'sales',login:'E104',pw:'1234'},
 ];
+// every account that can log in (admins + manager + support + sales)
+const ACCOUNTS=[...USERS,...SALES];
+const accountByLogin=lid=>ACCOUNTS.find(u=>u.login.toLowerCase()===String(lid||'').trim().toLowerCase());
+const accountByUid=uid=>ACCOUNTS.find(u=>u.id===uid);
 const personById=id=>SALES.find(s=>s.id===id)||USERS.find(u=>u.id===id)||{name:'ยังไม่มอบหมาย',short:'—',color:'#9A9186'};
 
 const SOURCE={line:{l:'LINE OA',i:'msg'},booth:{l:'ออกบูธ',i:'booth'},repeat:{l:'ลูกค้าเก่า',i:'repeat'},interior:{l:'อินทีเรีย',i:'palette'}};
@@ -382,6 +435,44 @@ const VYNN_PRODUCTS=['ม่านลอน','ม่านจีบใต้ร�
 const VG_SYSTEMS=[['spring','ระบบสปริง'],['handcrank','ระบบมือหมุน'],['somfy','Somfy Motor'],['vangardeMotor','Vangarde Motor'],['motorLeft','มอเตอร์ซ้าย'],['motorRight','มอเตอร์ขวา'],['remote1ch','รีโมท 1ch'],['remote15ch','รีโมท 15ch']];
 const VG_ACCESSORIES=[['handcrankHybrid','+มือหมุน (Hybrid)'],['led','+LED'],['rainSensor','+Rain Sensor'],['shakeSensor','+Shake Sensor'],['waterCurtain','+ฉากกันน้ำ']];
 const VG_INSTALL=[['betweenWall','ระหว่างผนัง'],['frontWall','หน้าผนัง'],['boxIn','หันกล่องเข้าด้านใน'],['boxOut','หันกล่องออกด้านนอก'],['extraPost','ตั้งเสาเพิ่ม'],['flashing','ติดแฟลชชิ่งกันน้ำ']];
+// per-product config: which size fields to show, how it's priced, and which system/accessory/install options apply
+const VG_PROD={
+ 'Pergola':   {dims:[['w','กว้าง'],['d','ลึก'],['h','สูง']], price:'sqm',  list:'pergola',
+   systems:['spring','vangardeMotor','somfy','remote1ch','remote15ch'], accessories:['led','rainSensor'], install:['betweenWall','frontWall','extraPost','flashing']},
+ 'Zip Shade': {dims:[['w','กว้าง'],['h','สูง']], price:'sqm', list:'zipshade',
+   systems:['handcrank','somfy','vangardeMotor','handcrankHybrid','motorLeft','motorRight','remote1ch','remote15ch'], accessories:['rainSensor'], install:['betweenWall','frontWall','boxIn','boxOut']},
+ 'Awning':    {dims:[['w','กว้าง'],['vgExtend','ยื่น']], price:'awn', list:'awning',
+   systems:['handcrank','vangardeMotor','remote1ch','remote15ch'], accessories:['shakeSensor','led','waterCurtain'], install:['frontWall','flashing']},
+ 'Skylight':  {dims:[['w','กว้าง'],['d','ยาว']], price:'roof', list:'roofawning',
+   systems:['handcrank','vangardeMotor','remote1ch','remote15ch'], accessories:['led','waterCurtain'], install:['frontWall','flashing']},
+ 'Outdoor Roller':{dims:[['w','กว้าง'],['h','สูง']], price:'flat', list:null,
+   systems:['handcrank','vangardeMotor'], accessories:['rainSensor'], install:['frontWall']},
+};
+const vgCfg=prod=>VG_PROD[prod]||VG_PROD['Pergola'];
+// catalog codes for dropdowns
+const VG_FRAME_COLORS=['Black','Charcoal Grey','Brown','White','Light Grey','Beige'];
+const VG_FABRIC_CODES=[
+ 'G1004/25BC-1%','G3004/25BC-1%','G4004/25BC-1%','G5004/25BC-1%','G6004/25BC-1%','G8004/25BC-1%','G9004/25BC-1%',
+ 'G1004/25BC-5%','G3004/25BC-5%','G4004/25BC-5%','G5004/25BC-5%','G6004/25BC-5%','G7004/25BC-5%','G8004/25BC-5%','G9004/25BC-5%',
+ 'G3004/25BC-10%','G4004/25BC-10%','G6004/25BC-10%','G7004/25BC-10%',
+ 'G6002/25BC-20%','G6001/25BC-40%',
+ 'BO6001/100','BO6002/100','BO6003/100','BO6004/100','BO6005/100','BO6006/100','BO6007/100',
+ 'BO2001/100','BO2004/100','BO2006/100','BO2007/100','BO2011/100','BO2012/100',
+];
+// auto-suggest the right series from entered size (meters)
+function vgSuggestSeries(prod,wM,dM,hM){
+ const vg=state.vgPricing||defaultVgPricing();
+ if(prod==='Pergola'){
+  for(const r of vg.pergola){const m=(r.max||'').split('×').map(Number),mw=m[0]||99,ml=m[1]||99,mh=m[2]||99;
+   if(((wM<=mw&&dM<=ml)||(wM<=ml&&dM<=mw))&&(!hM||hM<=mh))return r.series;}
+  return vg.pergola[vg.pergola.length-1].series;
+ }
+ if(prod==='Zip Shade'){
+  const v15=wM>6||hM>6; const c=vg.zipshade.filter(r=>v15?r.series.indexOf('V15')===0:r.series.indexOf('V6')===0);
+  return (c[0]||vg.zipshade[0]).series;
+ }
+ return null;
+}
 const FRAME_COLOR_SUGGEST=['light grey','ดำด้าน','ขาว','เทา','น้ำตาลไม้','แชมเปญ'];
 const vgHasMotor=pt=>!!(pt.systems&&(pt.systems.somfy||pt.systems.vangardeMotor));
 function swatchHex(name){const n=(''+(name||'')).toLowerCase();const map={'light grey':'#c9ccce','light gray':'#c9ccce','ดำด้าน':'#232323','ดำ':'#232323','black':'#232323','ขาว':'#f3f3f3','white':'#f3f3f3','เทา':'#8a8d90','grey':'#8a8d90','gray':'#8a8d90','น้ำตาลไม้':'#8a5a2b','น้ำตาล':'#6b4a2b','brown':'#6b4a2b','แชมเปญ':'#c9b489','เบจ':'#d8c9a3','beige':'#d8c9a3','ครีม':'#efe6cf','cream':'#efe6cf'};for(const k in map){if(n.includes(k))return map[k];}return '#b8bcbf';}
@@ -528,6 +619,53 @@ function seed(){return {
 /* ============ STATE ============ */
 const LS='vynn_os_v2';
 let state, view='overview', brand='all', search='', role='admin', hrMonth='2026-07';
+let currentUser=null; // the logged-in account (from ACCOUNTS)
+
+/* ============ AUTH / RBAC ============ */
+const SESS='vynn_os_session';
+// which view ids each role may open. 'admin' = full access.
+const ACCESS={
+ admin:'*',
+ manager:['overview','leads','survey','quote','vgprice','sewing','china','install','service','finance','expenses','saleshist'],
+ sales_support:['overview','leads','survey','quote','vgprice','sewing','china','install','service','finance','expenses','settings'],
+ sales:['overview','leads','survey','quote','vgprice','install','service','finance','expenses','saleshist'],
+ hr:['overview','expenses','hr'],
+};
+function canView(v){const a=ACCESS[role];return a==='*'||(a&&a.includes(v));}
+function firstAllowedView(){if(canView('overview'))return 'overview';const a=ACCESS[role];return (a==='*')?'overview':(a&&a[0])||'overview';}
+// current employee id for sales-scoping (sales sees only own); '' means see all
+function myScopeId(){return currentUser&&currentUser.role==='sales'?currentUser.id:'';}
+function pwOf(uid){return (state&&state.passwords&&state.passwords[uid])||accountByUid(uid).pw;}
+function tryLogin(loginId,pw){
+ const u=accountByLogin(loginId);
+ if(!u)return{ok:false,msg:'ไม่พบรหัสพนักงานนี้'};
+ if(pwOf(u.id)!==pw)return{ok:false,msg:'รหัสผ่านไม่ถูกต้อง'};
+ setSession(u.id);
+ logAudit('login','เข้าสู่ระบบ');
+ return{ok:true};
+}
+function setSession(uid){currentUser=accountByUid(uid);role=currentUser.role;try{localStorage.setItem(SESS,uid);}catch(e){}}
+function logout(){logAudit('logout','ออกจากระบบ');currentUser=null;try{localStorage.removeItem(SESS);}catch(e){}brand='all';showLogin();}
+function restoreSession(){let uid=null;try{uid=localStorage.getItem(SESS);}catch(e){}if(uid&&accountByUid(uid)){setSession(uid);return true;}return false;}
+// ---- audit log (kept in state, trimmed to last ~600 / 60 days) ----
+function logAudit(action,detail){
+ if(!state)return;
+ if(!state.audit)state.audit=[];
+ const u=currentUser||{id:'?',name:'ไม่ทราบ',role:'?'};
+ state.audit.push({ts:new Date().toISOString(),uid:u.id,name:u.name,role:u.role,action,detail:detail||''});
+ const cut=Date.now()-60*864e5;
+ state.audit=state.audit.filter(e=>new Date(e.ts).getTime()>=cut).slice(-600);
+ save();
+}
+const ROLE_LABEL={admin:'แอดมิน',manager:'ผู้จัดการ',sales_support:'ซัพพอร์ต',sales:'เซลล์',hr:'ฝ่ายบุคคล'};
+const ROLE_COLOR={admin:'#7A4FB5',manager:'#B77504',sales_support:'#0E7C86',sales:'#0F6E68',hr:'#2C6BB3'};
+function showLogin(){document.getElementById('loginScreen').style.display='flex';document.querySelector('.app').style.display='none';const e=document.getElementById('loginErr');e.classList.remove('show');document.getElementById('loginForm').reset();setTimeout(()=>document.getElementById('loginId').focus(),50);}
+function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';if(!canView(view))view=firstAllowedView();renderUserChip();render();}
+function renderUserChip(){
+ const el=document.getElementById('userChip');if(!el||!currentUser)return;
+ const col=currentUser.color||ROLE_COLOR[role]||'#7A4FB5';
+ el.innerHTML=`<div class="user-chip"><div class="uc-av" style="background:${col}">${(currentUser.short||currentUser.name||'?').slice(0,2)}</div><div style="flex:1;min-width:0"><div class="uc-name">${currentUser.name}</div><div class="uc-role"><span class="role-badge" style="background:${col}22;color:${col}">${ROLE_LABEL[role]||role}</span> · ${currentUser.login}</div></div></div>`;
+}
 function migrateState(){
  if(!state.accounts)state.accounts=defaultAccounts();
  if(!state.employees)state.employees=defaultEmployees();
@@ -539,13 +677,21 @@ function migrateState(){
  if(state.surveys)state.surveys.forEach(s=>s.points.forEach(migratePoint));
  if(state.quotes)state.quotes.forEach(migrateQuote);
  if(!state.travelClaims)state.travelClaims=[];
+ if(!state.expenses)state.expenses=[]; // ค่าใช้จ่ายรายวัน (พนักงานกรอกเอง)
  if(state.seq&&!state.seq.T)state.seq.T=903;
  if(state.seq&&!state.seq.TR)state.seq.TR=1;
+ if(state.seq&&!state.seq.EX)state.seq.EX=1;
+ if(!state.passwords)state.passwords={}; // per-user password overrides (uid -> pw)
+ if(!state.audit)state.audit=[]; // audit log
+ if(!state.salesHist)state.salesHist=seedSalesHist(); // 12-month per-sales history
+ if(!state.vgPricing||!(state.vgPricing.v>=3))state.vgPricing=defaultVgPricing(); // Vangarde price list (v3 = + roof/skylight matrix, corrected catalog)
+ (state.accounts||[]).forEach(a=>{if(a.qr===undefined)a.qr='';}); // QR field for bank transfer
+ {const nv=(state.accounts||[]).find(a=>a.id==='acc-novat');if(nv&&!nv.bank){nv.legalName=nv.legalName||'เวทิดา ยิ้มถนอม';nv.bank='ธ.กสิกรไทย เลขที่ 035-320-4475 (เวทิดา ยิ้มถนอม)';}}
 }
 function load(){try{const r=localStorage.getItem(LS);if(r){state=JSON.parse(r);}}catch(e){}if(!state)state=seed();migrateState();}
 function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}}
 function resetData(){state=seed();migrateState();save();render();}
-function emptyState(){const s=seed();s.leads=[];s.surveys=[];s.quotes=[];s.fabricOrders=[];s.sewing=[];s.chinaLots=[];s.installs=[];s.tickets=[];s.payments={};s.monthly=s.monthly.map(m=>({m:m.m,v:0}));s.attendance=[];s.advances=[];s.payroll={};s.travelClaims=[];return s;}
+function emptyState(){const s=seed();s.leads=[];s.surveys=[];s.quotes=[];s.fabricOrders=[];s.sewing=[];s.chinaLots=[];s.installs=[];s.tickets=[];s.payments={};s.monthly=s.monthly.map(m=>({m:m.m,v:0}));s.attendance=[];s.advances=[];s.payroll={};s.travelClaims=[];s.expenses=[];return s;}
 function startEmpty(){state=emptyState();migrateState();save();render();}
 function backupData(){try{const data=JSON.stringify(state);const blob=new Blob([data],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');const d=new Date();const pad=n=>String(n).padStart(2,'0');a.href=url;a.download='vynn-os-backup-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);return true;}catch(e){alert('สำรองข้อมูลไม่สำเร็จ: '+e.message);return false;}}
 function restoreData(file){const reader=new FileReader();reader.onload=e=>{let obj;try{obj=JSON.parse(e.target.result);}catch(err){alert('ไฟล์เสียหาย อ่านไม่ได้ (ไม่ใช่ไฟล์ JSON ที่ถูกต้อง)');return;}if(!obj||typeof obj!=='object'||!Array.isArray(obj.leads)||!obj.prices){alert('ไฟล์นี้ไม่ใช่ไฟล์สำรองของระบบ VYNN·OS');return;}const n=(obj.leads||[]).length;if(!confirm('นำเข้าข้อมูลจากไฟล์นี้? (ลูกค้า '+n+' ราย)\nข้อมูลปัจจุบันในเครื่องนี้จะถูกแทนที่ทั้งหมด'))return;try{state=obj;migrateState();save();render();alert('✓ นำเข้าข้อมูลสำเร็จ — ลูกค้า '+(state.leads||[]).length+' ราย');}catch(err){alert('นำเข้าไม่สำเร็จ: '+err.message);}};reader.onerror=()=>alert('อ่านไฟล์ไม่สำเร็จ');reader.readAsText(file);}
@@ -571,7 +717,8 @@ function personBrand(l){return l.brand;}
 // role/brand scoped leads
 function scopedLeads(){
  let L=state.leads;
- if(role==='sales'){ /* demo: sales sees own — pick ณิชา s1 as the logged-in sales */ L=L.filter(l=>l.assignedTo==='s1'); }
+ const mine=myScopeId();
+ if(mine){ L=L.filter(l=>l.assignedTo===mine); }
  if(brand!=='all') L=L.filter(l=>l.brand===brand);
  return L;
 }
@@ -583,8 +730,8 @@ function brandChip(b){return `<span class="chip-brand ${b}">${b}</span>`;}
 function brandColor(b){return b==='Vangarde'?'var(--brand-vangarde)':'var(--brand-vynn)';}
 function bn(l){return l?`<span class="brand-name-${l.brand}">${l.name}</span>`:'—';}
 function defaultAccounts(){return [
- {id:'acc-vat',label:'บัญชีมี VAT',legalName:'บริษัท วีวายเอ็นเอ็น คอลเล็คชั่น แอนด์ดีไซน์ จำกัด',taxId:'0105560067775',addr:'710 ถ.พัฒนาการ แขวงสวนหลวง เขตสวนหลวง กรุงเทพฯ 10250',bank:'ธ.กสิกรไทย เลขที่ 025-8-10362-9',vat:true},
- {id:'acc-novat',label:'บัญชีไม่มี VAT',legalName:'',taxId:'',addr:'',bank:'',vat:false}
+ {id:'acc-vat',label:'บัญชีมี VAT',legalName:'บริษัท วีวายเอ็นเอ็น คอลเล็คชั่น แอนด์ดีไซน์ จำกัด',taxId:'0105560067775',addr:'710 ถ.พัฒนาการ แขวงสวนหลวง เขตสวนหลวง กรุงเทพฯ 10250',bank:'ธ.กสิกรไทย เลขที่ 025-8-10362-9',vat:true,qr:''},
+ {id:'acc-novat',label:'บัญชีไม่มี VAT',legalName:'เวทิดา ยิ้มถนอม',taxId:'',addr:'',bank:'ธ.กสิกรไทย เลขที่ 035-320-4475 (เวทิดา ยิ้มถนอม)',vat:false,qr:''}
 ];}
 function accountById(id){const a=(state.accounts||[]);return a.find(x=>x.id===id)||a[0]||{id:'acc-vat',label:'บัญชีมี VAT',vat:true};}
 function accountOf(q){return accountById(q&&q.accountId);}
@@ -622,6 +769,89 @@ function findFabric(code){if(!code)return null;const p=P();return [...p.fabricsB
 function fabricKind(code){const p=P();if(p.fabricsBlackout.some(f=>f.code===code))return 'ทึบ';if(p.fabricsSheer.some(f=>f.code===code))return 'โปร่ง';if((p.fabricsLining||[]).some(f=>f.code===code))return 'ซับใน';return '';}
 function isSheer(code){return P().fabricsSheer.some(f=>f.code===code);}
 // compute a single survey point -> {label, detail, meters, sell, cost, order:[...]}
+/* ---- VG (Vangarde) real price list — 25 Nov 2025. MSRP = retail sell.
+   Tiers: dealer=MSRP×0.7, agent=MSRP×0.85. Sales see MSRP only; mgr/admin/support see all 3. ---- */
+function defaultVgPricing(){return {
+ v:3, // bump to force-refresh reference prices on load
+ tiers:{dealer:0.70, agent:0.85},
+ pergola:[
+  {series:'V180', max:'4.5×4.5×2.7', msrp:14000, moq:10},
+  {series:'V220', max:'5×6×6', msrp:16000, moq:12},
+  {series:'V260', max:'6×6×6', msrp:18000, moq:15},
+  {series:'V350-220 (+4 ZipShade)', max:'5×8×6', msrp:32000, moq:25},
+  {series:'V350-260 (+4 ZipShade)', max:'6×8×6', msrp:34000, moq:25},
+ ],
+ zipshade:[
+  {series:'V6-100 · ท่อ70', msrp:3500, moq:5},{series:'V6-100 · ท่อ85', msrp:3800, moq:5},
+  {series:'V6-110 · ท่อ70', msrp:3500, moq:5},{series:'V6-110 · ท่อ85', msrp:3800, moq:5},{series:'V6-110 · ท่อ95', msrp:4000, moq:5},
+  {series:'V6-120 · ท่อ70', msrp:3800, moq:5},{series:'V6-120 · ท่อ85', msrp:4000, moq:5},{series:'V6-120 · ท่อ95', msrp:4000, moq:5},{series:'V6-120 · ท่อ105', msrp:4400, moq:5},
+  {series:'V6-130 · ท่อ70', msrp:4000, moq:5},{series:'V6-130 · ท่อ85', msrp:4000, moq:5},{series:'V6-130 · ท่อ95', msrp:4400, moq:5},{series:'V6-130 · ท่อ105', msrp:4800, moq:5},
+  {series:'V15-100', msrp:5500, moq:10},{series:'V15-120', msrp:6000, moq:14},{series:'V15-140', msrp:6500, moq:18},
+ ],
+ // Retractable Awning — fixed price by กว้าง(W)×ยื่น(Extend), Polyester(จีน) grade. Acrylic Sauleda(สเปน) = higher grade (col T, add later).
+ // Retractable Awning V7 — poly=Polyester(จีน), acr=Sauleda Acrylic(สเปน)
+ awning:[
+  {w:2,ext:1.5,poly:30000,acr:33000},{w:2.5,ext:1.5,poly:32000,acr:37500},{w:2.5,ext:2,poly:33000,acr:40000},
+  {w:3,ext:1.5,poly:34000,acr:39500},{w:3,ext:2,poly:35000,acr:42000},{w:3,ext:2.5,poly:36000,acr:45000},
+  {w:3.5,ext:1.5,poly:37000,acr:42000},{w:3.5,ext:2,poly:38000,acr:45000},{w:3.5,ext:2.5,poly:39000,acr:47500},{w:3.5,ext:3,poly:40500,acr:50000},
+  {w:4,ext:1.5,poly:38000,acr:45000},{w:4,ext:2,poly:39500,acr:48500},{w:4,ext:2.5,poly:40500,acr:52000},{w:4,ext:3,poly:41500,acr:55000},{w:4,ext:3.5,poly:44000,acr:60000},
+  {w:4.5,ext:1.5,poly:42000,acr:49000},{w:4.5,ext:2,poly:43000,acr:52500},{w:4.5,ext:2.5,poly:44500,acr:55500},{w:4.5,ext:3,poly:45500,acr:59000},{w:4.5,ext:3.5,poly:48500,acr:64500},{w:4.5,ext:4,poly:51000,acr:73000},
+  {w:5,ext:1.5,poly:43000,acr:52000},{w:5,ext:2,poly:44500,acr:56000},{w:5,ext:2.5,poly:45500,acr:60000},{w:5,ext:3,poly:47000,acr:63500},{w:5,ext:3.5,poly:51500,acr:71000},{w:5,ext:4,poly:56000,acr:79500},
+  {w:5.5,ext:1.5,poly:51500,acr:60000},{w:5.5,ext:2,poly:53000,acr:64500},{w:5.5,ext:2.5,poly:54500,acr:68500},{w:5.5,ext:3,poly:56000,acr:73000},{w:5.5,ext:3.5,poly:55500,acr:75000},{w:5.5,ext:4,poly:60500,acr:83500},
+  {w:6,ext:1.5,poly:52000,acr:60500},{w:6,ext:2,poly:53500,acr:65000},{w:6,ext:2.5,poly:55000,acr:69000},{w:6,ext:3,poly:56500,acr:73500},{w:6,ext:3.5,poly:56000,acr:75500},{w:6,ext:4,poly:61000,acr:84000},
+ ],
+ // Roof Awning / Skylight (Full Cassette) — fixed by กว้าง(width cols)×ยาว(length rows)
+ roofawning:{widths:[2,2.5,3,3.5,4,4.5,5,5.5,6], rows:{
+  '2':[39000,42920,45520,48880,51480,55920,59280,61880,64480],
+  '2.5':[41580,45520,48120,51480,54080,58520,61880,64480,67080],
+  '3':[44000,48120,50720,54080,56680,61120,64480,67080,69680],
+  '3.5':[48120,50720,54600,58520,61120,65000,68920,71520,74880],
+  '4':[50690,53320,57200,61950,63720,67600,71520,74120,77480],
+  '4.5':[53290,55920,59800,63720,66320,70200,74120,77480,82680],
+  '5':[55870,59280,63720,67080,70200,74880,77480,82680,87880],
+  '5.5':[58490,61880,66320,69680,72800,77480,82680,87880,93080],
+  '6':[61090,64480,68920,72280,75400,80600,85800,91000,96200],
+ }},
+ addons:{
+  pergola:[{n:'LED strip (คาน+เสา+ราง)',price:800,u:'ม.'},{n:'Rain Sensor',price:6000,u:'ตัว'},{n:'Broadlink Automation',price:3500,u:'ตัว'},{n:'เพิ่มความสูงเป็น 3.0 ม.',price:6000,u:'ชุด'}],
+  zipshade:[{n:'มอเตอร์ Somfy (ฝรั่งเศส)',price:19800,u:'ชุด'},{n:'มอเตอร์ Vangarde',price:9900,u:'ชุด'},{n:'มอเตอร์ Vangarde Hybrid (ไม่ใช้ไฟ ≤4×3ม.)',price:14000,u:'ชุด'},{n:'รีโมท 1Ch/15Ch',price:1200,u:'ตัว'},{n:'Rain Sensor',price:6000,u:'ตัว'}],
+  awning:[{n:'มอเตอร์ Vangarde + รีโมท',price:12000,u:'ชุด'},{n:'เซนเซอร์กันสั่น',price:3000,u:'ชุด'},{n:'ค่าติดตั้ง',price:3000,u:'ชุด'}],
+ },
+};}
+// tiers off MSRP; visible tiers by role (sales = retail only)
+function vgTiers(msrp){const t=(state.vgPricing||defaultVgPricing()).tiers;return {msrp,dealer:Math.round(msrp*t.dealer),agent:Math.round(msrp*t.agent)};}
+function vgShowTiers(){return role!=='sales';} // sales see retail only
+
+/* ---- Dual fabric-pricing engine (from real VYNN Excel: หน้าผ้า/yard + ตรม/m²) ----
+   All dims in METERS. roman=ม่านพับ (fullness 1, hem 0.2). Returns both methods per layer. */
+function fabricBothMethods(Wm,Hm,fabricWidthM,fullness,pricePerYard,pricePerM2,roman){
+ const topHem=roman?0.2:0.35, sideHem=0.2;
+ fabricWidthM=fabricWidthM||1.4;
+ // METHOD 1 — หน้าผ้า (yards)
+ const canRail=fabricWidthM>=(Hm+topHem);
+ const widths=canRail?1:Math.max(1,Math.ceil(((Wm*fullness)+sideHem)/fabricWidthM));
+ const lenPer=canRail?(Wm*fullness+(roman?0.2:0.3)):(Hm+topHem);
+ const yards=Math.ceil(((widths*lenPer)/0.9)*2)/2;      // →0.5 yd
+ const priceYard=Math.ceil(yards*(pricePerYard||0));
+ // METHOD 2 — ตรม (m²)
+ const sqm=roman
+   ? Math.max(1.5,Math.ceil((Wm+0.2)*(Hm+0.2)*2)/2)     // roman: CEILING .5, min 1.5
+   : Math.ceil((Wm+0.15)*(Hm+0.15)*fullness);           // curtain: (W+.15)(H+.15)×fullness, round up 1
+ const priceM2=Math.ceil(sqm*(pricePerM2||0));
+ return {widths,yards,priceYard,sqm,priceM2};
+}
+// blind area (มู่ลี่/ม่านม้วน/ม่านปรับแสง) — same in both methods: max(W,1)×H, min 1.5 m²
+function blindArea(Wm,Hm){return Math.max(1.5,Math.ceil(Math.max(Wm,1)*Hm*10)/10);}
+// normal track sell from cost: 150→450, 165→850 (else cost×3 fallback)
+function trackSell(costPerM){return costPerM===150?450:costPerM===165?850:costPerM*3;}
+// Roof Awning / Skylight price by กว้าง(width)×ยาว(length), round each up to nearest table size
+function roofAwnPrice(vg,wM,lenM){
+ const rw=vg.roofawning; if(!rw)return 0;
+ const cols=rw.widths; let ci=cols.findIndex(c=>c>=wM-1e-9); if(ci<0)ci=cols.length-1;
+ const rowKeys=Object.keys(rw.rows).map(Number).sort((a,b)=>a-b);
+ let rk=rowKeys.find(r=>r>=lenM-1e-9); if(rk==null)rk=rowKeys[rowKeys.length-1];
+ return {price:rw.rows[String(rk)][ci], w:cols[ci], len:rk};
+}
 function calcPoint(pt){
  const p=P();
  if(pt.amt!=null){const o=pt.aOpaque||0,s=pt.aSheer||0,t=pt.aTrack||0;const sum=o+s+t;const sell=sum||pt.amt;return {kind:pt.kind||'curtain',imported:true,sell,cost:pt.cost||0,inst:0,meters:0,widths:0,layers:[],sellOpaque:sum?o:sell,sellSheer:s,sellTrack:t,code1:pt.code1||'',code2:pt.code2||'',order:[{t:pt.prodLabel||'รายการนำเข้า',code:pt.code1||'',q:pt.qty+' '+(pt.kind==='curtain'?'ชุด':'รายการ')}]};}
@@ -655,14 +885,37 @@ function calcPoint(pt){
    const code2=((pt.fabrics||[]).find(f=>f.code&&f.layer==='โปร่ง')||{}).code||'';
    return {kind:'curtain',layers,widths:layers[0]?layers[0].widths:0,meters:+layers.reduce((a,l)=>a+l.meters,0).toFixed(2),tlen,trate,motorName,sell,cost,inst,order,sellOpaque,sellSheer,sellTrack,code1,code2};
  } else if(pt.kind==='vangarde'){
-   const vp=(p.vangarde||[]).find(x=>x.type===pt.vgProduct)||{price:6000,cost:3000};
-   const areaEach=Math.max(p.vgMinSqm||1,(pt.w/100)*(pt.h/100));
+   // price from the REAL VG price list (retail/MSRP); Pergola/Zip=per m² by series, Awning=fixed by W×ยื่น
+   const vg=state.vgPricing||defaultVgPricing();
+   if(!pt.vgProduct)return {kind:'vangarde',area:0,areaEach:0,sell:0,cost:0,inst:0,vgUnit:'(ยังไม่เลือกสินค้า)',sellOpaque:0,sellSheer:0,sellTrack:0,code1:'',code2:'',order:[]};
+   const wM=(pt.w||0)/100, hM=(pt.h||0)/100, dM=(pt.d||0)/100, extM=(pt.vgExtend||150)/100, prod=pt.vgProduct;
+   let base=0, areaEach=0, unit=prod;
+   const depthM=dM||hM;   // ลึก/ยาว — fall back to old height field for legacy points
+   if(prod==='Pergola'){                       // area = กว้าง × ลึก
+     const row=vg.pergola.find(x=>x.series===pt.vgSeries)||vg.pergola[0];
+     areaEach=Math.max(row.moq||1, wM*depthM); base=areaEach*row.msrp; unit=prod+' '+row.series;
+   } else if(prod==='Zip Shade'){              // area = กว้าง × สูง
+     const row=vg.zipshade.find(x=>x.series===pt.vgSeries)||vg.zipshade[0];
+     areaEach=Math.max(row.moq||1, wM*hM); base=areaEach*row.msrp; unit=prod+' '+row.series;
+   } else if(prod==='Awning'){                 // fixed by กว้าง × ยื่น (poly/acrylic)
+     const cand=vg.awning.filter(a=>a.w>=wM-1e-9&&a.ext>=extM-1e-9).sort((a,b)=>(a.w-b.w)||(a.ext-b.ext))[0]||vg.awning[vg.awning.length-1];
+     base=pt.vgGrade==='acr'?cand.acr:cand.poly; areaEach=wM*extM;
+     unit='Awning '+cand.w+'×'+cand.ext+' ม.'+(pt.vgGrade==='acr'?' (สเปน)':' (จีน)');
+   } else if(prod==='Skylight'){               // fixed by กว้าง × ยาว (roof matrix)
+     const rp=roofAwnPrice(vg,wM,depthM); base=rp.price; areaEach=wM*depthM; unit='Skylight '+rp.w+'×'+rp.len+' ม.';
+   } else {                                    // Outdoor Roller — flat fallback
+     const vp=(p.vangarde||[]).find(x=>x.type===prod)||{price:6000};
+     areaEach=Math.max(p.vgMinSqm||1,wM*hM); base=areaEach*vp.price;
+   }
    const area=+(areaEach*pt.qty).toFixed(2);
+   const sellBase=base*pt.qty;
    const hasMotor=vgHasMotor(pt);
-   const motorAdd=hasMotor?p.blindMotorAddPerSqm*area:0;
-   const sell=area*vp.price+motorAdd+p.installPerPoint*pt.qty;
-   const cost=area*vp.cost+motorAdd*0.5;
-   return {kind:'vangarde',area,areaEach:+areaEach.toFixed(2),sell,cost,inst:p.installPerPoint*pt.qty,sellOpaque:(area*vp.price),sellSheer:0,sellTrack:motorAdd,code1:pt.fabricCode||'',code2:'',order:[{t:pt.vgProduct+' · เฟรม '+(pt.frameColor||'-')+' · ผ้า '+(pt.fabricCode||'-'),code:'',q:area+' ตร.ม. ('+pt.qty+' จุด)'},...(hasMotor?[{t:'ระบบมอเตอร์',code:'',q:pt.qty+' ตัว'}]:[])]};
+   let motorAdd=0;
+   if(hasMotor){const m=prod==='Awning'?12000:prod==='Zip Shade'?9900:0;motorAdd=m*pt.qty;}
+   const inst=p.installPerPoint*pt.qty;
+   const sell=sellBase+motorAdd+inst;
+   const cost=Math.round((sellBase+motorAdd)*(vg.tiers.dealer||0.7));   // cost ≈ dealer purchase tier (ประมาณ)
+   return {kind:'vangarde',area,areaEach:+areaEach.toFixed(2),sell,cost,inst,vgUnit:unit,sellOpaque:sellBase,sellSheer:0,sellTrack:motorAdd,code1:pt.fabricCode||'',code2:'',order:[{t:unit+' · เฟรม '+(pt.frameColor||'-')+' · ผ้า '+(pt.fabricCode||'-'),code:'',q:area+' ตร.ม. ('+pt.qty+' จุด)'},...(hasMotor?[{t:'มอเตอร์ + รีโมท',code:'',q:pt.qty+' ชุด'}]:[])]};
  } else {
    const bl=p.blinds.find(b=>b.type===pt.blindType)||{price:1600,cost:650};
    const areaEach=Math.max(p.blindMinSqm,(pt.w/100)*(pt.h/100));
@@ -744,8 +997,8 @@ function addQuoteOption(leadId){
  state.payments[nid]=[{n:1,pct:50,st:'pending',d:''},{n:2,pct:30,st:'pending',d:''},{n:3,pct:20,st:'pending',d:''}];
  save();openReviseModal(nid);
 }
-function newPoint(kind){const p=P();return kind==='vangarde'?{kind:'vangarde',room:'',w:0,h:0,detail:'',vgProduct:VANGARDE_PRODUCTS[0],frameColor:'',fabricCode:'',systems:{},accessories:{},install:{},track:'normal',qty:1,note:'',photos:[]}:kind==='blind'?{kind:'blind',room:'',w:0,h:0,blindType:p.blinds[0].type,track:'normal',motorModel:p.motors[0].model,openSide:'',slanted:false,slantNote:'',qty:1,note:'',photos:[]}:{kind:'curtain',room:'',w:0,h:0,curtainType:CURTAIN_TYPES[0],fabrics:[{layer:'ทึบ',code:'',w:140,price:0,cost:0},{layer:'โปร่ง',code:'',w:150,price:0,cost:0},{layer:'ซับใน',code:'',w:150,price:0,cost:0}],track:'normal',hooks:'ตะขอมาตรฐาน',motorModel:p.motors[0].model,motorSide:'ขวา',openSide:'',mountType:'ชิดฝ้า',mountAboveCm:0,sideAllowCm:2,slanted:false,slantNote:'',qty:1,note:'',photos:[]};}
-function migratePoint(pt){if(typeof pt.photos==='number')pt.photos=ph(pt.photos);pt.photos=pt.photos||[];pt.note=pt.note||'';pt.qty=pt.qty||1;pt.track=pt.track||'normal';if(pt.kind==='vangarde'){pt.vgProduct=pt.vgProduct&&VANGARDE_PRODUCTS.includes(pt.vgProduct)?pt.vgProduct:VANGARDE_PRODUCTS[0];if(pt.frameColor===undefined)pt.frameColor=pt.frameCode?({'FR-BK':'ดำด้าน','FR-WH':'ขาว','FR-GY':'เทา','FR-BR':'น้ำตาลไม้','FR-CH':'แชมเปญ'}[pt.frameCode]||''):'';pt.fabricCode=pt.fabricCode||'';pt.detail=pt.detail||'';pt.systems=pt.systems||{};pt.accessories=pt.accessories||{};pt.install=pt.install||{};pt.track=vgHasMotor(pt)?'motor':(pt.track||'normal');}if(pt.kind==='blind'){pt.openSide=pt.openSide||'';pt.slanted=pt.slanted||false;pt.slantNote=pt.slantNote||'';}if(pt.kind==='curtain'){pt.openSide=pt.openSide||'';pt.slantNote=pt.slantNote||'';if(pt.fabricBlackout===undefined&&!pt.fabrics){const code=pt.fabricCode||'';if(code){if(isSheer(code)){pt.fabricSheer=code;pt.fabricBlackout='';}else{pt.fabricBlackout=code;pt.fabricSheer='';}}else{pt.fabricBlackout='';pt.fabricSheer='';}pt.fabricLining='';}if(!pt.fabrics){const mk=(layer,code)=>{const f=code?findFabric(code):null;return {layer,code:code||'',w:f?f.widthCm:140,price:f?f.price:0,cost:f?f.cost:0};};pt.fabrics=[mk('ทึบ',pt.fabricBlackout),mk('โปร่ง',pt.fabricSheer),mk('ซับใน',pt.fabricLining)];}pt.curtainType=(pt.curtainType&&CURTAIN_TYPES.includes(pt.curtainType))?pt.curtainType:CURTAIN_TYPES[1];pt.motorModel=pt.motorModel||pt.motor||P().motors[0].model;pt.motorSide=pt.motorSide||'ขวา';pt.mountType=pt.mountType||'ชิดฝ้า';if(pt.mountAboveCm===undefined)pt.mountAboveCm=0;if(pt.sideAllowCm===undefined)pt.sideAllowCm=2;pt.slanted=pt.slanted||false;pt.hooks=pt.hooks||'ตะขอมาตรฐาน';}}
+function newPoint(kind){const p=P();return kind==='vangarde'?{kind:'vangarde',room:'',w:0,h:0,d:0,vgExtend:150,vgGrade:'poly',detail:'',vgProduct:'',vgSeries:'',frameColor:'',fabricCode:'',systems:{},accessories:{},install:{},track:'normal',qty:1,note:'',photos:[]}:kind==='blind'?{kind:'blind',room:'',w:0,h:0,blindType:p.blinds[0].type,track:'normal',motorModel:p.motors[0].model,openSide:'',slanted:false,slantNote:'',qty:1,note:'',photos:[]}:{kind:'curtain',room:'',w:0,h:0,curtainType:CURTAIN_TYPES[0],fabrics:[{layer:'ทึบ',code:'',w:140,price:0,cost:0},{layer:'โปร่ง',code:'',w:150,price:0,cost:0},{layer:'ซับใน',code:'',w:150,price:0,cost:0}],track:'normal',hooks:'ตะขอมาตรฐาน',motorModel:p.motors[0].model,motorSide:'ขวา',openSide:'',mountType:'ชิดฝ้า',mountAboveCm:0,sideAllowCm:2,slanted:false,slantNote:'',qty:1,note:'',photos:[]};}
+function migratePoint(pt){if(typeof pt.photos==='number')pt.photos=ph(pt.photos);pt.photos=pt.photos||[];pt.note=pt.note||'';pt.qty=pt.qty||1;pt.track=pt.track||'normal';if(pt.kind==='vangarde'){pt.vgProduct=VANGARDE_PRODUCTS.includes(pt.vgProduct)?pt.vgProduct:'';if(pt.d===undefined)pt.d=0;if(pt.vgExtend===undefined)pt.vgExtend=150;if(pt.vgGrade===undefined)pt.vgGrade='poly';if(pt.frameColor===undefined)pt.frameColor=pt.frameCode?({'FR-BK':'ดำด้าน','FR-WH':'ขาว','FR-GY':'เทา','FR-BR':'น้ำตาลไม้','FR-CH':'แชมเปญ'}[pt.frameCode]||''):'';pt.fabricCode=pt.fabricCode||'';pt.detail=pt.detail||'';pt.systems=pt.systems||{};pt.accessories=pt.accessories||{};pt.install=pt.install||{};pt.track=vgHasMotor(pt)?'motor':(pt.track||'normal');}if(pt.kind==='blind'){pt.openSide=pt.openSide||'';pt.slanted=pt.slanted||false;pt.slantNote=pt.slantNote||'';}if(pt.kind==='curtain'){pt.openSide=pt.openSide||'';pt.slantNote=pt.slantNote||'';if(pt.fabricBlackout===undefined&&!pt.fabrics){const code=pt.fabricCode||'';if(code){if(isSheer(code)){pt.fabricSheer=code;pt.fabricBlackout='';}else{pt.fabricBlackout=code;pt.fabricSheer='';}}else{pt.fabricBlackout='';pt.fabricSheer='';}pt.fabricLining='';}if(!pt.fabrics){const mk=(layer,code)=>{const f=code?findFabric(code):null;return {layer,code:code||'',w:f?f.widthCm:140,price:f?f.price:0,cost:f?f.cost:0};};pt.fabrics=[mk('ทึบ',pt.fabricBlackout),mk('โปร่ง',pt.fabricSheer),mk('ซับใน',pt.fabricLining)];}pt.curtainType=(pt.curtainType&&CURTAIN_TYPES.includes(pt.curtainType))?pt.curtainType:CURTAIN_TYPES[1];pt.motorModel=pt.motorModel||pt.motor||P().motors[0].model;pt.motorSide=pt.motorSide||'ขวา';pt.mountType=pt.mountType||'ชิดฝ้า';if(pt.mountAboveCm===undefined)pt.mountAboveCm=0;if(pt.sideAllowCm===undefined)pt.sideAllowCm=2;pt.slanted=pt.slanted||false;pt.hooks=pt.hooks||'ตะขอมาตรฐาน';}}
 
 /* ============ PAYMENTS ============ */
 function payInfo(qid){
@@ -766,10 +1019,13 @@ function spark(data,color){const w=92,h=38,max=Math.max(...data),min=Math.min(..
 /* ============ NAV ============ */
 const NAV=[
  {id:'overview',label:'ภาพรวม',icon:'grid'},
+ {grp:'ค่าใช้จ่าย'},
+ {id:'expenses',label:'ค่าใช้จ่ายรายวัน',icon:'cash',count:()=>expensesVisible().filter(e=>(e.date||'')===todayISO()).length},
  {grp:'งานขาย'},
  {id:'leads',label:'Lead Intake',icon:'inbox',count:()=>scopedLeads().filter(l=>l.stage==='new').length},
  {id:'survey',label:'วัดหน้างาน',icon:'ruler',count:()=>scopedLeads().filter(l=>l.stage==='assigned').length},
  {id:'quote',label:'ใบเสนอราคา',icon:'doc',count:()=>brandLeads().map(l=>quoteOfLead(l.id)).filter(q=>q&&q.status==='pending').length},
+ {id:'vgprice',label:'ราคา VG (อ้างอิง)',icon:'box'},
  {grp:'ผลิต & จัดหา'},
  {id:'sewing',label:'คิวตัดเย็บ (VYNN)',icon:'scissors',count:()=>state.sewing.filter(s=>s.status!=='done').length},
  {id:'china',label:'สั่งจีน (Vangarde)',icon:'truck',count:()=>state.chinaLots.filter(l=>!l.closed).length},
@@ -777,17 +1033,23 @@ const NAV=[
  {id:'install',label:'ติดตั้ง',icon:'wrench',count:()=>state.installs.filter(i=>i.status==='scheduled').length},
  {id:'service',label:'งานเก็บ & ประกัน',icon:'shield',count:()=>(state.tickets||[]).filter(t=>t.status!=='resolved').length},
  {id:'finance',label:'การเงิน / งวด',icon:'cash'},
+ {grp:'ผลงานการขาย'},
+ {id:'saleshist',label:'ยอดขายสะสม (12ด.)',icon:'trend'},
  {grp:'รายงาน & ตั้งค่า'},
  {id:'forecast',label:'ยอดขาย & Forecast',icon:'trend'},
  {id:'kpi',label:'KPI Dashboard',icon:'chart'},
  {id:'stats',label:'สถิติสินค้า',icon:'box'},
  {id:'pnl',label:'กำไร-ขาดทุน',icon:'trend'},
  {id:'settings',label:'ตั้งค่าราคา',icon:'gear'},
+ {grp:'ผู้ดูแลระบบ',adminOnly:true},
+ {id:'users',label:'จัดการผู้ใช้',icon:'user',adminOnly:true},
+ {id:'audit',label:'บันทึกการใช้งาน',icon:'shield',adminOnly:true},
  {grp:'บุคคล (HR)',hrOnly:true},
  {id:'hr',label:'HR / เงินเดือน',icon:'user',hrOnly:true},
 ];
 const META={
  overview:{t:'ภาพรวมบริษัท',s:'สรุปทุกโมดูลแบบเรียลไทม์',act:true},
+ expenses:{t:'ค่าใช้จ่ายรายวัน',s:'พนักงานพิมพ์ยอด+หมวด (เช่น "ค่าน้ำมัน 500") แนบรูปบิล → บันทึกทันที เข้าฐานข้อมูลเดียวกับทั้งระบบ',act:false},
  leads:{t:'Lead Intake',s:'รับลูกค้า 4 ช่องทาง (LINE / ออกบูธ / ลูกค้าเก่า / อินทีเรีย) แล้วมอบหมายเซลล์',act:true},
  survey:{t:'Site Survey',s:'ลงพื้นที่วัดหน้างานหลายจุด บันทึกขนาด/ผ้า/อุปกรณ์/รูป',act:false},
  quote:{t:'Quotation',s:'คำนวณผ้า+อุปกรณ์อัตโนมัติจากหน้างาน → ใบเสนอราคา → ผู้จัดการอนุมัติ',act:false},
@@ -802,19 +1064,30 @@ const META={
  pnl:{t:'กำไร-ขาดทุน (P&L)',s:'ต้นทุนและกำไรสุทธิ แยกรายโปรเจค และสรุปรายเดือน (เฉพาะแอดมิน)',act:false},
  settings:{t:'ตั้งค่าราคา',s:'เรตผ้า/ราง/มอเตอร์/มู่ลี่ + ค่าความฟู/ชายผ้า/VAT (ปรับได้)',act:false},
  hr:{t:'HR / เงินเดือน',s:'พนักงาน · เงินเดือน · ขาด-ลา · เบิกล่วงหน้า · คอม/โบนัส/ประกันสังคม/ค่าเดินทาง/สวัสดิการ · วันเกิด (เฉพาะ HR)',act:false},
+ vgprice:{t:'ราคา Vangarde (VG)',s:'ราคาสินค้า VG — Pergola / Zip Shade / Awning + อุปกรณ์เสริม (เซลล์เห็นราคาปลีก · ผู้จัดการเห็นครบ 3 ระดับ)',act:false},
+ saleshist:{t:'ยอดขายสะสมย้อนหลัง 12 เดือน',s:'ยอดขายสะสมรายเดือนของเซลล์แต่ละคน (ย้อนหลัง 1 ปี)',act:false},
+ users:{t:'จัดการผู้ใช้',s:'บัญชีพนักงาน · รหัสเข้าระบบ · ตั้ง/รีเซ็ตรหัสผ่าน (เฉพาะแอดมิน)',act:false},
+ audit:{t:'บันทึกการใช้งาน (Audit Log)',s:'ใครเข้าระบบ / แก้ไขอะไร — ย้อนหลัง 30 วัน (เฉพาะแอดมิน)',act:false},
 };
 
 function renderNav(){
  const nav=document.getElementById('nav');
- const hrOK=(role==='hr'||role==='admin');
- nav.innerHTML=NAV.map(n=>{
-  if(n.grp)return (n.hrOnly&&!hrOK)?'':`<div class="group-label">${n.grp}</div>`;
-  if(n.hrOnly&&!hrOK)return ''; // HR module: HR + admin only
-  if(n.id==='settings'&&role==='sales')return ''; // sales can't see price settings
-  if(n.id==='pnl'&&role!=='admin')return ''; // P&L (cost/profit) admin-only
+ // an item is visible if the current role may open it
+ const itemVisible=n=>!n.grp&&canView(n.id);
+ let html='';
+ NAV.forEach((n,i)=>{
+  if(n.grp){
+   // show the group label only if at least one following item (until next group) is visible
+   let any=false;
+   for(let j=i+1;j<NAV.length&&!NAV[j].grp;j++){if(itemVisible(NAV[j])){any=true;break;}}
+   if(any)html+=`<div class="group-label">${n.grp}</div>`;
+   return;
+  }
+  if(!itemVisible(n))return;
   const c=n.count?n.count():0;
-  return `<button data-view="${n.id}" class="${view===n.id?'active':''}">${svg(n.icon,'ico')}<span>${n.label}</span>${c?`<span class="badge">${c}</span>`:''}</button>`;
- }).join('');
+  html+=`<button data-view="${n.id}" class="${view===n.id?'active':''}">${svg(n.icon,'ico')}<span>${n.label}</span>${c?`<span class="badge">${c}</span>`:''}</button>`;
+ });
+ nav.innerHTML=html;
  nav.querySelectorAll('button').forEach(b=>b.onclick=()=>{view=b.dataset.view;search='';document.querySelector('.sidebar').classList.remove('open');document.getElementById('scrim').classList.remove('open');render();});
 }
 
@@ -842,7 +1115,7 @@ function renderOverview(){
  const fd=funnelStages.map(s=>({s,n:L.filter(l=>l.stage!=='lost'&&rank(l.stage)>=funnelStages.indexOf(s)).length}));
  const maxF=fd[0].n||1;
  document.getElementById('content').innerHTML=`
-  ${role==='sales'?'<div class="banner-info">'+svg('user')+'มุมมอง <b>เซลล์ (ณิชา)</b> — เห็นเฉพาะลูกค้าของตัวเอง · ไม่เห็นต้นทุน/กำไร</div>':role==='sales_support'?'<div class="banner-info">'+svg('doc')+'มุมมอง <b>Sales Support</b> — ออกใบเสนอราคา · ใส่ราคาทุนสินค้า · เช็คคิวตัดเย็บ/ตารางติดตั้ง · เช็คสถานะจ่ายเงิน (เห็นต้นทุน แต่ไม่เห็นหน้ากำไร-ขาดทุน)</div>':''}
+  ${role==='sales'?'<div class="banner-info">'+svg('user')+'มุมมอง <b>เซลล์ ('+(currentUser?currentUser.short:'')+')</b> — เห็นเฉพาะลูกค้าของตัวเอง · ไม่เห็นต้นทุน/กำไร</div>':role==='sales_support'?'<div class="banner-info">'+svg('doc')+'มุมมอง <b>Sales Support</b> — ออกใบเสนอราคา · ใส่ราคาทุนสินค้า · เช็คคิวตัดเย็บ/ตารางติดตั้ง · เช็คสถานะจ่ายเงิน (เห็นต้นทุน แต่ไม่เห็นหน้ากำไร-ขาดทุน)</div>':''}
   <div class="stat-row" style="margin-bottom:16px">
    ${tiles.map(t=>`<div class="stat"><div class="tile-ico">${svg(t.ico)}</div><div class="label">${t.label}</div><div class="value">${t.value}</div><div class="delta ${t.up?'up':'down'}">${t.up?svg('trend'):''} ${t.delta}</div>${spark(t.spark,t.color)}</div>`).join('')}
   </div>
@@ -880,8 +1153,8 @@ function actionQueue(){
  L.filter(l=>l.stage==='assigned').forEach(l=>{items.push({i:'ruler',c:'warn',t:'นัดวัดหน้างาน: '+bn(l),sub:personById(l.assignedTo).short});queueActions.push(()=>openLead(l.id));});
  state.quotes.filter(q=>q.status==='pending').forEach(q=>{const l=leadById(q.leadId);if(brand!=='all'&&l.brand!==brand)return;items.push({i:'doc',c:'warn',t:'รออนุมัติใบเสนอราคา '+q.id,sub:bn(l)});queueActions.push(()=>openLead(q.leadId));});
  state.installs.filter(i=>i.status==='scheduled').forEach(i=>{const l=leadById(i.leadId);if(brand!=='all'&&l.brand!==brand)return;const pi=payInfo(i.quoteId);const unpaid2=pi&&pi.sched[1].st!=='paid';items.push({i:'wrench',c:unpaid2?'crit':'accent',t:(unpaid2?'⚠ ยังไม่เก็บงวด 2 · ':'')+'นัดติดตั้ง '+fmtDate(i.scheduled),sub:bn(l)});queueActions.push(()=>{view='install';render();});});
- (state.tickets||[]).filter(t=>t.type==='punch'&&t.status!=='resolved').forEach(t=>{const l=leadById(t.leadId);if(brand!=='all'&&l&&l.brand!==brand)return;if(role==='sales'&&l&&l.assignedTo!=='s1')return;items.unshift({i:'wrench',c:'crit',t:'⚠ งานเก็บค้าง: '+bn(l),sub:TK_ISSUE[t.issue]});queueActions.unshift(()=>{view='service';render();});});
- (state.tickets||[]).filter(t=>t.type==='warranty'&&t.status!=='resolved').forEach(t=>{const l=leadById(t.leadId);if(brand!=='all'&&l&&l.brand!==brand)return;if(role==='sales'&&l&&l.assignedTo!=='s1')return;items.push({i:'shield',c:'info',t:'เคลมประกัน: '+bn(l),sub:TK_ISSUE[t.issue]});queueActions.push(()=>{view='service';render();});});
+ (state.tickets||[]).filter(t=>t.type==='punch'&&t.status!=='resolved').forEach(t=>{const l=leadById(t.leadId);if(brand!=='all'&&l&&l.brand!==brand)return;if(myScopeId()&&l&&l.assignedTo!==myScopeId())return;items.unshift({i:'wrench',c:'crit',t:'⚠ งานเก็บค้าง: '+bn(l),sub:TK_ISSUE[t.issue]});queueActions.unshift(()=>{view='service';render();});});
+ (state.tickets||[]).filter(t=>t.type==='warranty'&&t.status!=='resolved').forEach(t=>{const l=leadById(t.leadId);if(brand!=='all'&&l&&l.brand!==brand)return;if(myScopeId()&&l&&l.assignedTo!==myScopeId())return;items.push({i:'shield',c:'info',t:'เคลมประกัน: '+bn(l),sub:TK_ISSUE[t.issue]});queueActions.push(()=>{view='service';render();});});
  if(!items.length)return '<div class="empty">✓ ไม่มีงานค้าง</div>';
  return items.slice(0,10).map((it,idx)=>`<div class="q-item" data-qi="${idx}" style="display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:8px;cursor:pointer"><span class="pill ${it.c}" style="width:28px;height:28px;padding:0;justify-content:center;border-radius:8px">${svg(it.i)}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.t}</div><div class="mini-note">${it.sub}</div></div><span style="color:var(--text-faint)">→</span></div>`).join('');
 }
@@ -1279,37 +1552,92 @@ function renderSurveyEditor(){
  const bC=ov.querySelector('#addCurtain');if(bC)bC.onclick=()=>{pts.push(newPoint('curtain'));renderSurveyEditor();};
  const bB=ov.querySelector('#addBlind');if(bB)bB.onclick=()=>{pts.push(newPoint('blind'));renderSurveyEditor();};
  const bV=ov.querySelector('#addVg');if(bV)bV.onclick=()=>{pts.push(newPoint('vangarde'));renderSurveyEditor();};
- ov.querySelectorAll('[data-f]').forEach(el=>{const i=+el.dataset.i,f=el.dataset.f;el.onchange=()=>{const v=el.type==='checkbox'?el.checked:(el.type==='number'?+el.value:el.value);pts[i][f]=v;if(f==='track'||f==='mountType'||f==='curtainType')renderSurveyEditor();};});
+ ov.querySelectorAll('[data-f]').forEach(el=>{const i=+el.dataset.i,f=el.dataset.f;el.onchange=()=>{const v=el.type==='checkbox'?el.checked:(el.type==='number'?+el.value:el.value);pts[i][f]=v;
+   // VG: auto-suggest the right series when size or product changes
+   if(pts[i].kind==='vangarde'&&(f==='w'||f==='h'||f==='d'||f==='vgProduct')&&(pts[i].vgProduct==='Pergola'||pts[i].vgProduct==='Zip Shade')){const s=vgSuggestSeries(pts[i].vgProduct,(pts[i].w||0)/100,(pts[i].d||0)/100,(pts[i].h||0)/100);if(s)pts[i].vgSeries=s;}
+   if(f==='track'||f==='mountType'||f==='curtainType'||f==='vgProduct'||f==='vgSeries'||f==='vgExtend'||f==='vgGrade'||f==='w'||f==='h'||f==='d'||f==='qty')renderSurveyEditor();};});
  ov.querySelectorAll('[data-fg]').forEach(el=>{const i=+el.dataset.i,fg=el.dataset.fg,fk=el.dataset.fk;el.onchange=()=>{pts[i][fg]=pts[i][fg]||{};pts[i][fg][fk]=el.checked;if(fg==='systems')pts[i].track=vgHasMotor(pts[i])?'motor':'normal';};});
- ov.querySelectorAll('[data-fl]').forEach(el=>{const i=+el.dataset.i,li=+el.dataset.fl,f=el.dataset.flf;el.onchange=()=>{if(pts[i].fabrics&&pts[i].fabrics[li])pts[i].fabrics[li][f]=el.type==='number'?+el.value:el.value;};});
+ ov.querySelectorAll('[data-fl]').forEach(el=>{const i=+el.dataset.i,li=+el.dataset.fl,f=el.dataset.flf;el.onchange=()=>{if(pts[i].fabrics&&pts[i].fabrics[li])pts[i].fabrics[li][f]=el.type==='number'?+el.value:el.value;if(f==='code'||f==='w'||f==='price')renderSurveyEditor();};});
+ // per-point fabric options (alt): label + curtainType
+ ov.querySelectorAll('[data-ao]').forEach(el=>{const pr=el.dataset.ao.split('-'),i=+pr[0],ai=+pr[1],f=el.dataset.aof;el.onchange=()=>{pts[i].altOpts[ai][f]=el.value;renderSurveyEditor();};});
+ // alt fabric-layer fields
+ ov.querySelectorAll('[data-aol]').forEach(el=>{const pr=el.dataset.aol.split('-'),i=+pr[0],ai=+pr[1],li=+pr[2],f=el.dataset.aolf;el.onchange=()=>{const a=pts[i].altOpts[ai];a.fabrics=a.fabrics||[{layer:'ทึบ'},{layer:'โปร่ง'}];a.fabrics[li]=a.fabrics[li]||{layer:li===0?'ทึบ':'โปร่ง'};a.fabrics[li][f]=el.type==='number'?+el.value:el.value;renderSurveyEditor();};});
+ ov.querySelectorAll('[data-aoadd]').forEach(b=>b.onclick=()=>{const i=+b.dataset.aoadd;pts[i].altOpts=pts[i].altOpts||[];const base=(pts[i].fabrics||[]).slice(0,2).map(f=>({layer:f.layer,code:f.code,w:f.w,price:f.price}));while(base.length<2)base.push({layer:base.length===0?'ทึบ':'โปร่ง'});pts[i].altOpts.push({label:String.fromCharCode(66+pts[i].altOpts.length)+' · ทางเลือก',curtainType:'',fabrics:base});renderSurveyEditor();});
+ ov.querySelectorAll('[data-aorm]').forEach(b=>b.onclick=()=>{const pr=b.dataset.aorm.split('-'),i=+pr[0],ai=+pr[1];pts[i].altOpts.splice(ai,1);renderSurveyEditor();});
  ov.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{pts.splice(+b.dataset.rm,1);if(!pts.length)pts.push(newPoint(l.brand==='Vangarde'?'vangarde':'curtain'));renderSurveyEditor();});
  ov.querySelectorAll('[data-photo]').forEach(inp=>inp.onchange=e=>{const i=+inp.dataset.photo;const files=[...e.target.files];if(!files.length)return;Promise.all(files.map(f=>new Promise(res=>{const rd=new FileReader();rd.onload=()=>res({name:f.name,url:rd.result});rd.onerror=()=>res({name:f.name,url:''});rd.readAsDataURL(f);}))).then(imgs=>{pts[i].photos.push(...imgs);const tc=ov.querySelector('#ptThumbs-'+i);if(tc)tc.innerHTML=pts[i].photos.map(x=>photoThumb(x,44)).join('');});});
 }
+// price one alternative fabric/type option of a curtain point (for per-point comparison)
+function altCalc(pt,alt){
+ const c=JSON.parse(JSON.stringify(pt)); c.altOpts=[];
+ if(alt.curtainType)c.curtainType=alt.curtainType;
+ if(alt.fabrics&&alt.fabrics.length)c.fabrics=alt.fabrics;
+ return calcPoint(c);
+}
+// editor section: per-point fabric options (ถูก/กลาง/แพง หรือม่านคนละชนิดที่จุดเดียวกัน)
+function curtainAltSection(pt,i){
+ const alts=pt.altOpts||[]; const primary=calcPoint(pt);
+ const rows=alts.map((a,ai)=>{
+  const ac=altCalc(pt,a);
+  const fabs=(a.fabrics&&a.fabrics.length)?a.fabrics:[{layer:'ทึบ'},{layer:'โปร่ง'}];
+  return `<div style="border:1px dashed var(--border);border-radius:8px;padding:10px;margin-bottom:8px">
+   <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+    <input data-ao="${i}-${ai}" data-aof="label" value="${a.label||''}" placeholder="ชื่อออปชั่น เช่น B · ประหยัด" style="flex:1;font-weight:600;padding:6px 8px">
+    <span class="pill accent" style="white-space:nowrap">${THB(ac.sell)}</span>
+    <button class="btn sm" data-aorm="${i}-${ai}">ลบ</button>
+   </div>
+   <div class="pt-grid">
+    <div class="field col2"><label>ชนิดม่าน (เว้น = เหมือนหลัก)</label><select data-ao="${i}-${ai}" data-aof="curtainType"><option value="">— เหมือนหลัก (${pt.curtainType}) —</option>${CURTAIN_TYPES.map(t=>`<option value="${t}" ${a.curtainType===t?'selected':''}>${t}</option>`).join('')}</select></div>
+    ${fabs.map((fl,li)=>`<div class="field"><label>${fl.layer||(li===0?'ทึบ':'โปร่ง')} · รหัส</label><input data-aol="${i}-${ai}-${li}" data-aolf="code" value="${fl.code||''}" list="fabCodes"></div><div class="field"><label>หน้าผ้า</label><input type="number" data-aol="${i}-${ai}-${li}" data-aolf="w" value="${fl.w||0}"></div><div class="field"><label>ราคา/ม.</label><input type="number" data-aol="${i}-${ai}-${li}" data-aolf="price" value="${fl.price||0}"></div>`).join('')}
+   </div></div>`;
+ }).join('');
+ return `<div class="pt-sec">🎨 ตัวเลือกผ้าเทียบราคา (เสนอลูกค้าหลายเรทในใบเดียว)</div>
+  <div class="field col4">
+   <div class="mini-note" style="margin-bottom:6px">ตัวเลือกหลัก (A): <b>${pt.curtainType}</b> · <b>${THB(primary.sell)}</b> — เพิ่มตัวเลือกอื่นเพื่อให้ลูกค้าเทียบราคา/ชนิดม่านที่จุดนี้</div>
+   ${rows}
+   <button class="btn sm" data-aoadd="${i}">＋ เพิ่มตัวเลือกผ้า</button>
+  </div>`;
+}
 function ptCard(pt,i,fabOpt,sel){
  const p=P();const est=calcPoint(pt);
- const head=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>จุดที่ ${i+1} · ${pt.kind==='curtain'?'ผ้าม่าน':'มู่ลี่/ม่านม้วน'}</b><button class="btn sm" data-rm="${i}">ลบจุด</button></div>`;
+ const kindLabel=pt.kind==='curtain'?'ผ้าม่าน':pt.kind==='vangarde'?('จุดติดตั้ง'+(pt.vgProduct?' · '+pt.vgProduct:'')):'มู่ลี่/ม่านม้วน';
+ const head=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>จุดที่ ${i+1} · ${kindLabel}</b><button class="btn sm" data-rm="${i}">ลบจุด</button></div>`;
  const photoField=`<div class="field col4"><label>รูปภาพหน้างานจุดนี้</label><input type="file" accept="image/*" multiple data-photo="${i}"><div id="ptThumbs-${i}" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${(pt.photos||[]).map(x=>photoThumb(x,44)).join('')}</div></div>`;
  if(pt.kind==='vangarde'){
-  const cbGroup=(fg,list,obj)=>list.map(([k,label])=>`<label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 6px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="${fg}" data-fk="${k}" ${obj&&obj[k]?'checked':''}> ${label}</label>`).join('');
+  const cfg=vgCfg(pt.vgProduct);
+  // filtered checkbox group: only options allowed for this product
+  const cbGroup=(fg,fullList,obj,allow)=>fullList.filter(([k])=>allow.includes(k)).map(([k,label])=>`<label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 6px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="${fg}" data-fk="${k}" ${obj&&obj[k]?'checked':''}> ${label}</label>`).join('')||'<span class="mini-note">— ไม่มีตัวเลือกสำหรับสินค้านี้ —</span>';
+  const vgp=state.vgPricing||defaultVgPricing();
+  const dimFields=cfg.dims.map(([k,lb])=>`<div class="field"><label>${lb} (cm)</label><input type="number" data-i="${i}" data-f="${k}" value="${pt[k]||''}"></div>`).join('');
+  const prodSelect=`<div class="field col2"><label>สินค้า (Product)</label><select data-i="${i}" data-f="vgProduct"><option value="" ${!pt.vgProduct?'selected':''}>— เลือกสินค้า (Product) —</option>${VANGARDE_PRODUCTS.map(v=>`<option value="${v}" ${pt.vgProduct===v?'selected':''}>${v}</option>`).join('')}</select></div>`;
+  if(!pt.vgProduct){ // force sales to pick product first
+   return `<div class="pt-card">${head}<div class="pt-grid">
+    <div class="field col2"><label>ตำแหน่ง</label><input data-i="${i}" data-f="room" value="${pt.room||''}" placeholder="เช่น โรงจอดรถ"></div>
+    ${prodSelect}
+    <div class="field col4"><div class="banner-info">${svg('box')} กรุณาเลือกสินค้าก่อน — ช่องกรอกขนาด/รุ่น/ออปชั่น จะขึ้นให้ตรงกับสินค้าที่เลือก</div></div>
+   </div></div>`;
+  }
+  const frameSel=`<div class="field"><label>สีเฟรม</label><select data-i="${i}" data-f="frameColor"><option value="">— เลือกสีเฟรม —</option>${VG_FRAME_COLORS.map(c=>`<option value="${c}" ${pt.frameColor===c?'selected':''}>${c}</option>`).join('')}</select></div>`;
+  const fabSel=`<div class="field"><label>รหัสผ้า (แคตตาล็อก)</label><select data-i="${i}" data-f="fabricCode"><option value="">— เลือกรหัสผ้า —</option>${VG_FABRIC_CODES.map(c=>`<option value="${c}" ${pt.fabricCode===c?'selected':''}>${c}</option>`).join('')}</select></div>`;
   return `<div class="pt-card">${head}<div class="pt-grid">
    <div class="field col2"><label>ตำแหน่ง</label><input data-i="${i}" data-f="room" value="${pt.room||''}" placeholder="เช่น โรงจอดรถ"></div>
-   <div class="field"><label>กว้าง (cm)</label><input type="number" data-i="${i}" data-f="w" value="${pt.w}"></div>
-   <div class="field"><label>สูง/ลึก (cm)</label><input type="number" data-i="${i}" data-f="h" value="${pt.h}"></div>
-   <div class="field col2"><label>รายละเอียดเพิ่มเติม</label><input data-i="${i}" data-f="detail" value="${pt.detail||''}" placeholder="เช่น ขวา10 cm / ติดซ้าย10 ขวา10"></div>
-   <div class="field"><label>สีเฟรม</label><input data-i="${i}" data-f="frameColor" value="${pt.frameColor||''}" placeholder="light grey" list="frameSuggest"></div>
-   <div class="field"><label>ผ้า (รหัส)</label><input data-i="${i}" data-f="fabricCode" value="${pt.fabricCode||''}" placeholder="g3004/25bc-1%"></div>
-   <div class="pt-sec">Products</div>
-   <div class="field col4"><div style="display:flex;flex-wrap:wrap">${VANGARDE_PRODUCTS.map(v=>`<label style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;margin:0 14px 6px 0"><input type="radio" name="vgprod-${i}" data-i="${i}" data-f="vgProduct" value="${v}" ${pt.vgProduct===v?'checked':''}> ${v}</label>`).join('')}</div></div>
+   ${prodSelect}
+   ${dimFields}
    <div class="field"><label>จำนวน (จุด)</label><input type="number" data-i="${i}" data-f="qty" value="${pt.qty}"></div>
+   ${(pt.vgProduct==='Pergola'||pt.vgProduct==='Zip Shade')?`<div class="field col2"><label>รุ่น <span class="mini-note">(แนะนำอัตโนมัติจากขนาด)</span></label><select data-i="${i}" data-f="vgSeries">${(pt.vgProduct==='Pergola'?vgp.pergola:vgp.zipshade).map(r=>`<option value="${r.series}" ${pt.vgSeries===r.series?'selected':''}>${r.series} — ${THB(r.msrp)}/ตร.ม. (ขั้นต่ำ ${r.moq})</option>`).join('')}</select></div>`:''}
+   ${pt.vgProduct==='Awning'?`<div class="field"><label>เกรดผ้า</label><select data-i="${i}" data-f="vgGrade"><option value="poly" ${pt.vgGrade!=='acr'?'selected':''}>Polyester (จีน)</option><option value="acr" ${pt.vgGrade==='acr'?'selected':''}>Acrylic (สเปน)</option></select></div>`:''}
+   <div class="field col2"><label>รายละเอียดเพิ่มเติม</label><input data-i="${i}" data-f="detail" value="${pt.detail||''}" placeholder="เช่น ขวา10 cm / ติดซ้าย10 ขวา10"></div>
+   ${frameSel}
+   ${fabSel}
    <div class="pt-sec">Systems (ระบบ + มอเตอร์)</div>
-   <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('systems',VG_SYSTEMS,pt.systems)}</div></div>
+   <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('systems',VG_SYSTEMS,pt.systems,cfg.systems)}</div></div>
    <div class="pt-sec">Accessories</div>
-   <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('accessories',VG_ACCESSORIES,pt.accessories)}</div></div>
+   <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('accessories',VG_ACCESSORIES,pt.accessories,cfg.accessories)}</div></div>
    <div class="pt-sec">การติดตั้ง</div>
-   <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('install',VG_INSTALL,pt.install)}</div></div>
+   <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('install',VG_INSTALL,pt.install,cfg.install)}</div></div>
    <div class="field col4"><label>หมายเหตุ</label><input data-i="${i}" data-f="note" value="${pt.note||''}"></div>
    ${photoField}
-  </div><div class="mini-note" style="margin-top:8px">📐 ${est.area||0} ตร.ม. · ${pt.vgProduct} · เฟรม ${pt.frameColor||'-'} · ผ้า ${pt.fabricCode||'-'}${vgHasMotor(pt)?' · มอเตอร์':''} · ราคาประเมิน ${THB(est.sell)}</div></div>`;
+  </div><div class="mini-note" style="margin-top:8px">📐 ${est.area||0} ตร.ม. · <b>${est.vgUnit||pt.vgProduct}</b> · เฟรม ${pt.frameColor||'-'} · ผ้า ${pt.fabricCode||'-'}${vgHasMotor(pt)?' · มอเตอร์':''} · ราคาประเมิน <b>${THB(est.sell)}</b></div></div>`;
  }
  if(pt.kind==='blind'){
   return `<div class="pt-card">${head}<div class="pt-grid">
@@ -1335,8 +1663,9 @@ function ptCard(pt,i,fabOpt,sel){
    <div class="field"><label>ฝั่งเปิด/รวบผ้า</label><select data-i="${i}" data-f="openSide"><option value="">— เลือก —</option>${OPEN_SIDES.map(o=>`<option value="${o}" ${pt.openSide===o?'selected':''}>${o}</option>`).join('')}</select></div>
    <div class="field col2"><label>ผ้าเอียง?</label><div style="display:flex;align-items:center;gap:8px"><label style="display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap"><input type="checkbox" data-i="${i}" data-f="slanted" ${pt.slanted?'checked':''}> เอียง</label><input data-i="${i}" data-f="slantNote" value="${pt.slantNote||''}" placeholder="โน้ต เช่น เอียงซ้าย 5° / เพดานลาด" style="flex:1"></div></div>
    <div class="pt-sec">ผ้า (พิมพ์รหัส + หน้าผ้า · เว้นว่างชั้นที่ไม่ใช้)</div>
-   ${(pt.fabrics||[]).map((fl,li)=>`<div class="field"><label>${fl.layer} · รหัสผ้า</label><input data-i="${i}" data-fl="${li}" data-flf="code" value="${fl.code||''}" list="fabCodes" placeholder="${li===0?'เช่น BK-280':li===1?'เช่น SH-300':'เช่น LN-150'}"></div><div class="field"><label>หน้าผ้า (cm)</label><input type="number" data-i="${i}" data-fl="${li}" data-flf="w" value="${fl.w||0}"></div><div class="field"><label>ราคา/ม.</label><input type="number" data-i="${i}" data-fl="${li}" data-flf="price" value="${fl.price||0}"></div>${canSeeCost()?`<div class="field"><label>ต้นทุน/ม.</label><input type="number" data-i="${i}" data-fl="${li}" data-flf="cost" value="${fl.cost||0}"></div>`:'<div class="field"><label>&nbsp;</label><div class="cost-hidden">—</div></div>'}`).join('')}
+   ${(pt.fabrics||[]).map((fl,li)=>`<div class="field"><label>${fl.layer} · รหัสผ้า</label><input data-i="${i}" data-fl="${li}" data-flf="code" value="${fl.code||''}" list="fabCodes" placeholder="${li===0?'เช่น BK-280':li===1?'เช่น SH-300':'เช่น LN-150'}"></div><div class="field"><label>หน้าผ้า (cm)</label><input type="number" data-i="${i}" data-fl="${li}" data-flf="w" value="${fl.w||0}"></div><div class="field"><label>ราคา/ม.</label><input type="number" data-i="${i}" data-fl="${li}" data-flf="price" value="${fl.price||0}"></div>`).join('')}
    <div class="field col2"><label>ตะขอเกี่ยวม่าน</label><input data-i="${i}" data-f="hooks" value="${pt.hooks||''}"></div>
+   ${curtainAltSection(pt,i)}
    <div class="pt-sec">อุปกรณ์ราง / มอเตอร์</div>
    <div class="field"><label>รางม่าน</label><select data-i="${i}" data-f="track"><option value="normal" ${pt.track==='normal'?'selected':''}>รางธรรมดา</option><option value="motor" ${pt.track==='motor'?'selected':''}>รางมอเตอร์</option></select></div>
    ${pt.track==='motor'?`<div class="field"><label>รุ่นมอเตอร์</label><select data-i="${i}" data-f="motorModel">${p.motors.map(m=>`<option ${pt.motorModel===m.model?'selected':''}>${m.model}</option>`).join('')}</select></div><div class="field"><label>ฝั่งที่ใส่มอเตอร์</label><select data-i="${i}" data-f="motorSide">${sel(MOTOR_SIDES,pt.motorSide)}</select></div>`:''}
@@ -1354,6 +1683,7 @@ function saveEdit(){
   if(sv){sv.points=editState.points;sv.date='2026-07-12';}
   else{state.surveys.push({id:'SV-'+(state.seq.SV++),leadId:editState.leadId,date:'2026-07-12',by:lead.assignedTo||'s1',points:editState.points});}
   if(lead.stage==='assigned')lead.stage='surveyed';
+  logAudit('survey','บันทึกวัดหน้างาน — '+lead.name+' ('+editState.points.length+' จุด)');
   save();closeEditor();render();openLead(editState.leadId);
  } else {
   const q=quoteById(editState.quoteId);if(!q)return;
@@ -1374,7 +1704,7 @@ function bahtText(amount){
  let text=readInt(num[0])+'บาท';text+=(num[1]==='00')?'ถ้วน':chunk(num[1])+'สตางค์';return text;
 }
 function docCompany(brand){return (state.company&&state.company[brand])||defaultCompany()[brand];}
-function docCo(l,q){const b=docCompany(l.brand);const a=accountOf(q);return {logo:b.logo,brand:b.brand,phone:b.phone,web:b.web,name:(a&&a.legalName)||b.name,addr:(a&&a.addr)||b.addr,taxId:a?(a.taxId||''):b.taxId,bank:(a&&a.bank)||b.bank,vat:!(a&&a.vat===false),acctLabel:a?a.label:''};}
+function docCo(l,q){const b=docCompany(l.brand);const a=accountOf(q);return {logo:b.logo,brand:b.brand,phone:b.phone,web:b.web,name:(a&&a.legalName)||b.name,addr:(a&&a.addr)||b.addr,taxId:a?(a.taxId||''):b.taxId,bank:(a&&a.bank)||b.bank,vat:!(a&&a.vat===false),acctLabel:a?a.label:'',qr:(a&&a.qr)||''};}
 function docHead(co,title,en,no,date){return `<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #333;padding-bottom:14px"><div>${co.logo?`<img src="${co.logo}" style="max-height:56px;max-width:240px;object-fit:contain;margin-bottom:6px;display:block">`:`<div style="font-size:18px;font-weight:800;color:#111">${co.brand}</div>`}<div style="font-weight:600">${co.name}</div><div style="font-size:11.5px;color:#555;margin-top:3px;max-width:330px">${co.addr}</div><div style="font-size:11.5px;color:#555">โทร ${co.phone}${co.taxId?' · เลขประจำตัวผู้เสียภาษี '+co.taxId:''}</div></div><div style="text-align:right"><h1>${title}</h1><div style="font-size:11px;color:#888">${en}</div><div style="margin-top:8px;font-size:12px">เลขที่ <b>${no}</b></div><div style="font-size:12px">วันที่ ${date}</div></div></div>`;}
 function docCustomer(l,rl,rv){return `<div style="display:flex;justify-content:space-between;margin:14px 0;font-size:12.5px"><div><div style="color:#888;font-size:11px">ลูกค้า</div><div style="font-weight:600">${l.name}</div><div style="color:#555">${l.site}</div><div style="color:#555">โทร ${l.phone}</div></div><div style="text-align:right"><div style="color:#888;font-size:11px">${rl||''}</div><div>${rv||''}</div></div></div>`;}
 function docLines(cc){return `<table><thead><tr><th style="width:32px">#</th><th>รายการ</th><th class="doc-num" style="width:52px">จำนวน</th><th class="doc-num" style="width:86px">หน่วยละ</th><th class="doc-num" style="width:94px">จำนวนเงิน</th></tr></thead><tbody>${cc.lines.map((ln,i)=>`<tr><td>${i+1}</td><td>${ln.room} · ${ln.desc}</td><td class="doc-num">${ln.qty}</td><td class="doc-num">${money(ln.sell/ln.qty)}</td><td class="doc-num">${money(ln.sell)}</td></tr>`).join('')}</tbody></table>`;}
@@ -1383,7 +1713,7 @@ function docSign(a,b){return `<div style="display:flex;justify-content:space-bet
 function docQuotation(q,l,co,cc){return docHead(co,'ใบเสนอราคา','QUOTATION',q.id,fmtDate(q.date))+docCustomer(l,'พนักงานขาย',personById(l.assignedTo).name)+docLines(cc)+`<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start"><div style="flex:1;font-size:11px;color:#555;padding-top:6px">* ยืนยันราคาภายใน 30 วัน<br>* มัดจำ 50% เมื่อยืนยันสั่งผลิต · 30% ก่อนติดตั้ง · 20% เมื่อจบงาน<br>* จำนวนเงินเป็นตัวอักษร: <b>(${bahtText(cc.total)})</b></div>${docTotals(cc)}</div>`+docSign('ผู้เสนอราคา / '+co.brand,'ผู้อนุมัติสั่งซื้อ / ลูกค้า');}
 function docInvoice(q,l,co,cc){const pi=payInfo(q.id);return docHead(co,'ใบกำกับภาษี / ใบเสร็จรับเงิน','TAX INVOICE / RECEIPT','INV-'+q.id.replace('QT-',''),fmtDate(q.date))+docCustomer(l,'ประเภทงาน',l.brand+' · '+(l.source==='interior'?'ผ่านอินทีเรีย':'ขายตรง'))+docLines(cc)+`<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start"><div style="flex:1;font-size:11.5px;border:1px solid #cfcfcf;padding:9px 11px;border-radius:4px"><div style="color:#888;font-size:11px">จำนวนเงินเป็นตัวอักษร</div><div style="font-weight:700">(${bahtText(cc.total)})</div><div style="color:#888;font-size:11px;margin-top:8px">การชำระเงิน 3 งวด</div>${pi.sched.map(s=>`<div style="display:flex;justify-content:space-between"><span>งวด ${s.n} (${s.pct}%)</span><span>${money(pi.total*s.pct/100)} · ${s.st==='paid'?'จ่ายแล้ว '+fmtDate(s.d):'ค้างชำระ'}</span></div>`).join('')}</div>${docTotals(cc)}</div>`+docSign('ผู้รับเงิน / '+co.brand,'ผู้รับสินค้า / ลูกค้า')+`<div style="margin-top:12px;font-size:10.5px;color:#999;text-align:center">${co.bank?'ชำระผ่าน '+co.bank+' · ':''}เอกสารตัวอย่างจากระบบ VYNN·OS</div>`;}
 function docDelivery(q,l,co,cc){const sv=surveyById(q.surveyId);const ins=state.installs.find(i=>i.quoteId===q.id);return docHead(co,'ใบส่งมอบงาน','DELIVERY / HANDOVER NOTE','DN-'+q.id.replace('QT-',''),ins?fmtDate(ins.scheduled):fmtDate('2026-07-11'))+docCustomer(l,'ทีมติดตั้ง',ins?ins.team:'—')+`<table><thead><tr><th style="width:32px">#</th><th>ห้อง / จุดติดตั้ง</th><th>รายการที่ส่งมอบ</th><th class="doc-num" style="width:66px">จำนวน</th></tr></thead><tbody>${sv?sv.points.map((p,i)=>`<tr><td>${i+1}</td><td>${p.room}</td><td>${p.kind==='curtain'?p.curtainType+' · '+([p.fabricBlackout,p.fabricSheer,p.fabricLining].filter(Boolean).map(cd=>(findFabric(cd)||{}).name||cd).join(' + '))+(p.track==='motor'?' + รางมอเตอร์ '+p.motorModel:' + รางธรรมดา'):p.blindType+(p.track==='motor'?' + มอเตอร์':'')}</td><td class="doc-num">${p.qty}</td></tr>`).join(''):'<tr><td colspan="4">—</td></tr>'}</tbody></table><div style="border:1px solid #cfcfcf;border-radius:4px;padding:9px 12px;font-size:12px;background:#f6faf9"><b>การรับประกัน:</b> รับประกันงานติดตั้ง 1 ปี${ins&&ins.warrantyUntil?' (ถึงวันที่ '+fmtDate(ins.warrantyUntil)+')':''} — ครอบคลุมความเสียหายจากการติดตั้งและอุปกรณ์ตามเงื่อนไข</div><div style="margin-top:10px;font-size:12px;color:#555">ข้าพเจ้าได้รับมอบและตรวจรับงานเรียบร้อยแล้วตามรายการข้างต้น</div>`+docSign('ผู้ส่งมอบงาน / '+co.brand,'ผู้รับมอบงาน / ลูกค้า');}
-function docButtons(q,l){const isV=accIsVat(q);return `<div><div class="section-title">เอกสาร (พิมพ์ได้)</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-doc="quotation" data-q="${q.id}">${svg('doc','ico')} ใบเสนอราคา</button>${['approved','accepted'].includes(q.status)?`<button class="btn sm" data-doc="taxinvoice" data-q="${q.id}">${svg('print','ico')} ${isV?'ใบกำกับภาษี/ใบเสร็จ':'ใบเสร็จรับเงิน'}</button>`:''}${['won','production','installing','done'].includes(l.stage)?`<button class="btn sm" data-doc="delivery" data-q="${q.id}">${svg('doc','ico')} ใบส่งมอบงาน</button>`:''}</div></div>`;}
+function docButtons(q,l){const isV=accIsVat(q);const dealt=['approved','accepted'].includes(q.status)||['won','production','installing','done'].includes(l.stage);return `<div><div class="section-title">เอกสาร (พิมพ์ได้)</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-doc="quotation" data-q="${q.id}">${svg('doc','ico')} ใบเสนอราคา</button>${dealt?`<button class="btn sm" data-doc="billing" data-q="${q.id}">${svg('cash','ico')} ใบแจ้งหนี้ (แบ่งงวด)</button>`:''}${['approved','accepted'].includes(q.status)?`<button class="btn sm" data-doc="taxinvoice" data-q="${q.id}">${svg('print','ico')} ${isV?'ใบกำกับภาษี/ใบเสร็จ':'ใบเสร็จรับเงิน'}</button>`:''}${['won','production','installing','done'].includes(l.stage)?`<button class="btn sm" data-doc="delivery" data-q="${q.id}">${svg('doc','ico')} ใบส่งมอบงาน</button>`:''}</div></div>`;}
 /* --- standard bilingual (TH/EN) document layout (overrides simple versions above) --- */
 function docLetterhead(co,titleTh,titleEn,subRight){const isVg=co.brand==='Vangarde';const bc=isVg?'var(--brand-vangarde)':'var(--brand-vynn)';const bcs=isVg?'var(--brand-vangarde-soft)':'var(--brand-vynn-soft)';return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div style="max-width:60%"><div style="font-size:15px;font-weight:800;color:${bc};letter-spacing:.2px">${co.name}</div><div style="font-size:10px;color:#555;margin-top:3px">${co.addr}</div><div style="font-size:10px;color:#555;margin-top:1px">${co.taxId?'TID: '+co.taxId:''}${co.web?'&nbsp;&nbsp; '+co.web:''}${co.phone?'&nbsp;&nbsp; Tel: '+co.phone:''}</div></div>${co.logo?`<img src="${co.logo}" style="max-height:46px;max-width:160px;object-fit:contain">`:`<div style="font-size:18px;font-weight:800;color:${bc}">${co.brand}</div>`}</div><div style="margin-top:8px;background:${bcs};border-top:2px solid ${bc};border-bottom:2px solid ${bc};text-align:center;padding:4px 0;font-size:13px;font-weight:700;color:${bc}">${titleEn} / ${titleTh} · ${co.brand}</div>`;}
 function boxRow(th,en,val){return `<tr><td style="border:none;padding:2px 6px 2px 0;width:46%;vertical-align:top"><span style="font-weight:600;font-size:10.5px">${th}</span> <span style="font-size:8px;color:#999">${en}</span></td><td style="border:none;padding:2px 0;font-size:11px;vertical-align:top;color:#222">${val}</td></tr>`;}
@@ -1392,14 +1722,26 @@ function th2(th,en,style){return `<th style="${style||''}"><div style="font-size
 function skuOf(pt){if(!pt)return '-';if(pt.kind==='curtain'){const f=(pt.fabrics||[]).find(x=>x.code);return f?f.code:'-';}if(pt.kind==='vangarde')return pt.fabricCode||'-';return pt.blindType||'-';}
 function docItems(cc,sv,withImg){const img=pt=>{const p=pt&&(pt.photos||[]).find(x=>x&&x.url);return p?`<img src="${p.url}" style="width:28px;height:28px;object-fit:cover;border-radius:3px">`:`<div style="width:28px;height:28px;border:1px solid #ddd;border-radius:3px;margin:0 auto"></div>`;};return `<table><thead><tr>${th2('รหัส','SKU','width:66px')}${withImg?th2('รูป','Image','width:38px;text-align:center'):''}${th2('รายการสินค้า','Products Item','')}${th2('จำนวน','Qty','width:40px;text-align:right')}${th2('หน่วย','Unit','width:36px')}${th2('ราคา','Unit Price','width:64px;text-align:right')}${th2('ส่วนลด','Discount','width:50px;text-align:right')}${th2('มูลค่าก่อนภาษี','Pre-Tax Amount','width:80px;text-align:right')}</tr></thead><tbody>${cc.lines.map((ln,i)=>`<tr><td style="font-size:9.5px">${skuOf(ln.pt)}</td>${withImg?`<td style="text-align:center">${img(ln.pt)}</td>`:''}<td>${ln.room} · ${ln.desc}</td><td class="doc-num">${ln.qty}</td><td>${ln.c.kind==='curtain'?'ชุด':'จุด'}</td><td class="doc-num">${money(ln.product/ln.qty)}</td><td class="doc-num">0.00</td><td class="doc-num">${money(ln.product)}</td></tr>`).join('')}</tbody></table>`;}
 function docSummary(cc){const productsSum=cc.sub-cc.service;const row=(th,en,val,bold)=>`<div style="display:flex;justify-content:space-between;padding:5px 10px;border-top:1px solid #e2e2e2;${bold?'background:#2c2c2c;color:#fff;font-weight:800':''}"><span>${th} <span style="color:${bold?'#ccc':'#999'};font-size:.8em">/ ${en}</span></span><span class="doc-num">${val}</span></div>`;return `<div style="display:flex;gap:12px;margin-top:10px"><div style="flex:1;border:1px solid #ddd;border-radius:3px;padding:8px 10px;font-size:11px"><div style="color:#888">หมายเหตุ <span style="font-size:.8em">/ Remarks</span></div><div style="min-height:28px"></div><div style="border-top:1px dashed #ccc;padding-top:6px">จำนวนเงินตัวอักษร: <b>(${bahtText(cc.total)})</b></div></div><div style="width:46%;border:1px solid #ddd;border-radius:3px;font-size:11.5px;overflow:hidden">${row('รวมทั้งสิ้น','Sub Total',money(productsSum))}${row('ส่วนลด','Discount',money(cc.discount))}${row('ค่าติดตั้ง/บริการ','Service',money(cc.service))}${cc.vatRate?row('รวมเงินก่อนภาษี','Pre-VAT Amount',money(cc.netBeforeVat))+row('ภาษีมูลค่าเพิ่ม '+cc.vatRate+'%','VAT '+cc.vatRate+'%',money(cc.vat)):''}${row('จำนวนเงินรวมทั้งสิ้น','Grand Total',money(cc.total),true)}</div></div>`;}
-function docItemsVYNN(cc){const m=v=>v?money(v):'-';return `<table class="vynn-items" style="font-size:9px;margin-top:8px"><thead><tr style="background:#f3f3f3">${th2('ตำแหน่ง','Area','')}${th2('ประเภท','Product','')}${th2('รายละเอียด','Details','')}${th2('รหัส 1','Code #1','width:52px')}${th2('รหัส 2','Code #2','width:52px')}${th2('กว้าง','W(m)','width:40px;text-align:right')}${th2('สูง','H(m)','width:40px;text-align:right')}${th2('จน.','Qty','width:28px;text-align:right')}${th2('ผ้าทึบ/ม้วน/มู่ลี่/วอลล์','CU,RB,WB,WPP','width:62px;text-align:right')}${th2('ผ้าโปร่ง','Sheer','width:56px;text-align:right')}${th2('ราง/มอเตอร์/อุปกรณ์','Track,Motor,Acc','width:62px;text-align:right')}${th2('จำนวนเงิน','Amount (THB)','width:66px;text-align:right')}</tr></thead><tbody>${cc.lines.map(ln=>{const pt=ln.pt,c=ln.c;const prod=pt.prodLabel||(pt.kind==='curtain'?pt.curtainType:pt.kind==='vangarde'?pt.vgProduct:pt.blindType);const det=pt.detail!=null?pt.detail:(pt.kind==='curtain'?(pt.track==='motor'?'ระบบมอเตอร์ '+pt.motorModel:''):pt.kind==='vangarde'?('เฟรม '+(pt.frameColor||'-')):(pt.note||''));return `<tr><td>${pt.room}</td><td>${prod}</td><td style="font-size:8.5px;color:#555">${det||''}</td><td class="mono" style="font-size:8.5px">${c.code1||'-'}</td><td class="mono" style="font-size:8.5px">${c.code2||'-'}</td><td class="doc-num">${(pt.w/100).toFixed(3)}</td><td class="doc-num">${(pt.h/100).toFixed(3)}</td><td class="doc-num">${pt.qty}</td><td class="doc-num">${m(c.sellOpaque)}</td><td class="doc-num">${m(c.sellSheer)}</td><td class="doc-num">${m(c.sellTrack)}</td><td class="doc-num" style="font-weight:600">${money(ln.product)}</td></tr>`;}).join('')}${cc.service?`<tr><td></td><td colspan="7" style="color:#555">ค่าบริการติดตั้ง & ตัดเย็บ <span style="font-size:.85em;color:#999">/ Installation & Tailoring Service</span></td><td class="doc-num">-</td><td class="doc-num">-</td><td class="doc-num">-</td><td class="doc-num" style="font-weight:600">${money(cc.service)}</td></tr>`:''}</tbody></table>`;}
+// comparison sub-rows for a curtain point's alternative fabric/type options (Phase 2)
+function vynnAltRows(pt){if(pt.kind!=='curtain'||!(pt.altOpts&&pt.altOpts.length))return '';const m=v=>v?money(v):'-';return pt.altOpts.map((a,ai)=>{const ac=altCalc(pt,a);const prod=(ac.sellOpaque||0)+(ac.sellSheer||0)+(ac.sellTrack||0);return `<tr style="background:#faf7f0;color:#555"><td></td><td colspan="2" style="font-style:italic;font-size:8.5px">↳ ทางเลือก ${a.label||('#'+(ai+2))}${a.curtainType?' · '+a.curtainType:''}</td><td class="mono" style="font-size:8.5px">${ac.code1||'-'}</td><td class="mono" style="font-size:8.5px">${ac.code2||'-'}</td><td class="doc-num"></td><td class="doc-num"></td><td class="doc-num"></td><td class="doc-num">${m(ac.sellOpaque)}</td><td class="doc-num">${m(ac.sellSheer)}</td><td class="doc-num">${m(ac.sellTrack)}</td><td class="doc-num" style="font-weight:600;font-style:italic">${money(prod)}</td></tr>`;}).join('');}
+function docItemsVYNN(cc){const m=v=>v?money(v):'-';const anyAlt=cc.lines.some(ln=>ln.pt&&ln.pt.kind==='curtain'&&ln.pt.altOpts&&ln.pt.altOpts.length);return `<table class="vynn-items" style="font-size:9px;margin-top:8px"><thead><tr style="background:#f3f3f3">${th2('ตำแหน่ง','Area','')}${th2('ประเภท','Product','')}${th2('รายละเอียด','Details','')}${th2('รหัส 1','Code #1','width:52px')}${th2('รหัส 2','Code #2','width:52px')}${th2('กว้าง','W(m)','width:40px;text-align:right')}${th2('สูง','H(m)','width:40px;text-align:right')}${th2('จน.','Qty','width:28px;text-align:right')}${th2('ผ้าทึบ/ม้วน/มู่ลี่/วอลล์','CU,RB,WB,WPP','width:62px;text-align:right')}${th2('ผ้าโปร่ง','Sheer','width:56px;text-align:right')}${th2('ราง/มอเตอร์/อุปกรณ์','Track,Motor,Acc','width:62px;text-align:right')}${th2('จำนวนเงิน','Amount (THB)','width:66px;text-align:right')}</tr></thead><tbody>${cc.lines.map(ln=>{const pt=ln.pt,c=ln.c;const prod=pt.prodLabel||(pt.kind==='curtain'?pt.curtainType:pt.kind==='vangarde'?pt.vgProduct:pt.blindType);const det=pt.detail!=null?pt.detail:(pt.kind==='curtain'?(pt.track==='motor'?'ระบบมอเตอร์ '+pt.motorModel:''):pt.kind==='vangarde'?('เฟรม '+(pt.frameColor||'-')):(pt.note||''));return `<tr><td>${pt.room}</td><td>${prod}</td><td style="font-size:8.5px;color:#555">${det||''}</td><td class="mono" style="font-size:8.5px">${c.code1||'-'}</td><td class="mono" style="font-size:8.5px">${c.code2||'-'}</td><td class="doc-num">${(pt.w/100).toFixed(3)}</td><td class="doc-num">${(pt.h/100).toFixed(3)}</td><td class="doc-num">${pt.qty}</td><td class="doc-num">${m(c.sellOpaque)}</td><td class="doc-num">${m(c.sellSheer)}</td><td class="doc-num">${m(c.sellTrack)}</td><td class="doc-num" style="font-weight:600">${money(ln.product)}</td></tr>`+vynnAltRows(pt);}).join('')}${cc.service?`<tr><td></td><td colspan="7" style="color:#555">ค่าบริการติดตั้ง & ตัดเย็บ <span style="font-size:.85em;color:#999">/ Installation & Tailoring Service</span></td><td class="doc-num">-</td><td class="doc-num">-</td><td class="doc-num">-</td><td class="doc-num" style="font-weight:600">${money(cc.service)}</td></tr>`:''}</tbody></table>${anyAlt?'<div style="font-size:9px;color:#888;margin-top:3px;font-style:italic">↳ แถว "ทางเลือก" = ราคาผ้า/ชนิดม่านทางเลือกของจุดนั้น (ให้ลูกค้าเลือกเทียบราคา ถูก/กลาง/แพง) · ยอดรวมด้านล่างคิดจาก "ตัวเลือกหลัก" ของแต่ละจุด</div>':''}`;}
 function docWarrantyNotes(co){const red='color:#c0392b';const li=(t,r)=>`<div style="margin:1px 0;${r?red:''}">${t}</div>`;return `<div style="margin-top:10px;font-size:10px;line-height:1.5"><div style="display:flex;gap:14px;flex-wrap:wrap"><div style="min-width:110px;font-weight:700">การรับประกัน:<div style="font-size:8px;color:#999;font-weight:400">Warranty</div></div><div style="flex:1;min-width:260px">${li('รับประกัน สินค้า ผ้า ราง และอุปกรณ์ เป็นระยะเวลา <b>1 ปี</b> นับจากวันที่ส่งมอบ')}${li('รับประกัน งานติดตั้ง เป็นระยะเวลา <b>3 ปี</b> นับจากวันที่ส่งมอบ',true)}${li('รับประกัน ระบบมอเตอร์ไฟฟ้า Somfy เป็นระยะเวลา <b>5 ปี</b> นับจากวันที่ส่งมอบ *ซ่อม เปลี่ยน เคลมอะไหล่ฟรี (มีค่าบริการ) ** ยกเว้น น้ำเข้า ไฟไหม้ ไฟฟ้าลัดวงจร ไฟกระชาก อุบัติภัยทางธรรมชาติ')}</div></div><div style="display:flex;gap:14px;margin-top:6px"><div style="min-width:110px;font-weight:700">ส่งมอบสินค้า:<div style="font-size:8px;color:#999;font-weight:400">Delivery</div></div><div style="flex:1">${li('ภายใน 30 วัน จากวันที่ยืนยันการสั่งซื้อ / ได้รับการชำระเงิน ยกเว้นสินค้านำเข้า')}</div></div><div style="display:flex;gap:14px;margin-top:6px"><div style="min-width:110px;font-weight:700">หมายเหตุ:<div style="font-size:8px;color:#999;font-weight:400">Remarks</div></div><div style="flex:1">${li('ราคาและส่วนลดสินค้าตามรายการทั้งหมดที่นำเสนอ เป็นราคาพิเศษสำหรับโครงการนี้เท่านั้น ไม่สามารถนำไปใช้กับงานโครงการอื่นได้',true)}${co.vat?li('ราคาที่นำเสนอรวมภาษีมูลค่าเพิ่มแล้ว'):''}${li('ราคาที่นำเสนอรวม บริการออกแบบ ให้คำปรึกษา ตรวจสอบหน้างาน งานผลิต ค่าขนส่งสินค้าถึงหน่วยงาน และค่าติดตั้ง งานเรียบร้อยแล้ว')}${co.vat?'':li('ราคานี้ไม่รวมภาษีมูลค่าเพิ่ม (VAT)')}${li('ราคาที่นำเสนออาจมีการปรับเปลี่ยนได้ ตามขนาดหน้างานจริงและวัสดุที่ใช้ และจะไม่รวมงานด้านระบบไฟ งานแก้ไขประตูหน้าต่าง งานฝ้า งานตรวจสอบโครงสร้าง และการจัดเตรียมพื้นที่หน้างาน นอกจากที่ระบุไว้')}${li('ทางบริษัทฯรับผิดชอบงานตามที่ได้ประเมินจากหน้างานจริงและได้รับการยืนยันจากลูกค้าแล้วเท่านั้น หากงานที่สั่งผลิตเกิดความผิดพลาดเนื่องจากการเปลี่ยนแปลงของหน้างาน ทางบริษัทฯไม่สามารถรับคืน/เปลี่ยนสินค้าได้')}${li('ทางบริษัทขอสงวนสิทธิ์ในการคิดค่าดำเนินการ ขั้นต่ำ 4,000 บาท / ครั้ง หากลูกค้ามีการเปลี่ยนแปลง แก้ไข หรือเลื่อนกำหนดโดยไม่แจ้งล่วงหน้า ทำให้ต้องเข้าหน้างานเพิ่มเติมนอกเหนือจากที่ตกลงกันไว้')}${li('*** ถ้าหากสินค้า / บริการ ไม่ถูกต้องหรือมีตำหนิ โปรดแจ้งให้ทางบริษัททราบภายใน 7 วัน',true)}${li('*** กรณีสินค้าผลิตแล้ว / ติดตั้งเสร็จแล้ว / ตรวจรับมอบงานแล้ว ทางบริษัทขอสงวนสิทธิ์ในการรับสินค้าคืน หรือคืนเงิน ทุกกรณี',true)}</div></div></div>`;}
 function docSign3(co){const col=(en,th,withDate)=>`<div style="width:31%;text-align:center"><div style="height:34px"></div><div style="border-top:1px solid #333;padding-top:4px;font-size:11px">${en} <span style="color:#888">/ ${th}</span></div><div style="color:#888;font-size:10px;margin-top:3px">${withDate?'Date / วันที่ : ____ / ____ / ____':'วันที่ : ____ / ____ / ____'}</div></div>`;return `<div style="display:flex;justify-content:space-between;margin-top:26px">${col('Quoted by','ผู้เสนอราคา')}${col('Approved by','ผู้อนุมัติ')}${col('Ordered by','ผู้มีอำนาจสั่งซื้อ',true)}</div>`;}
-function docPayTotals(co,cc){const t=cc.total;const disc=cc.sub-cc.netBeforeVat;const payRow=(pct,amt,note)=>`<div style="display:flex;justify-content:space-between;gap:8px"><span>ชำระเงิน ${pct}%: <b>${money(amt)}</b> บาท</span><span style="color:#888;font-size:.9em">${note}</span></div>`;const sRow=(th,en,val,bold)=>`<div style="display:flex;justify-content:space-between;padding:3px 8px;${bold?'background:#2c2c2c;color:#fff;font-weight:800':'border-top:1px solid #e2e2e2'}"><span>${th} <span style="color:${bold?'#ccc':'#999'};font-size:.82em">/ ${en}</span></span><span class="doc-num">${val}</span></div>`;return `<div style="display:flex;gap:12px;margin-top:10px;align-items:flex-start"><div style="flex:1;font-size:10px;line-height:1.55"><div style="font-weight:700">เงื่อนไขการชำระเงิน <span style="font-size:.85em;color:#888">/ Payment Terms</span></div>${payRow(50,t*0.5,'เพื่อยืนยันการสั่งซื้อ/ผลิตสินค้า')}${payRow(30,t*0.3,'ก่อนเข้าติดตั้งงาน 2-3 วัน')}${payRow(20,t*0.2,'หลังจากติดตั้งงานเสร็จเรียบร้อย')}<div style="margin-top:6px;color:#555">การโอนเงิน: กรุณาโอนเงินเข้าบัญชีในนาม<br>"<b>${co.bankName||co.name}</b>" ${co.bank||''}${co.bankAcct?' เลขที่ '+co.bankAcct:''}</div><div style="margin-top:6px">จำนวนเงินตัวอักษร: <b>(${bahtText(t)})</b></div></div><div style="width:44%;border:1px solid #ddd;border-radius:3px;font-size:11px;overflow:hidden">${sRow('ราคารวม','Total',money(cc.sub))}${disc?sRow('ส่วนลดพิเศษ','Special Discount','('+money(disc)+')'):''}${cc.vatRate?sRow('รวมทั้งสิ้น','Sub-total',money(cc.netBeforeVat))+sRow('Vat '+cc.vatRate+'%','VAT',money(cc.vat)):''}${sRow('รวมราคาสุทธิ','Net Total',money(t),true)}</div></div>`;}
+function docPayTotals(co,cc){const t=cc.total;const disc=cc.sub-cc.netBeforeVat;const payRow=(pct,amt,note)=>`<div style="display:flex;justify-content:space-between;gap:8px"><span>ชำระเงิน ${pct}%: <b>${money(amt)}</b> บาท</span><span style="color:#888;font-size:.9em">${note}</span></div>`;const sRow=(th,en,val,bold)=>`<div style="display:flex;justify-content:space-between;padding:3px 8px;${bold?'background:#2c2c2c;color:#fff;font-weight:800':'border-top:1px solid #e2e2e2'}"><span>${th} <span style="color:${bold?'#ccc':'#999'};font-size:.82em">/ ${en}</span></span><span class="doc-num">${val}</span></div>`;return `<div style="display:flex;gap:12px;margin-top:10px;align-items:flex-start"><div style="flex:1;font-size:10px;line-height:1.55"><div style="font-weight:700">เงื่อนไขการชำระเงิน <span style="font-size:.85em;color:#888">/ Payment Terms</span></div>${payRow(50,t*0.5,'เพื่อยืนยันการสั่งซื้อ/ผลิตสินค้า')}${payRow(30,t*0.3,'ก่อนเข้าติดตั้งงาน 2-3 วัน')}${payRow(20,t*0.2,'หลังจากติดตั้งงานเสร็จเรียบร้อย')}<div style="margin-top:6px;color:#555">การโอนเงิน: กรุณาโอนเงินเข้าบัญชีในนาม<br>"<b>${co.bankName||co.name}</b>" ${co.bank||''}${co.bankAcct?' เลขที่ '+co.bankAcct:''}</div>${co.qr?`<div style="margin-top:6px;display:flex;align-items:center;gap:8px"><img src="${co.qr}" style="max-height:110px;max-width:110px;object-fit:contain;border:1px solid #ddd;padding:3px;background:#fff"><div style="font-size:9px;color:#888">สแกน QR<br>เพื่อโอนเงิน</div></div>`:''}<div style="margin-top:6px">จำนวนเงินตัวอักษร: <b>(${bahtText(t)})</b></div></div><div style="width:44%;border:1px solid #ddd;border-radius:3px;font-size:11px;overflow:hidden">${sRow('ราคารวม','Total',money(cc.sub))}${disc?sRow('ส่วนลดพิเศษ','Special Discount','('+money(disc)+')'):''}${cc.vatRate?sRow('รวมทั้งสิ้น','Sub-total',money(cc.netBeforeVat))+sRow('Vat '+cc.vatRate+'%','VAT',money(cc.vat)):''}${sRow('รวมราคาสุทธิ','Net Total',money(t),true)}</div></div>`;}
 function docQuotation(q,l,co,cc){const nrev=(q.revisions||[]).length;const rr=boxRow('Ref #','เลขที่','QT'+q.id.replace('QT-','')+' - Rev '+nrev)+boxRow('Date','วันที่',fmtDate(q.date))+boxRow('Salesperson','พนักงานขาย',personById(l.assignedTo).name)+boxRow('Prepared by','จัดทำโดย',personById(l.assignedTo).name)+(q.optionLabel&&q.optionLabel!=='หลัก'?boxRow('Option','ตัวเลือก',q.optionLabel):'');return docLetterhead(co,'ใบเสนอราคา','Quotation')+docParties(l,rr)+docItemsVYNN(cc)+docPayTotals(co,cc)+docWarrantyNotes(co)+docSign3(co);}
-function docInvoice(q,l,co,cc){const sv=surveyById(q.surveyId);const pi=payInfo(q.id);return docLetterhead(co,co.vat?'ใบกำกับภาษี/ใบเสร็จรับเงิน':'ใบเสร็จรับเงิน',co.vat?'Tax Invoice/Receipt':'Receipt','(ต้นฉบับ / Original)')+docParties(l,boxRow('เลขที่ใบเสร็จ','Receipt No.','RE-'+q.id.replace('QT-',''))+boxRow('เลขที่','No.',q.id)+boxRow('วันที่','Issue Date',fmtDate(q.date)))+docItems(cc,sv,true)+docSummary(cc)+`<div style="margin-top:12px;border-top:1px solid #333;padding-top:8px;font-size:11px"><b>การชำระเงิน <span style="font-size:.85em;color:#888">/ Payment</span></b>${co.bank?`<div style="color:#555">โอนผ่านธนาคาร / Bank Transfer · ${co.bank}</div>`:''}${pi.sched.map(s=>`<div style="color:#555">งวด ${s.n} (${s.pct}%) ${money(pi.total*s.pct/100)} บาท — ${s.st==='paid'?'ชำระแล้ว '+fmtDate(s.d)+(s.method?' · '+s.method:'')+(s.ref?' ('+s.ref+')':''):'รอชำระ'}</div>`).join('')}</div>`+docSign('ผู้รับเงิน / '+co.brand,'ผู้รับสินค้า / ลูกค้า');}
+function docInvoice(q,l,co,cc){const sv=surveyById(q.surveyId);const pi=payInfo(q.id);return docLetterhead(co,co.vat?'ใบกำกับภาษี/ใบเสร็จรับเงิน':'ใบเสร็จรับเงิน',co.vat?'Tax Invoice/Receipt':'Receipt','(ต้นฉบับ / Original)')+docParties(l,boxRow('เลขที่ใบเสร็จ','Receipt No.','RE-'+q.id.replace('QT-',''))+boxRow('เลขที่','No.',q.id)+boxRow('วันที่','Issue Date',fmtDate(q.date)))+docItems(cc,sv,true)+docSummary(cc)+`<div style="margin-top:12px;border-top:1px solid #333;padding-top:8px;font-size:11px"><b>การชำระเงิน <span style="font-size:.85em;color:#888">/ Payment</span></b>${co.bank?`<div style="color:#555">โอนผ่านธนาคาร / Bank Transfer · ${co.bank}</div>`:''}${pi.sched.map(s=>`<div style="color:#555">งวด ${s.n} (${s.pct}%) ${money(pi.total*s.pct/100)} บาท — ${s.st==='paid'?'ชำระแล้ว '+fmtDate(s.d)+(s.method?' · '+s.method:'')+(s.ref?' ('+s.ref+')':''):'รอชำระ'}</div>`).join('')}${co.qr?`<div style="margin-top:6px"><img src="${co.qr}" style="max-height:100px;max-width:100px;object-fit:contain;border:1px solid #ddd;padding:3px;background:#fff"><span style="font-size:9px;color:#888;margin-left:6px;vertical-align:bottom">สแกนเพื่อโอนเงิน</span></div>`:''}</div>`+docSign('ผู้รับเงิน / '+co.brand,'ผู้รับสินค้า / ลูกค้า');}
+// ใบแจ้งหนี้ / Invoice — แบ่งชำระเป็นงวด (bill next-unpaid installment; shows full schedule)
+function docBilling(q,l,co,cc){const sv=surveyById(q.surveyId);const pi=payInfo(q.id);const t=cc.total;
+ const due=pi.sched.find(s=>s.st!=='paid')||pi.sched[pi.sched.length-1];const dueAmt=t*due.pct/100;
+ const schedRows=pi.sched.map(s=>{const amt=t*s.pct/100;const isDue=s.n===due.n&&s.st!=='paid';return `<div style="display:flex;justify-content:space-between;padding:4px 8px;${isDue?'background:'+((co.brand==='Vangarde')?'var(--brand-vangarde-soft)':'var(--brand-vynn-soft)')+';font-weight:700':'border-top:1px solid #eee'}"><span>งวดที่ ${s.n} (${s.pct}%) <span style="font-size:.85em;color:#888">/ Installment ${s.n}</span>${isDue?' — เรียกเก็บงวดนี้':''}</span><span class="doc-num">${money(amt)} ${s.st==='paid'?'· ชำระแล้ว':''}</span></div>`;}).join('');
+ return docLetterhead(co,'ใบแจ้งหนี้','Invoice','(ต้นฉบับ / Original)')
+  +docParties(l,boxRow('เลขที่ใบแจ้งหนี้','Invoice No.','IV-'+q.id.replace('QT-','')+'-'+due.n)+boxRow('อ้างอิงใบเสนอราคา','Quotation Ref',q.id)+boxRow('วันที่','Issue Date',fmtDate('2026-07-12'))+boxRow('ครบกำหนดชำระ','Due',due.pct+'% · งวดที่ '+due.n))
+  +docItems(cc,sv,false)+docSummary(cc)
+  +`<div style="display:flex;gap:12px;margin-top:10px;align-items:flex-start"><div style="flex:1;border:1px solid #ddd;border-radius:3px;overflow:hidden;font-size:11px"><div style="background:#f3f3f3;padding:4px 8px;font-weight:700">แผนการชำระเงินแบ่งงวด <span style="font-size:.85em;color:#888">/ Installments</span></div>${schedRows}</div><div style="width:40%;border:2px solid #333;border-radius:4px;padding:8px 10px;font-size:12px"><div style="color:#888;font-size:11px">ยอดที่ต้องชำระงวดนี้ <span style="font-size:.85em">/ Amount Due Now</span></div><div style="font-size:20px;font-weight:800;margin:4px 0">${money(dueAmt)}</div><div style="font-size:10px;color:#555">(${bahtText(dueAmt)})</div></div></div>`
+  +`<div style="margin-top:10px;border-top:1px solid #333;padding-top:8px;font-size:11px"><b>ช่องทางชำระเงิน <span style="font-size:.85em;color:#888">/ Payment</span></b>${co.bank?`<div style="color:#555">โอนเข้าบัญชี "<b>${co.name}</b>" · ${co.bank}</div>`:''}${co.qr?`<div style="margin-top:6px;display:flex;align-items:center;gap:8px"><img src="${co.qr}" style="max-height:110px;max-width:110px;object-fit:contain;border:1px solid #ddd;padding:3px;background:#fff"><div style="font-size:9px;color:#888">สแกน QR<br>เพื่อโอนเงิน</div></div>`:''}</div>`
+  +docSign('ผู้วางบิล / '+co.brand,'ผู้รับวางบิล / ลูกค้า');}
 function docDelivery(q,l,co,cc){const sv=surveyById(q.surveyId);const pts=(q.points&&q.points.length)?q.points:(sv?sv.points:[]);const ins=state.installs.find(i=>i.quoteId===q.id);return docLetterhead(co,'ใบส่งมอบงาน','Delivery/Handover Note','(ต้นฉบับ / Original)')+docParties(l,boxRow('เลขที่','Doc No.','DN-'+q.id.replace('QT-',''))+boxRow('วันที่ติดตั้ง','Install Date',ins?fmtDate(ins.scheduled):fmtDate('2026-07-11'))+boxRow('ทีมติดตั้ง','Team',ins?ins.team:'-'))+`<table><thead><tr>${th2('#','No.','width:26px')}${th2('รูป','Image','width:38px;text-align:center')}${th2('ห้อง/จุด','Location','')}${th2('รายการที่ส่งมอบ','Item Delivered','')}${th2('สเปกช่าง','Installer Spec','width:140px')}${th2('จำนวน','Qty','width:40px;text-align:right')}</tr></thead><tbody>${pts.length?pts.map((p,i)=>{const im=(p.photos||[]).find(x=>x&&x.url);return `<tr><td>${i+1}</td><td style="text-align:center">${im?`<img src="${im.url}" style="width:28px;height:28px;object-fit:cover;border-radius:3px">`:'—'}</td><td>${p.room}</td><td>${p.kind==='curtain'?p.curtainType+' · '+((p.fabrics||[]).filter(f=>f.code).map(f=>f.code).join('+'))+(p.track==='motor'?' · รางมอเตอร์ '+p.motorModel+' (ฝั่ง'+p.motorSide+')':' · รางธรรมดา'):p.kind==='vangarde'?p.vgProduct+' · เฟรม '+(p.frameColor||'-')+' / ผ้า '+(p.fabricCode||'-')+(vgHasMotor(p)?' · มอเตอร์':''):p.blindType+(p.track==='motor'?' · มอเตอร์':'')}</td><td style="font-size:10px;color:#555">${p.kind==='curtain'?p.mountType+(p.mountType==='เหนือกรอบวงกบ'?' '+p.mountAboveCm+'cm':'')+' · เผื่อข้าง '+p.sideAllowCm+'cm'+(p.slanted?' · ผ้าเอียง':''):'-'}${p.note?'<br>'+p.note:''}</td><td class="doc-num">${p.qty}</td></tr>`;}).join(''):'<tr><td colspan="6">—</td></tr>'}</tbody></table><div style="border:1px solid #cfcfcf;border-radius:4px;padding:9px 12px;font-size:11px;background:#f6faf9;margin-top:8px;line-height:1.5"><b>การรับประกัน / Warranty</b>${ins&&ins.warrantyUntil?' (เริ่มนับจากวันที่ส่งมอบ · ถึง '+fmtDate(ins.warrantyUntil)+')':''}<div>• สินค้า ผ้า ราง และอุปกรณ์ — <b>1 ปี</b> นับจากวันที่ส่งมอบ</div><div>• งานติดตั้ง — <b>3 ปี</b> นับจากวันที่ส่งมอบ</div><div>• ระบบมอเตอร์ไฟฟ้า Somfy — <b>5 ปี</b> นับจากวันที่ส่งมอบ (ซ่อม/เปลี่ยน/เคลมอะไหล่ มีค่าบริการ · ยกเว้น น้ำเข้า ไฟไหม้ ไฟฟ้าลัดวงจร ไฟกระชาก ภัยธรรมชาติ)</div></div><div style="margin-top:8px;font-size:12px;color:#555">ข้าพเจ้าได้รับมอบและตรวจรับงานเรียบร้อยแล้วตามรายการข้างต้น</div>`+docSign('ผู้ส่งมอบงาน / '+co.brand,'ผู้รับมอบงาน / ลูกค้า');}
-function openDoc(type,quoteId){const q=quoteById(quoteId);if(!q)return;const l=leadById(q.leadId);const co=docCo(l,q);const cc=calcQuote(q);const paper=type==='taxinvoice'?docInvoice(q,l,co,cc):type==='delivery'?docDelivery(q,l,co,cc):docQuotation(q,l,co,cc);let ov=document.getElementById('docOverlay');if(!ov){ov=document.createElement('div');ov.id='docOverlay';ov.className='doc-overlay';document.body.appendChild(ov);}const wide=(type!=='taxinvoice'&&type!=='delivery');const wc=wide?' doc-wide':'';ov.innerHTML=`<div class="doc-toolbar${wc}"><button class="btn" id="docClose">✕ ปิด</button><button class="btn primary" id="docPrint">${svg('print','ico')} พิมพ์ / บันทึก PDF</button></div><div class="doc-paper${wc}" id="docPaper">${paper}</div>`;let ps=document.getElementById('pageOrient');if(!ps){ps=document.createElement('style');ps.id='pageOrient';document.head.appendChild(ps);}ps.textContent='@page{size:A4 '+(wide?'landscape':'portrait')+';margin:'+(wide?'8mm':'12mm')+'}';ov.style.display='block';ov.querySelector('#docClose').onclick=()=>{ov.style.display='none';};ov.querySelector('#docPrint').onclick=()=>window.print();}
+function openDoc(type,quoteId){const q=quoteById(quoteId);if(!q)return;const l=leadById(q.leadId);const co=docCo(l,q);const cc=calcQuote(q);const paper=type==='taxinvoice'?docInvoice(q,l,co,cc):type==='billing'?docBilling(q,l,co,cc):type==='delivery'?docDelivery(q,l,co,cc):docQuotation(q,l,co,cc);let ov=document.getElementById('docOverlay');if(!ov){ov=document.createElement('div');ov.id='docOverlay';ov.className='doc-overlay';document.body.appendChild(ov);}const wide=(type!=='taxinvoice'&&type!=='delivery'&&type!=='billing');const wc=wide?' doc-wide':'';ov.innerHTML=`<div class="doc-toolbar${wc}"><button class="btn" id="docClose">✕ ปิด</button><button class="btn primary" id="docPrint">${svg('print','ico')} พิมพ์ / บันทึก PDF</button></div><div class="doc-paper${wc}" id="docPaper">${paper}</div>`;let ps=document.getElementById('pageOrient');if(!ps){ps=document.createElement('style');ps.id='pageOrient';document.head.appendChild(ps);}ps.textContent='@page{size:A4 '+(wide?'landscape':'portrait')+';margin:'+(wide?'8mm':'12mm')+'}';ov.style.display='block';ov.querySelector('#docClose').onclick=()=>{ov.style.display='none';};ov.querySelector('#docPrint').onclick=()=>window.print();}
 
 /* ============ FINANCE ============ */
 function renderFinance(){
@@ -1606,6 +1948,7 @@ function renderPnL(){
    <div class="table-wrap"><table><thead><tr><th>โปรเจค</th><th>แบรนด์</th><th class="num">รายได้</th><th class="num">ต้นทุนสินค้า</th><th class="num">ค่าส่ง</th><th class="num">ค่าแนะนำ</th><th class="num">ค่าแรง</th><th class="num">ค่าเดินทาง</th><th class="num">ต้นทุนรวม</th><th class="num">กำไรสุทธิ</th><th class="num">Margin</th></tr></thead><tbody>
    ${projects.length?projects.map(p=>`<tr class="clickable" data-lead="${p.l.id}"><td style="font-weight:600">${bn(p.l)}<div class="mini-note">${p.l.site} · ${p.q.id}</div></td><td>${brandChip(p.l.brand)}</td><td class="num">${THB(p.revenue)}</td><td class="num">${THB(p.cogs)}</td><td class="num">${p.ship?THB(p.ship):'<span style="color:var(--text-faint)">—</span>'}</td><td class="num">${p.referral?THB(p.referral):'<span style="color:var(--text-faint)">—</span>'}</td><td class="num">${THB(p.labor)}</td><td class="num">${p.travel?THB(p.travel):'<span style="color:var(--text-faint)">—</span>'}</td><td class="num" style="color:var(--warn)">${THB(p.totalCost)}</td><td class="num" style="font-weight:700;color:var(--good)">${THB(p.net)}</td><td class="num"><span class="pill ${p.margin>=.35?'good':p.margin>=.2?'warn':'crit'}">${Math.round(p.margin*100)}%</span></td></tr>`).join(''):emptyRow(11,'ยังไม่มีโปรเจคที่ปิดได้')}
    </tbody></table></div></div>`;
+ c.insertAdjacentHTML('beforeend',opexPnlCard());
  wireRows(c);
 }
 
@@ -1651,6 +1994,137 @@ function renderForecast(){
    <tr style="border-top:2px solid var(--border-strong)"><td style="font-weight:700">รวมทั้งหมด</td><td></td><td class="num" style="font-weight:700">${deals.length}</td><td class="num" style="font-weight:700">${THB(totalSales)}</td><td class="num">${THB(sum(perAcc,x=>x.a.vat?x.preVat:0))}</td><td class="num" style="font-weight:700;color:var(--warn)">${THB(sum(perAcc,x=>x.vat))}</td><td class="num" style="font-weight:700">${THB(totalPipe)}</td></tr>
    </tbody></table></div></div>`;
  wireRows(c);
+}
+
+/* ============ ค่าใช้จ่ายรายวัน (EXPENSES) ============ */
+let expMonth=new Date().toISOString().slice(0,7), expCatFilter='all', expBarPhotos=[], expLast={date:'',brand:'กลาง',method:'cash',by:''};
+function todayISO(){return new Date().toISOString().slice(0,10);}
+const EXP_CATS=[
+ {id:'fuel',label:'น้ำมัน/เดินทาง',c:'#C0392B',kw:['น้ำมัน','เดินทาง','แท็กซี่','taxi','grab','แกร็บ','ค่ารถ','ทางด่วน','วิน','ค่าเดินทาง','เติมน้ำมัน','ปั๊ม','ที่จอดรถ','จอดรถ']},
+ {id:'food',label:'อาหาร/รับรองลูกค้า',c:'#B77504',kw:['อาหาร','กาแฟ','ข้าว','เลี้ยง','รับรอง','กิน','น้ำดื่ม','ขนม','เครื่องดื่ม','ค่าอาหาร']},
+ {id:'material',label:'วัสดุ/อุปกรณ์',c:'#0E7C86',kw:['ผ้า','อุปกรณ์','วัสดุ','ราง','ตะขอ','มอเตอร์','ซื้อของ','ผ้าม่าน','เฟรม','สินค้า']},
+ {id:'shipping',label:'ขนส่ง/พัสดุ',c:'#2C6BB3',kw:['ส่งของ','ขนส่ง','พัสดุ','ไปรษณีย์','แมส','kerry','flash','เคอรี่','แฟลช','ค่าส่ง','ค่าขนส่ง']},
+ {id:'tool',label:'เครื่องมือช่าง',c:'#7A4FB5',kw:['สว่าน','ดอกสว่าน','เครื่องมือ','น็อต','สกรู','พุก','ค่าช่าง']},
+ {id:'office',label:'ออฟฟิศ/เบ็ดเตล็ด',c:'#5C6B73',kw:['กระดาษ','หมึก','เครื่องเขียน','ออฟฟิศ','เบ็ดเตล็ด','ทำความสะอาด','แม่บ้าน']},
+ {id:'marketing',label:'การตลาด/โฆษณา',c:'#0F6E68',kw:['โฆษณา','ยิงแอด','ads','การตลาด','บูธ','ป้าย','โบรชัวร์','ของแถม']},
+ {id:'utility',label:'น้ำ-ไฟ-เน็ต-โทร',c:'#B65C36',kw:['ค่าไฟ','ค่าน้ำ','ค่าเน็ต','อินเทอร์เน็ต','โทรศัพท์','ค่าโทร','wifi']},
+ {id:'other',label:'อื่นๆ',c:'#8A8078',kw:[]},
+];
+function catById(id){return EXP_CATS.find(c=>c.id===id)||EXP_CATS[EXP_CATS.length-1];}
+const EXP_METHODS=[['cash','เงินสด'],['transfer','โอน/พร้อมเพย์'],['credit','บัตรเครดิต'],['company','บิลบริษัท/เครดิตร้าน']];
+function methodLabel(m){const f=EXP_METHODS.find(x=>x[0]===m);return f?f[1]:(m||'-');}
+function parseExpense(text){
+ text=String(text||'');
+ const nums=text.match(/\d[\d,]*(?:\.\d+)?/g);
+ let amount=0,amtStr=null;
+ if(nums&&nums.length){amtStr=nums[nums.length-1];amount=parseFloat(amtStr.replace(/,/g,''))||0;}
+ let note=text;
+ if(amtStr){const i=note.lastIndexOf(amtStr);note=note.slice(0,i)+note.slice(i+amtStr.length);}
+ note=note.replace(/บาท|฿|thb/gi,'').replace(/\s+/g,' ').trim();
+ let category='other';const low=text.toLowerCase();
+ for(const cc of EXP_CATS){if(cc.kw.some(k=>low.includes(k.toLowerCase()))){category=cc.id;break;}}
+ return {amount,category,note};
+}
+function expensesVisible(){let a=state.expenses||[];const mine=myScopeId();if(mine)a=a.filter(e=>e.createdBy===mine||e.by===mine);return a;}
+function expInBrand(e){return brand==='all'||e.brand===brand||e.brand==='กลาง';}
+function catChip(id){const c=catById(id);return `<span class="pill" style="background:${c.c}1e;color:${c.c};border:1px solid ${c.c}40">${c.label}</span>`;}
+function openImg(url,name){let lb=document.getElementById('imgLightbox');if(!lb){lb=document.createElement('div');lb.id='imgLightbox';lb.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(10,8,6,.82);display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out';document.body.appendChild(lb);}lb.innerHTML=url&&(''+url).startsWith('data:')?`<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5)">`:`<div style="background:var(--surface);padding:30px;border-radius:8px;color:var(--text-muted)">ไม่มีรูป (${name||''})</div>`;lb.style.display='flex';lb.onclick=()=>{lb.style.display='none';lb.innerHTML='';};}
+function renderExpenses(){
+ const c=document.getElementById('content');
+ const meAll=expensesVisible();
+ const monthAll=meAll.filter(e=>(e.date||'').slice(0,7)===expMonth&&expInBrand(e));
+ const monthList=monthAll.filter(e=>expCatFilter==='all'||e.category===expCatFilter);
+ const sum=arr=>arr.reduce((a,e)=>a+(+e.amount||0),0);
+ const today=todayISO();
+ const todayTot=sum(meAll.filter(e=>e.date===today&&expInBrand(e)));
+ const monthTot=sum(monthAll);
+ const byCat={};monthAll.forEach(e=>byCat[e.category]=(byCat[e.category]||0)+(+e.amount||0));
+ const catRows=EXP_CATS.map(cat=>({cat,v:byCat[cat.id]||0})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+ const maxCat=Math.max(1,...catRows.map(x=>x.v));
+ const topCat=catRows[0];
+ const catOpts=`<option value="auto">🔎 เดาหมวดอัตโนมัติ</option>`+EXP_CATS.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');
+ const catFilterOpts=`<option value="all">ทุกหมวด</option>`+EXP_CATS.map(x=>`<option value="${x.id}"${expCatFilter===x.id?' selected':''}>${x.label}</option>`).join('');
+ const brandOpts=['กลาง','VYNN','Vangarde'].map(b=>`<option value="${b}"${expLast.brand===b?' selected':''}>${b==='กลาง'?'กลาง (ส่วนกลางบริษัท)':b}</option>`).join('');
+ const methodOpts=EXP_METHODS.map(m=>`<option value="${m[0]}"${expLast.method===m[0]?' selected':''}>${m[1]}</option>`).join('');
+ const defBy=expLast.by||(currentUser&&currentUser.id);
+ const byOpts=ACCOUNTS.map(a=>`<option value="${a.id}"${defBy===a.id?' selected':''}>${a.short||a.name}</option>`).join('');
+ const list=monthList.slice().sort((a,b)=>((b.date||'')+(b.createdAt||'')).localeCompare((a.date||'')+(a.createdAt||'')));
+ const canDel=e=>role!=='sales'||e.createdBy===myScopeId()||e.by===myScopeId();
+ c.innerHTML=`
+  <div class="banner-info">${svg('cash')}พิมพ์สั้นๆ เช่น <b>ค่าน้ำมัน 500</b> หรือ <b>120 กาแฟรับรองลูกค้า</b> แล้วกด Enter — ระบบแยกยอด+หมวดให้อัตโนมัติ แนบรูปบิลได้ · <span style="opacity:.85">เฟส 2: ต่อบอทไลน์กลุ่มให้พิมพ์/ส่งรูปในไลน์แล้วบันทึกอัตโนมัติ (ใช้ตัวแยกยอดตัวเดียวกันนี้)</span></div>
+  <div class="card" style="margin-bottom:16px">
+   <div class="card-head">${svg('cash')}<h3>บันทึกค่าใช้จ่ายด่วน</h3></div>
+   <div class="card-pad">
+    <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap">
+     <input id="expText" placeholder="เช่น: ค่าน้ำมัน 500   /   120 กาแฟรับรองลูกค้า" autocomplete="off" style="flex:1;min-width:220px;font-size:16px;padding:11px 13px">
+     <button class="btn primary" id="expAdd" style="padding:0 22px;font-size:15px">＋ บันทึก</button>
+    </div>
+    <div id="exp-preview" class="mini-note" style="margin-top:8px;min-height:18px"></div>
+    <div class="field-row" style="margin-top:10px">
+     <div class="field"><label>หมวด</label><select id="expCat">${catOpts}</select></div>
+     <div class="field"><label>วันที่</label><input type="date" id="expDate" value="${expLast.date||today}"></div>
+     <div class="field"><label>แบรนด์/หน่วยงาน</label><select id="expBrand">${brandOpts}</select></div>
+    </div>
+    <div class="field-row">
+     <div class="field"><label>วิธีจ่าย</label><select id="expMethod">${methodOpts}</select></div>
+     <div class="field"><label>ผู้จ่าย/ผู้บันทึก</label><select id="expBy">${byOpts}</select></div>
+     <div class="field"><label>รูปบิล/ใบเสร็จ</label><div style="display:flex;align-items:center;gap:8px"><label class="btn sm" style="cursor:pointer;margin:0">📎 แนบรูป<input type="file" id="exp-file" accept="image/*" multiple hidden></label><span id="exp-thumbs" style="display:flex;gap:5px;flex-wrap:wrap"></span></div></div>
+    </div>
+   </div>
+  </div>
+  <div class="stat-row" style="margin-bottom:16px">
+   <div class="stat"><div class="label">ยอดวันนี้</div><div class="value">${THB(todayTot)}</div><div class="mini-note" style="margin-top:8px">${fmtDate(today)}</div></div>
+   <div class="stat"><div class="label">ยอดเดือนนี้</div><div class="value" style="color:var(--warn)">${THB(monthTot)}</div><div class="mini-note" style="margin-top:8px">${monthAll.length} รายการ</div></div>
+   <div class="stat"><div class="label">หมวดที่ใช้มากสุด</div><div class="value" style="font-size:20px">${topCat?catById(topCat.cat.id).label:'—'}</div><div class="mini-note" style="margin-top:8px">${topCat?THB(topCat.v):'ยังไม่มี'}</div></div>
+   <div class="stat"><div class="label">เฉลี่ย/รายการ</div><div class="value">${THB(monthAll.length?monthTot/monthAll.length:0)}</div><div class="mini-note" style="margin-top:8px">เดือน ${monthLabel(expMonth)}</div></div>
+  </div>
+  ${catRows.length?`<div class="card" style="margin-bottom:16px"><div class="card-head">${svg('chart')}<h3>ค่าใช้จ่ายแยกหมวด · ${monthLabel(expMonth)}</h3></div><div class="card-pad">
+   ${catRows.map(x=>`<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px"><span>${catById(x.cat.id).label}</span><b class="tnum">${THB(x.v)}</b></div><div style="height:9px;background:var(--surface-2);border-radius:5px;overflow:hidden"><span style="display:block;height:100%;width:${Math.round(x.v/maxCat*100)}%;background:${x.cat.c}"></span></div></div>`).join('')}
+  </div></div>`:''}
+  <div class="card"><div class="card-head">${svg('doc')}<h3>รายการค่าใช้จ่าย</h3><span class="spacer"></span>
+    <input type="month" id="exp-month" value="${expMonth}" style="padding:6px 8px;margin-right:8px">
+    <select id="exp-catf" style="padding:6px 8px">${catFilterOpts}</select></div>
+   <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>หมวด</th><th>รายละเอียด</th><th>ผู้จ่าย</th><th>วิธี</th><th>หน่วยงาน</th><th>บิล</th><th class="num">ยอด</th><th></th></tr></thead><tbody>
+   ${list.length?list.map(e=>{const p=personById(e.by)||{};const ph=(e.photos||[])[0];return `<tr><td style="white-space:nowrap">${fmtDate(e.date)}</td><td>${catChip(e.category)}</td><td>${e.note||'<span style="color:var(--text-faint)">—</span>'}</td><td>${p.short||p.name||e.by||'—'}</td><td class="mini-note">${methodLabel(e.method)}</td><td>${e.brand==='กลาง'?'<span class="pill neutral">กลาง</span>':brandChip(e.brand)}</td><td>${ph?`<span class="clickable" data-expimg="${e.id}">${photoThumb(ph,32)}</span>`:'<span style="color:var(--text-faint)">—</span>'}</td><td class="num" style="font-weight:700">${THB(e.amount)}</td><td>${canDel(e)?`<button class="btn sm" data-expdel="${e.id}">ลบ</button>`:''}</td></tr>`;}).join(''):emptyRow(9,'ยังไม่มีค่าใช้จ่ายในเดือนนี้ — พิมพ์ในช่องด้านบนแล้วกด Enter ได้เลย')}
+   </tbody>${list.length?`<tfoot><tr style="border-top:2px solid var(--border-strong)"><td colspan="7" style="font-weight:700;padding:11px 14px">รวมเดือน ${monthLabel(expMonth)}${expCatFilter!=='all'?' · '+catById(expCatFilter).label:''}</td><td class="num" style="font-weight:700;padding:11px 14px">${THB(sum(list))}</td><td></td></tr></tfoot>`:''}</table></div></div>`;
+ const submit=()=>{
+  const inp=document.getElementById('expText');const raw=(inp.value||'').trim();const p=parseExpense(raw);
+  const amt=p.amount;const pv=document.getElementById('exp-preview');
+  if(!amt||amt<=0){pv.innerHTML='<span style="color:var(--crit)">⚠ ใส่จำนวนเงินด้วย เช่น "ค่าน้ำมัน 500"</span>';inp.focus();return;}
+  let cat=document.getElementById('expCat').value;if(cat==='auto')cat=p.category;
+  const date=document.getElementById('expDate').value||today;
+  const brandV=document.getElementById('expBrand').value;const method=document.getElementById('expMethod').value;const by=document.getElementById('expBy').value;
+  const note=p.note||catById(cat).label;
+  state.expenses.push({id:'EX-'+(state.seq.EX++),date,amount:amt,category:cat,note,by,brand:brandV,method,photos:expBarPhotos.slice(),status:'recorded',createdAt:new Date().toISOString(),createdBy:currentUser?currentUser.id:''});
+  logAudit('add_expense',THB(amt)+' · '+catById(cat).label+(note?' · '+note:''));
+  expLast={date,brand:brandV,method,by};expBarPhotos=[];save();render(false);
+  setTimeout(()=>{const i=document.getElementById('expText');if(i){i.value='';i.focus();}},0);
+ };
+ document.getElementById('expAdd').onclick=submit;
+ const et=document.getElementById('expText');
+ et.oninput=()=>{const p=parseExpense(et.value);const pv=document.getElementById('exp-preview');const cs=document.getElementById('expCat');const shownCat=cs.value==='auto'?p.category:cs.value;pv.innerHTML=et.value.trim()?`จะบันทึก: <b>${catById(shownCat).label}</b> · <b class="tnum">${p.amount?THB(p.amount):'฿0'}</b>${p.note?' · '+p.note:''}`:'';};
+ et.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();submit();}};
+ const fi=document.getElementById('exp-file');
+ if(fi)fi.onchange=e=>{const files=[...e.target.files];if(!files.length)return;Promise.all(files.map(f=>new Promise(res=>{const rd=new FileReader();rd.onload=()=>res({name:f.name,url:rd.result});rd.onerror=()=>res({name:f.name,url:''});rd.readAsDataURL(f);}))).then(imgs=>{expBarPhotos.push(...imgs);const tc=document.getElementById('exp-thumbs');if(tc)tc.innerHTML=expBarPhotos.map(x=>photoThumb(x,34)).join('');});};
+ document.getElementById('exp-month').onchange=e=>{expMonth=e.target.value;render(false);};
+ document.getElementById('exp-catf').onchange=e=>{expCatFilter=e.target.value;render(false);};
+ c.querySelectorAll('[data-expdel]').forEach(b=>b.onclick=()=>{if(confirm('ลบรายการค่าใช้จ่ายนี้?')){state.expenses=(state.expenses||[]).filter(x=>x.id!==b.dataset.expdel);save();render(false);}});
+ c.querySelectorAll('[data-expimg]').forEach(el=>el.onclick=()=>{const e=(state.expenses||[]).find(x=>x.id===el.dataset.expimg);const ph=e&&(e.photos||[])[0];if(ph)openImg(ph.url,ph.name);});
+}
+function opexPnlCard(){
+ const exps=(state.expenses||[]).filter(expInBrand);
+ const projs=brandLeads().filter(l=>['won','production','installing','done'].includes(l.stage)).map(projectPnL).filter(Boolean);
+ const netBy={};projs.forEach(p=>netBy[p.month]=(netBy[p.month]||0)+p.net);
+ const opexBy={};exps.forEach(e=>{const m=(e.date||'').slice(0,7);if(m)opexBy[m]=(opexBy[m]||0)+(+e.amount||0);});
+ const months=[...new Set([...Object.keys(netBy),...Object.keys(opexBy)])].sort();
+ if(!months.length)return '';
+ const totProj=months.reduce((a,m)=>a+(netBy[m]||0),0);
+ const totOpex=months.reduce((a,m)=>a+(opexBy[m]||0),0);
+ return `<div class="card" style="margin-top:16px"><div class="card-head">${svg('cash')}<h3>ค่าใช้จ่ายดำเนินงาน (จากบันทึกค่าใช้จ่ายรายวัน)</h3></div>
+  <div class="banner-info" style="margin:0 0 12px">${svg('trend')}“กำไรจากงาน” ด้านบนยังไม่ได้หักค่าใช้จ่ายจิปาถะรายวัน (น้ำมัน/รับรอง/ออฟฟิศ ฯลฯ) — ตารางนี้หักให้เห็น <b>กำไรบริษัทสุทธิจริง</b></div>
+  <div class="table-wrap"><table><thead><tr><th>เดือน</th><th class="num">กำไรจากงาน</th><th class="num">ค่าใช้จ่ายดำเนินงาน</th><th class="num">กำไรบริษัทสุทธิ</th></tr></thead><tbody>
+  ${months.map(m=>{const pn=netBy[m]||0,ox=opexBy[m]||0,af=pn-ox;return `<tr><td style="font-weight:600">${monthLabel(m)}</td><td class="num" style="color:var(--good)">${THB(pn)}</td><td class="num" style="color:var(--warn)">${ox?'−'+THB(ox):'—'}</td><td class="num" style="font-weight:700;color:${af>=0?'var(--good)':'var(--crit)'}">${THB(af)}</td></tr>`;}).join('')}
+  </tbody><tfoot><tr style="border-top:2px solid var(--border-strong)"><td style="font-weight:700;padding:11px 14px">รวม</td><td class="num" style="font-weight:700;color:var(--good);padding:11px 14px">${THB(totProj)}</td><td class="num" style="font-weight:700;color:var(--warn);padding:11px 14px">−${THB(totOpex)}</td><td class="num" style="font-weight:800;color:${totProj-totOpex>=0?'var(--good)':'var(--crit)'};padding:11px 14px">${THB(totProj-totOpex)}</td></tr></tfoot></table></div></div>`;
 }
 
 /* ============ HR / PAYROLL ============ */
@@ -1814,7 +2288,8 @@ function renderSettings(){
     <div class="field"><label>ชื่อนิติบุคคล (บนเอกสาร)</label><input id="ac-${i}-legal" value="${a.legalName||''}" placeholder="เว้นว่าง = ใช้ชื่อบริษัทหลัก"></div>
     <div class="field-row"><div class="field"><label>เลขผู้เสียภาษี</label><input id="ac-${i}-tax" value="${a.taxId||''}"></div><div class="field"><label style="display:flex;align-items:center;gap:6px;margin-top:22px"><input type="checkbox" id="ac-${i}-vat" ${a.vat?'checked':''}> ออกใบกำกับภาษี (มี VAT)</label></div></div>
     <div class="field"><label>ที่อยู่ (บนเอกสาร)</label><input id="ac-${i}-addr" value="${a.addr||''}" placeholder="เว้นว่าง = ใช้ที่อยู่บริษัทหลัก"></div>
-    <div class="field"><label>บัญชีธนาคาร (บนเอกสาร)</label><input id="ac-${i}-bank" value="${a.bank||''}"></div></div>`).join('')}
+    <div class="field"><label>บัญชีธนาคาร (บนเอกสาร)</label><input id="ac-${i}-bank" value="${a.bank||''}"></div>
+    <div class="field"><label>QR รับโอนเงิน (พร้อมเพย์/ธนาคาร)</label><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div id="qrPrev-${i}" style="height:80px;min-width:80px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:6px;padding:4px;background:#fff">${a.qr?`<img src="${a.qr}" style="max-height:72px;max-width:120px;object-fit:contain">`:'<span class="mini-note">ยังไม่มี QR</span>'}</div><input type="file" accept="image/*" id="qr-${i}" style="font-size:11px;max-width:150px"><button class="btn sm" id="qrClear-${i}" type="button">ลบ QR</button></div></div></div>`).join('')}
   </div></div>
   <div class="card" style="margin-top:16px"><div class="card-head">${svg('palette')}<h3>คลังผ้า & มู่ลี่/ม่านม้วน</h3><span class="spacer"></span><span class="hint">${canSeeCost()?'แก้ราคาขาย + ราคาทุนได้':'แก้ราคาขายได้'} · กดบันทึก</span></div>
    <div class="table-wrap"><table><thead><tr><th>รายการ</th><th>รหัส</th><th class="num">หน้าผ้า/หน่วย</th><th class="num">ราคาขาย</th>${canSeeCost()?'<th class="num">ราคาทุน</th>':''}</tr></thead><tbody>
@@ -1834,6 +2309,7 @@ function renderSettings(){
   (state.accounts||[]).forEach((a,i)=>{const v=id=>{const el=c.querySelector('#ac-'+i+'-'+id);return el?el.value:'';};a.label=v('label')||a.label;a.legalName=v('legal');a.taxId=v('tax');a.addr=v('addr');a.bank=v('bank');const cb=c.querySelector('#ac-'+i+'-vat');a.vat=cb?cb.checked:a.vat;});
   c.querySelectorAll('.cell-input').forEach(inp=>{const a=inp.dataset.arr;const list=a==='blackout'?p.fabricsBlackout:a==='sheer'?p.fabricsSheer:a==='lining'?p.fabricsLining:p.blinds;const it=list.find(x=>(x.code||x.type)===inp.dataset.id);if(it)it[inp.dataset.k]=+inp.value;});
   ['VYNN','Vangarde'].forEach(b=>{const co=state.company[b];const g2=k=>{const el=c.querySelector('#co-'+b+'-'+k);return el?el.value:'';};co.name=g2('name');co.addr=g2('addr');co.taxId=g2('tax');co.phone=g2('phone');});
+  logAudit('price','แก้ไขการตั้งค่าราคา/ข้อมูลบริษัท');
   save();c.querySelector('#saveMsg').textContent='✓ บันทึกแล้ว — ราคา/ต้นทุน/ข้อมูลบริษัท อัปเดตแล้ว';
  };
  ['VYNN','Vangarde'].forEach(b=>{
@@ -1841,6 +2317,13 @@ function renderSettings(){
   if(fi)fi.onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{state.company[b].logo=rd.result;save();const pv=c.querySelector('#logoPrev-'+b);if(pv)pv.innerHTML=`<img src="${rd.result}" style="max-height:38px;max-width:150px;object-fit:contain">`;};rd.readAsDataURL(f);};
   const cl=c.querySelector('#logoClear-'+b);
   if(cl)cl.onclick=()=>{state.company[b].logo='';save();const pv=c.querySelector('#logoPrev-'+b);if(pv)pv.innerHTML='<span class="mini-note">ยังไม่มีโลโก้</span>';};
+ });
+ // QR upload/clear per account
+ (state.accounts||[]).forEach((a,i)=>{
+  const qi=c.querySelector('#qr-'+i);
+  if(qi)qi.onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{a.qr=rd.result;save();const pv=c.querySelector('#qrPrev-'+i);if(pv)pv.innerHTML=`<img src="${rd.result}" style="max-height:72px;max-width:120px;object-fit:contain">`;};rd.readAsDataURL(f);};
+  const qc=c.querySelector('#qrClear-'+i);
+  if(qc)qc.onclick=()=>{a.qr='';save();const pv=c.querySelector('#qrPrev-'+i);if(pv)pv.innerHTML='<span class="mini-note">ยังไม่มี QR</span>';};
  });
 }
 
@@ -1865,7 +2348,7 @@ function openLead(id){
  const steps=[];
  steps.push({done:true,ico:'inbox',color:'var(--info)',title:'รับลีดเข้าระบบ',meta:`${SOURCE[l.source].l} · ${fmtDate(l.created)}`,
   card:`<div class="kv"><dt>เบอร์</dt><dd>${l.phone}</dd>${l.desiredInstall?`<dt>วันติดตั้งที่ต้องการ</dt><dd>${fmtDate(l.desiredInstall)}</dd>`:''}${l.source==='interior'?`<dt>ผู้แนะนำ</dt><dd>${l.referrer||'—'} · ค่าแนะนำ ${l.referralPct||0}%</dd>`:''}</div>${l.note?`<div class="mini-note" style="margin-top:8px">📝 ${l.note}</div>`:''}`});
- steps.push({done:!!l.assignedTo,ico:'user',color:'var(--accent)',title:l.assignedTo?'มอบหมายให้เซลล์':'รอมอบหมายเซลล์',meta:l.assignedTo?personById(l.assignedTo).name:'ยังไม่มอบหมาย',card:l.assignedTo?'':'<button class="btn primary" id="assignBtn">มอบหมายอัตโนมัติ</button>'});
+ steps.push({done:!!l.assignedTo,ico:'user',color:'var(--accent)',title:l.assignedTo?'มอบหมายให้เซลล์':'รอมอบหมายเซลล์',meta:l.assignedTo?personById(l.assignedTo).name:'ยังไม่มอบหมาย',card:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="assignSel" style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px">${SALES.map(s=>`<option value="${s.id}" ${((l.assignedTo||(SALES.find(x=>x.brand===l.brand)||SALES[0]).id)===s.id)?'selected':''}>${s.name} (${s.brand})</option>`).join('')}</select><button class="btn primary" id="assignBtn">${l.assignedTo?'เปลี่ยนผู้รับผิดชอบ':'＋ มอบหมาย'}</button></div>`});
  const svPhotos=sv?sv.points.reduce((a,p)=>a+(p.photos||[]).length,0):0;
  steps.push({done:!!sv,ico:'ruler',color:'var(--warn)',title:sv?`วัดหน้างานแล้ว · ${sv.points.length} จุด`:'รอวัดหน้างาน',meta:sv?`${fmtDate(sv.date)} · โดย ${personById(sv.by).short} · ${svPhotos} รูป`:'—',
   card:sv?`${sv.points.map((pt,pi)=>surveyPointSummary(pt,pi)).join('')}<button class="btn sm" id="editSurveyBtn" style="margin-top:6px">${svg('ruler','ico')} ดู / แก้ไขการวัดแบบละเอียด</button>`:(l.assignedTo&&l.stage==='assigned'?`<button class="btn primary" id="surveyBtn">${svg('ruler','ico')} บันทึกการวัดหน้างาน</button>`:'')});
@@ -1905,11 +2388,11 @@ function openLead(id){
   ${q?docButtons(q,l):''}
   ${ticketsOf(l.id).length?`<div><div class="section-title">งานเก็บ & เคลมประกัน (${ticketsOf(l.id).length})</div>${ticketsOf(l.id).map(t=>{const st=TK_STATUS[t.status];const ty=TK_TYPE[t.type];return `<div class="card card-pad clickable" data-ticket="${t.id}" style="padding:12px 14px;margin-bottom:8px;cursor:pointer"><div style="display:flex;gap:8px;align-items:center;margin-bottom:5px;flex-wrap:wrap"><span class="pill ${ty.c}">${svg(ty.i,'')} ${ty.l}</span><span class="pill ${st.c}">${st.l}</span><span class="mini-note" style="margin-left:auto">${fmtDate(t.opened)}</span></div><div style="font-size:12.5px">${TK_ISSUE[t.issue]} — ${t.desc}</div><div class="mini-note" style="margin-top:4px">📷 ${(t.photos||[]).length} รูป · 🕘 เข้าแก้ ${(t.log||[]).length} ครั้ง${t.due&&t.status!=='resolved'?' · กำหนด '+fmtDate(t.due):''} · แตะดูประวัติ →</div></div>`;}).join('')}<button class="btn sm" id="drawerAddTicket">${svg('plus','ico')} แจ้งปัญหาเพิ่ม</button></div>`:(q&&['production','installing','done'].includes(l.stage)?`<div><button class="btn sm" id="drawerAddTicket">${svg('shield','ico')} แจ้งปัญหา / เพิ่มงานเก็บ</button></div>`:'')}`;
  const bind=(id,fn)=>{const el=body.querySelector('#'+id);if(el)el.onclick=fn;};
- bind('assignBtn',()=>{const pool=SALES.filter(s=>s.brand===l.brand);l.assignedTo=(pool[0]||SALES[0]).id;l.stage='assigned';save();openLead(id);render(false);});
+ bind('assignBtn',()=>{const sel=document.getElementById('assignSel');const sid=sel?sel.value:null;if(!sid)return;l.assignedTo=sid;if(l.stage==='new')l.stage='assigned';logAudit('assign','มอบหมาย '+l.name+' → '+personById(sid).name);save();openLead(id);render(false);});
  bind('surveyBtn',()=>openSurveyEditor(l.id));
  bind('editSurveyBtn',()=>openSurveyEditor(l.id));
  bind('quoteBtn',()=>{const nid='QT-'+(state.seq.QT++);const nq={id:nid,leadId:l.id,surveyId:sv.id,date:'2026-07-12',status:'pending',approvedBy:null,discount:0,adjust:0,optionLabel:'หลัก',selected:true,scopeNote:'',points:JSON.parse(JSON.stringify(sv.points))};nq.revisions=[{rev:1,date:'2026-07-12',discount:0,adjust:0,note:'ออกใบเสนอราคาครั้งแรก',status:'pending',total:calcQuote(nq).total,by:'a1'}];state.quotes.push(nq);state.payments[nid]=[{n:1,pct:50,st:'pending',d:''},{n:2,pct:30,st:'pending',d:''},{n:3,pct:20,st:'pending',d:''}];l.stage='quoted';save();openLead(id);render(false);});
- bind('approveBtn',()=>{q.status='approved';q.approvedBy='mg';l.stage='won';save();openLead(id);render(false);});
+ bind('approveBtn',()=>{q.status='approved';q.approvedBy=currentUser?currentUser.id:'mg';l.stage='won';logAudit('approve','อนุมัติใบเสนอราคา '+q.id+' — '+l.name);save();openLead(id);render(false);});
  bind('reviseBtn',()=>openReviseModal(q.id));
  bind('editItemsBtn',()=>openQuoteEditor(q.id));
  bind('addOptBtn',()=>addQuoteOption(l.id));
@@ -1990,14 +2473,117 @@ function openAddLead(){
   const sid=m.querySelector('#f-sales').value;const src=m.querySelector('#f-src').value;const nid='L-'+(state.seq.L++);
   const nbrand=m.querySelector('#f-brand').value;
   state.leads.unshift({id:nid,custCode:nextCustCode(nbrand),name:m.querySelector('#f-name').value.trim()||'ลูกค้าใหม่',site:m.querySelector('#f-site').value||'—',phone:m.querySelector('#f-phone').value||'—',brand:nbrand,source:src,assignedTo:sid||null,stage:sid?'assigned':'new',created:'2026-07-12',desiredInstall:m.querySelector('#f-install').value||'',note:m.querySelector('#f-note').value,referrer:src==='interior'?m.querySelector('#f-ref').value:'',referralPct:src==='interior'?+m.querySelector('#f-refpct').value:0});
+  logAudit('add_lead','เพิ่มลูกค้า '+(leadById(nid)?leadById(nid).name:nid)+' ('+nid+')');
   save();close();view='leads';render();openLead(nid);
  };
  m.classList.add('open');document.getElementById('scrim').classList.add('open');
 }
 
 /* ============ RENDER ROOT ============ */
-function renderView(){({overview:renderOverview,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR}[view]||renderOverview)();}
+/* ============ SALES HISTORY (12-month cumulative) ============ */
+function last12Months(){
+ const cy=2026,cm=7; // "current" month in this demo dataset
+ const arr=[];
+ for(let i=11;i>=0;i--){const idx=(cy*12+(cm-1))-i;const yy=Math.floor(idx/12),mm=(idx%12)+1;arr.push({y:yy,m:mm,key:yy+'-'+String(mm).padStart(2,'0'),label:MM[mm-1]+' '+String((yy+543)%100)});}
+ return arr;
+}
+function seedSalesHist(){
+ const months=last12Months();const h={};
+ SALES.forEach((s,si)=>{
+  let seed=0;for(const ch of s.id)seed+=ch.charCodeAt(0);
+  const base=150000+si*38000;
+  h[s.id]=months.map((mo,mi)=>{
+   const wave=Math.sin((mi+seed)*0.7)*0.32+Math.cos((mi+seed)*1.3)*0.16;
+   const growth=1+mi*0.02;
+   let v=Math.round((base*(1+wave)*growth)/1000)*1000;
+   if(v<20000)v=20000+(seed%5)*5000;
+   return{m:mo.key,v};
+  });
+ });
+ return h;
+}
+function liveMonthRevenue(sid){return state.leads.filter(l=>l.assignedTo===sid&&['won','production','installing','done'].includes(l.stage)).reduce((a,l)=>a+dealTotal(l.id),0);}
+function renderSalesHist(){
+ const c=document.getElementById('content');
+ const months=last12Months();
+ if(!state.salesHist)state.salesHist=seedSalesHist();
+ const mine=myScopeId();
+ let list=mine?SALES.filter(s=>s.id===mine):SALES.filter(s=>brand==='all'||s.brand===brand);
+ const totalOf=s=>{const h=(state.salesHist[s.id]||[]).slice();if(h.length)h[h.length-1]={m:months[months.length-1].key,v:liveMonthRevenue(s.id)};return h.reduce((a,x)=>a+x.v,0);};
+ const rowsHtml=list.map(s=>{
+  const hist=(state.salesHist[s.id]||[]).slice();
+  if(hist.length)hist[hist.length-1]={m:months[months.length-1].key,v:liveMonthRevenue(s.id)};
+  const total=hist.reduce((a,x)=>a+x.v,0);
+  const max=Math.max(...hist.map(x=>x.v),1);
+  const bars=hist.map((x,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;height:74px;background:var(--surface-2);border-radius:3px;display:flex;align-items:flex-end"><div title="${months[i].label}: ${THB(x.v)}" style="width:100%;background:${s.color};border-radius:3px;height:${Math.max(x.v/max*100,3)}%"></div></div><div style="font-size:9px;color:var(--text-faint);white-space:nowrap">${months[i].label}</div></div>`).join('');
+  const avg=Math.round(total/12);
+  return `<div class="card" style="margin-bottom:14px"><div class="card-head">${avatar(s.id)}<h3 style="margin-left:2px">${s.name}</h3> ${brandChip(s.brand)}<span class="spacer"></span><div style="text-align:right"><div class="mini-note">ยอดสะสม 12 เดือน</div><div style="font-size:19px;font-weight:800;color:var(--good)">${THB(total)}</div><div class="mini-note">เฉลี่ย ${THBk(avg)}/เดือน</div></div></div><div class="card-pad"><div style="display:flex;gap:5px;align-items:flex-end">${bars}</div></div></div>`;
+ }).join('');
+ const grand=list.reduce((a,s)=>a+totalOf(s),0);
+ c.innerHTML=`${mine?'<div class="banner-info">'+svg('user')+'มุมมองเซลล์ — เห็นเฉพาะยอดขายสะสมของตัวเอง</div>':`<div class="stat-row" style="margin-bottom:16px"><div class="stat"><div class="tile-ico">${svg('trend')}</div><div class="label">ยอดขายรวมทุกเซลล์ (12 เดือน)</div><div class="value">${THB(grand)}</div><div class="mini-note" style="margin-top:6px">${list.length} คน · ย้อนหลังถึง ${months[0].label}</div></div></div>`}${rowsHtml||'<div class="card"><div class="empty">ไม่มีข้อมูล</div></div>'}`;
+}
+/* ============ USER MANAGEMENT (admin) ============ */
+function renderUsers(){
+ const c=document.getElementById('content');
+ if(role!=='admin'){c.innerHTML='<div class="card"><div class="empty">'+svg('lock')+'<div>เฉพาะแอดมินเท่านั้นที่จัดการผู้ใช้ได้</div></div></div>';return;}
+ const rows=ACCOUNTS.map(u=>{const col=ROLE_COLOR[u.role]||'#777';const changed=state.passwords&&state.passwords[u.id];return `<tr><td style="font-weight:600">${u.name}</td><td><code>${u.login}</code></td><td><span class="role-badge" style="background:${col}22;color:${col}">${ROLE_LABEL[u.role]||u.role}</span></td><td>${u.brand?brandChip(u.brand):'—'}</td><td class="mini-note">${changed?'ตั้งรหัสเองแล้ว':'รหัสเริ่มต้น'}</td><td style="text-align:right"><button class="btn sm" data-pwreset="${u.id}">ตั้ง/รีเซ็ตรหัสผ่าน</button></td></tr>`;}).join('');
+ c.innerHTML=`<div class="card"><div class="card-head">${svg('user')}<h3>บัญชีพนักงาน (${ACCOUNTS.length})</h3><span class="spacer"></span><span class="hint">ตั้ง/รีเซ็ตรหัสผ่านได้</span></div><div class="table-wrap"><table><thead><tr><th>ชื่อ</th><th>รหัสพนักงาน</th><th>บทบาท</th><th>แบรนด์</th><th>รหัสผ่าน</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><div class="card-pad" style="border-top:1px solid var(--border)"><span class="mini-note">💡 รหัสผ่านเก็บฝั่งเดโม — ความปลอดภัยระดับเซิร์ฟเวอร์เต็มรูปแบบเป็นงานเฟสถัดไป</span></div></div>`;
+ c.querySelectorAll('[data-pwreset]').forEach(b=>b.onclick=()=>{
+  const uid=b.dataset.pwreset,u=accountByUid(uid);
+  const np=prompt('ตั้งรหัสผ่านใหม่สำหรับ '+u.name+' ('+u.login+'):');
+  if(np===null)return;if(String(np).length<4){alert('รหัสผ่านต้องยาวอย่างน้อย 4 ตัวอักษร');return;}
+  if(!state.passwords)state.passwords={};state.passwords[uid]=np;save();
+  logAudit('reset_password','ตั้งรหัสผ่านใหม่ให้ '+u.name+' ('+u.login+')');
+  alert('✓ เปลี่ยนรหัสผ่านของ '+u.name+' เรียบร้อย');
+  renderUsers();
+ });
+}
+/* ============ AUDIT LOG (admin) ============ */
+function renderAudit(){
+ const c=document.getElementById('content');
+ if(role!=='admin'){c.innerHTML='<div class="card"><div class="empty">'+svg('lock')+'<div>เฉพาะแอดมินเท่านั้นที่ดูบันทึกการใช้งานได้</div></div></div>';return;}
+ const cut=Date.now()-30*864e5;
+ const logs=(state.audit||[]).filter(e=>new Date(e.ts).getTime()>=cut).slice().reverse();
+ const actLabel={login:'เข้าระบบ',logout:'ออกจากระบบ',add_lead:'เพิ่มลูกค้า',assign:'มอบหมายเซลล์',survey:'บันทึกวัดหน้างาน',approve:'อนุมัติใบเสนอราคา',price:'แก้ไขราคา',reset_password:'ตั้งรหัสผ่าน',data:'จัดการข้อมูล'};
+ const actColor={login:'good',logout:'warn',reset_password:'crit',approve:'accent',price:'warn'};
+ const pad=n=>String(n).padStart(2,'0');
+ const fmt=ts=>{const d=new Date(ts);return `${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;};
+ const rows=logs.map(e=>`<tr><td style="white-space:nowrap;color:var(--text-muted)">${fmt(e.ts)}</td><td style="font-weight:600">${e.name}</td><td><span class="role-badge" style="background:${(ROLE_COLOR[e.role]||'#777')}22;color:${ROLE_COLOR[e.role]||'#777'}">${ROLE_LABEL[e.role]||e.role}</span></td><td><span class="pill ${actColor[e.action]||'info'}">${actLabel[e.action]||e.action}</span></td><td>${e.detail||''}</td></tr>`).join('');
+ c.innerHTML=`<div class="card"><div class="card-head">${svg('shield')}<h3>บันทึกการใช้งาน — 30 วันล่าสุด</h3><span class="spacer"></span><span class="hint">${logs.length} รายการ</span></div><div class="table-wrap"><table><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>บทบาท</th><th>การกระทำ</th><th>รายละเอียด</th></tr></thead><tbody>${rows||'<tr><td colspan="5" style="text-align:center;color:var(--text-faint);padding:22px">ยังไม่มีบันทึกการใช้งาน</td></tr>'}</tbody></table></div></div>`;
+}
+/* ============ VG PRICE LIST ============ */
+function renderVgPrice(){
+ const c=document.getElementById('content');
+ const vg=state.vgPricing||defaultVgPricing();
+ const showT=vgShowTiers();
+ const th=showT?'<th class="num">Dealer −30%</th><th class="num">Agent −15%</th>':'';
+ const tierCells=msrp=>{if(!showT)return '';const t=vgTiers(msrp);return `<td class="num" style="color:var(--text-muted)">${THB(t.dealer)}</td><td class="num" style="color:var(--text-muted)">${THB(t.agent)}</td>`;};
+ // Pergola
+ const perg=`<div class="card" style="margin-bottom:16px"><div class="card-head">${svg('booth')}<h3>Pergola</h3><span class="spacer"></span><span class="hint">ราคาต่อ ตร.ม. · มีขั้นต่ำพื้นที่</span></div>
+  <div class="table-wrap"><table><thead><tr><th>รุ่น</th><th>ขนาดสูงสุด (ก×ย×ส ม.)</th><th class="num">ราคาปลีก/ตร.ม.</th>${th}<th class="num">ขั้นต่ำ</th></tr></thead><tbody>
+   ${vg.pergola.map(r=>`<tr><td style="font-weight:600">${r.series}</td><td class="mini-note">${r.max}</td><td class="num" style="font-weight:700;color:var(--good)">${THB(r.msrp)}</td>${tierCells(r.msrp)}<td class="num">${r.moq} ตร.ม.</td></tr>`).join('')}
+  </tbody></table></div></div>`;
+ // ZipShade
+ const zip=`<div class="card" style="margin-bottom:16px"><div class="card-head">${svg('truck')}<h3>Zip Shade</h3><span class="spacer"></span><span class="hint">ราคาต่อ ตร.ม.</span></div>
+  <div class="table-wrap"><table><thead><tr><th>รุ่น</th><th class="num">ราคาปลีก/ตร.ม.</th>${th}<th class="num">ขั้นต่ำ</th></tr></thead><tbody>
+   ${vg.zipshade.map(r=>`<tr><td style="font-weight:600">${r.series}</td><td class="num" style="font-weight:700;color:var(--good)">${THB(r.msrp)}</td>${tierCells(r.msrp)}<td class="num">${r.moq} ตร.ม.</td></tr>`).join('')}
+  </tbody></table></div></div>`;
+ // Awning matrix
+ const awn=`<div class="card" style="margin-bottom:16px"><div class="card-head">${svg('shield')}<h3>Retractable Awning (กันสาดพับแขน)</h3><span class="spacer"></span><span class="hint">ราคาตายตัวตาม กว้าง×ยื่น</span></div>
+  <div class="table-wrap"><table><thead><tr><th class="num">กว้าง (ม.)</th><th class="num">ยื่น (ม.)</th><th class="num">ผ้า Polyester (จีน)</th><th class="num">ผ้า Acrylic (สเปน)</th>${showT?'<th class="num">Poly · Dealer</th><th class="num">Poly · Agent</th>':''}</tr></thead><tbody>
+   ${vg.awning.map(r=>`<tr><td class="num">${r.w}</td><td class="num">${r.ext}</td><td class="num" style="font-weight:700;color:var(--good)">${THB(r.poly)}</td><td class="num" style="font-weight:600;color:var(--accent)">${THB(r.acr)}</td>${tierCells(r.poly)}</tr>`).join('')}
+  </tbody></table></div>
+  <div class="card-pad" style="border-top:1px solid var(--border)"><span class="mini-note">💡 ราคารวมทั้ง 2 เกรดผ้าแล้ว · เสริม: มอเตอร์+รีโมท ฿12,000 · เซนเซอร์กันสั่น ฿3,000 · ติดตั้ง ฿3,000</span></div></div>`;
+ // Add-ons
+ const addBlock=(title,arr)=>`<div class="card" style="margin-bottom:14px"><div class="card-head"><h3 style="font-size:14px">อุปกรณ์เสริม · ${title}</h3></div><div class="table-wrap"><table><tbody>${arr.map(a=>`<tr><td>${a.n}</td><td class="num" style="font-weight:600">${THB(a.price)}</td><td class="mini-note">/${a.u}</td></tr>`).join('')}</tbody></table></div></div>`;
+ c.innerHTML=`
+  <div class="banner-info">${svg(showT?'user':'lock')}${showT?'คุณเห็นราคาครบทั้ง 3 ระดับ (ปลีก / Dealer / Agent)':'มุมมองเซลล์ — เห็นเฉพาะ<b>ราคาขายปลีก</b> สำหรับเสนอลูกค้า'}</div>
+  ${perg}${zip}${awn}
+  <div class="grid two-col" style="grid-template-columns:1fr 1fr 1fr">${addBlock('Pergola',vg.addons.pergola)}${addBlock('Zip Shade',vg.addons.zipshade)}${addBlock('Awning',vg.addons.awning)}</div>`;
+}
+function renderView(){({overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
 function render(rerenderNav=true){
+ if(!canView(view))view=firstAllowedView(); // block disallowed views
  const meta=META[view];
  document.getElementById('pageTitle').textContent=meta.t;
  document.getElementById('pageSub').textContent=meta.s;
@@ -2010,7 +2596,16 @@ function render(rerenderNav=true){
 /* ============ WIRING ============ */
 function initChrome(){
  document.getElementById('brandFilter').querySelectorAll('button').forEach(b=>b.onclick=()=>{brand=b.dataset.b;document.querySelectorAll('#brandFilter button').forEach(x=>x.classList.toggle('active',x===b));render();});
- document.getElementById('roleSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{role=b.dataset.r;document.querySelectorAll('#roleSeg button').forEach(x=>x.classList.toggle('active',x===b));if(view==='settings'&&role==='sales')view='overview';if(view==='pnl'&&role!=='admin')view='overview';if(view==='hr'&&!(role==='hr'||role==='admin'))view='overview';render();});
+ // ---- login / logout wiring ----
+ document.getElementById('loginForm').onsubmit=e=>{
+  e.preventDefault();
+  const id=document.getElementById('loginId').value;
+  const pw=document.getElementById('loginPw').value;
+  const err=document.getElementById('loginErr');
+  const r=tryLogin(id,pw);
+  if(r.ok){showApp();}else{err.textContent=r.msg;err.classList.add('show');}
+ };
+ document.getElementById('logoutBtn').onclick=()=>logout();
  const tt=document.getElementById('themeToggle');
  function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('vynn_theme',t);document.getElementById('themeLabel').textContent=t==='dark'?'โหมดมืด':'โหมดสว่าง';document.getElementById('themeIcon').innerHTML=svg(t==='dark'?'moon':'sun');const ic=document.querySelector('#themeIcon svg');if(ic)ic.style.width='16px';}
  setTheme(localStorage.getItem('vynn_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
@@ -2026,5 +2621,6 @@ function initChrome(){
  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAll();});
  document.getElementById('hamburger').onclick=()=>{document.querySelector('.sidebar').classList.add('open');document.getElementById('scrim').classList.add('open');};
 }
-load();initChrome();render();
+load();initChrome();
+if(restoreSession()){showApp();}else{showLogin();}
 </script>
