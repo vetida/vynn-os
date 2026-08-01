@@ -2633,30 +2633,47 @@ function initChrome(){
 </script>
 <script>
 /* ============================================================
- * VYNN·OS — server persistence adapter (Postgres via /api/state)
- * Replaces the localStorage-only boot with a DB-backed one.
- * The main app's save() calls window.__serverSaveDebounced().
+ * VYNN·OS — offline-first persistence adapter (Postgres via /api/state)
+ * - save() writes localStorage instantly + calls __serverSaveDebounced()
+ * - every edit marks a persisted "dirty" flag (survives crash / power loss)
+ * - on boot: if local has UNSYNCED changes -> trust LOCAL (never let a stale
+ *   server copy overwrite work made offline / lost before a sync); else server
+ * - auto-retries the sync when the network comes back (online event + interval)
  * ============================================================ */
 (function () {
   window.__VYNN_SERVER = true;
-  var saveTimer = null, saving = false, dirty = false;
+  var META = 'vynn_os_meta';
+  var saveTimer = null, saving = false, pending = false;
+
+  function readMeta() { try { return JSON.parse(localStorage.getItem(META)) || {}; } catch (e) { return {}; } }
+  function writeMeta(m) { try { localStorage.setItem(META, JSON.stringify(m)); } catch (e) {} }
+  function setDirty(v) {
+    var m = readMeta();
+    m.dirty = v;
+    if (v) m.localUpdatedAt = new Date().toISOString();
+    else m.lastSyncedAt = new Date().toISOString();
+    writeMeta(m);
+  }
+  function isDirty() { return !!readMeta().dirty; }
+  function hasLocal() { try { return !!localStorage.getItem(LS); } catch (e) { return false; } }
 
   function badge(stateName) {
     var d = document.getElementById('__syncBadge');
     if (!d) return;
     var m = {
-      saving:  ['#B77504', '● กำลังบันทึก…'],
-      saved:   ['#2E7D46', '● บันทึกแล้ว (ฐานข้อมูล)'],
-      offline: ['#C0392B', '● ออฟไลน์ — แก้ไขยังไม่ถูกบันทึก']
-    }[stateName];
+      saving:   ['#B77504', '● กำลังบันทึก…'],
+      saved:    ['#2E7D46', '● บันทึกแล้ว · ซิงค์ขึ้นระบบ'],
+      unsynced: ['#B06A00', '● บันทึกในเครื่องแล้ว · รอซิงค์ขึ้นระบบ'],
+      offline:  ['#C0392B', '● ออฟไลน์ · ข้อมูลเก็บในเครื่องแล้ว']
+    }[stateName] || ['#2E7D46', '● บันทึกแล้ว'];
     d.style.background = m[0];
     d.textContent = m[1];
-    d.title = m[1];
+    d.title = m[1] + (readMeta().lastSyncedAt ? '\nซิงค์ล่าสุด: ' + new Date(readMeta().lastSyncedAt).toLocaleString('th-TH') : '');
   }
 
   function serverSaveNow() {
-    if (saving) { dirty = true; return; }
-    saving = true; dirty = false;
+    if (saving) { pending = true; return; }
+    saving = true; pending = false;
     badge('saving');
     fetch('/api/state', {
       method: 'PUT',
@@ -2664,58 +2681,83 @@ function initChrome(){
       body: JSON.stringify({ state: state })
     }).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
+      setDirty(false);
       badge('saved');
     }).catch(function (e) {
-      console.warn('save failed', e);
-      badge('offline');
+      console.warn('sync failed — kept safely in this device', e);
+      badge(navigator.onLine === false ? 'offline' : 'unsynced');
     }).then(function () {
       saving = false;
-      if (dirty) serverSaveNow();
+      if (pending) serverSaveNow();
     });
   }
+
+  // called by the app's save() on every change
   window.__serverSaveDebounced = function () {
-    dirty = true;
+    setDirty(true);            // persist "unsynced" flag immediately (crash-safe)
+    pending = true;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(serverSaveNow, 700);
   };
 
-  function serverLoad() {
+  function tryFlush() { if (isDirty() && !saving) serverSaveNow(); }
+
+  function loadFromServer() {
     return fetch('/api/state').then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     }).then(function (j) {
-      if (j && j.state) {                 // existing data in DB
+      if (j && j.state) {                       // existing data in DB
         state = j.state; migrateState();
+        try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {}
+        setDirty(false);
         return 'server';
       }
-      // DB reachable but empty -> seed demo data and push it up
-      state = seed(); migrateState();
+      state = seed(); migrateState();           // DB reachable but empty -> seed + push
+      try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {}
       serverSaveNow();
       return 'seeded';
-    }).catch(function (e) {
+    });
+  }
+
+  function boot() {
+    // If this device has edits that were never confirmed synced (offline work,
+    // or a crash/power-off before the last sync), the local cache is the freshest
+    // truth — load it and push up, so a stale server copy can never overwrite it.
+    if (hasLocal() && isDirty()) {
+      load();                                   // localStorage cache -> state + migrate
+      setTimeout(serverSaveNow, 400);           // attempt to push local up
+      return Promise.resolve('local-dirty');
+    }
+    // Clean local (already synced) or first run -> take server; offline -> local.
+    return loadFromServer().catch(function (e) {
       console.warn('server load failed, using local cache', e);
-      load();                              // localStorage cache or seed (offline)
+      load();
       return 'offline';
     });
   }
 
   function mountBadge(mode) {
-    if (document.getElementById('__syncBadge')) { badge(mode); return; }
-    var d = document.createElement('div');
-    d.id = '__syncBadge';
-    d.style.cssText = 'position:fixed;bottom:12px;right:14px;z-index:400;font-size:11px;font-weight:600;color:#fff;padding:5px 11px;border-radius:20px;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.92;pointer-events:none;font-family:inherit';
-    document.body.appendChild(d);
+    if (!document.getElementById('__syncBadge')) {
+      var d = document.createElement('div');
+      d.id = '__syncBadge';
+      d.style.cssText = 'position:fixed;bottom:12px;right:14px;z-index:400;font-size:11px;font-weight:600;color:#fff;padding:5px 11px;border-radius:20px;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.92;pointer-events:none;font-family:inherit';
+      document.body.appendChild(d);
+    }
     badge(mode);
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    serverLoad().then(function (mode) {
+    boot().then(function (mode) {
       initChrome();
-      // login gate (same as local boot) — DB data is loaded, now show login or app
+      // login gate (same as local boot)
       if (typeof restoreSession === 'function' && restoreSession()) { showApp(); }
       else if (typeof showLogin === 'function') { showLogin(); }
       else { render(); }
-      mountBadge(mode === 'offline' ? 'offline' : 'saved');
+      mountBadge((mode === 'offline' || mode === 'local-dirty') ? (isDirty() ? 'unsynced' : 'saved') : 'saved');
+      // auto-retry the sync when the connection returns, and periodically
+      window.addEventListener('online', function () { tryFlush(); });
+      setInterval(tryFlush, 20000);
     });
   });
 })();
