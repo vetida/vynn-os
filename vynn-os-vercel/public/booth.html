@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>ฟอร์มเก็บลูกค้าหน้าบูธ · VYNN / Vangarde</title>
+<style>
+  :root{
+    --accent:#2E6FE0; --accent-d:#255ec2; --accent-soft:#e7f0ff;
+    --vynn:#2E6FE0; --vangarde:#D8434F;
+    --ink:#15203a; --muted:#5c6b82; --faint:#93a1b5;
+    --paper:#eef2f8; --surface:#ffffff; --surface2:#f3f6fb; --border:#dde5f0; --border2:#cbd6e6;
+    --good:#1c8c66; --good-bg:#e4f4ee; --warn:#b57d16; --warn-bg:#fbefd6; --bad:#c0392b; --bad-bg:#fbe7e3;
+    --num:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,"Segoe UI","Leelawadee UI",Tahoma,-apple-system,sans-serif;
+    --sh:0 1px 2px rgba(20,40,80,.05),0 4px 16px rgba(20,40,80,.07);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --accent:#4f8df5; --accent-d:#3f79db; --accent-soft:#16233c;
+    --vynn:#6ba2ff; --vangarde:#ff8a92;
+    --ink:#e7edf6; --muted:#9aa8bd; --faint:#6b7a90;
+    --paper:#0d1420; --surface:#161f2e; --surface2:#1b2636; --border:#293648; --border2:#38495e;
+    --good:#43c093; --good-bg:#123227; --warn:#e0a437; --warn-bg:#352a13; --bad:#e57366; --bad-bg:#37201d;
+    --sh:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="light"]{--accent:#2E6FE0;--accent-soft:#e7f0ff;--ink:#15203a;--muted:#5c6b82;--paper:#eef2f8;--surface:#fff;--surface2:#f3f6fb;--border:#dde5f0;--border2:#cbd6e6;--vynn:#2E6FE0;--vangarde:#D8434F;--good:#1c8c66;--good-bg:#e4f4ee;--warn:#b57d16;--warn-bg:#fbefd6;--bad:#c0392b;--bad-bg:#fbe7e3;--faint:#93a1b5;}
+  :root[data-theme="dark"]{--accent:#4f8df5;--accent-soft:#16233c;--ink:#e7edf6;--muted:#9aa8bd;--paper:#0d1420;--surface:#161f2e;--surface2:#1b2636;--border:#293648;--border2:#38495e;--vynn:#6ba2ff;--vangarde:#ff8a92;--good:#43c093;--good-bg:#123227;--warn:#e0a437;--warn-bg:#352a13;--bad:#e57366;--bad-bg:#37201d;--faint:#6b7a90;}
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-text-size-adjust:100%;}
+  .num{font-family:var(--num);font-variant-numeric:tabular-nums;}
+  .wrap{max-width:640px;margin:0 auto;padding:0 0 40px;}
+
+  /* appbar */
+  .appbar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:var(--sh);}
+  .appbar-in{padding:11px 15px;display:flex;align-items:center;gap:10px;}
+  .logo{font-weight:800;font-size:16px;letter-spacing:-.01em;}
+  .logo .b1{color:var(--vynn)} .logo .b2{color:var(--vangarde)}
+  .appbar .who{margin-left:auto;text-align:right;font-size:12px;color:var(--muted);line-height:1.25;}
+  .appbar .who b{color:var(--ink);font-size:13px;}
+  .tabs{display:flex;border-top:1px solid var(--border);}
+  .tabs button{flex:1;padding:11px 6px;background:none;border:none;font-family:var(--sans);font-size:13.5px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;}
+  .tabs button.on{color:var(--accent);border-bottom-color:var(--accent);}
+
+  .pad{padding:15px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh);padding:15px;margin-bottom:14px;}
+  .card h2{font-size:14px;margin:0 0 3px;font-weight:800;}
+  .card .sub{font-size:12px;color:var(--muted);margin:0 0 12px;}
+  .eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:800;}
+
+  label.fl{display:block;font-size:13px;font-weight:700;margin:0 0 5px;}
+  label.fl .req{color:var(--bad);} label.fl .opt{color:var(--faint);font-weight:500;font-size:11.5px;}
+  .f{margin-bottom:13px;} .f:last-child{margin-bottom:0;}
+  input,textarea,select{width:100%;font-family:var(--sans);font-size:16px;padding:11px 12px;border:1.5px solid var(--border2);border-radius:10px;background:var(--surface2);color:var(--ink);}
+  input[type=date],input[type=tel]{font-family:var(--num);}
+  textarea{min-height:62px;resize:vertical;line-height:1.45;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+  input::placeholder,textarea::placeholder{color:var(--faint);}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{font-family:var(--sans);font-size:14px;font-weight:600;padding:9px 14px;border-radius:100px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--ink);cursor:pointer;user-select:none;transition:.12s;}
+  .chip:active{transform:scale(.96);}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .chip.on.bv{background:var(--vynn);border-color:var(--vynn);}
+  .chip.on.bg{background:var(--vangarde);border-color:var(--vangarde);}
+  .prodgrp{margin-top:10px;padding-top:11px;border-top:1px dashed var(--border);display:none;}
+  .prodgrp.show{display:block;}
+  .prodgrp .gh{font-size:12.5px;font-weight:800;margin-bottom:8px;}
+  .prodgrp .gh.v{color:var(--vynn)} .prodgrp .gh.g{color:var(--vangarde)}
+  .hideblock{display:none;} .hideblock.show{display:block;}
+
+  .btn{font-family:var(--sans);font-size:15px;font-weight:800;padding:14px;border-radius:12px;border:none;background:var(--accent);color:#fff;width:100%;cursor:pointer;box-shadow:0 3px 10px rgba(46,111,224,.28);}
+  .btn:active{transform:translateY(1px);}
+  .btn.sec{background:var(--surface);color:var(--ink);border:1.5px solid var(--border2);box-shadow:none;font-weight:700;font-size:14px;padding:12px;}
+  .btn.sm{padding:9px 12px;font-size:13px;width:auto;}
+  .btnrow{display:flex;gap:9px;flex-wrap:wrap;}
+  .btnrow .btn{flex:1;min-width:120px;}
+  .err{color:var(--bad);font-size:12.5px;margin-top:6px;display:none;}
+  .err.show{display:block;}
+
+  /* counter strip */
+  .counter{display:flex;gap:10px;margin-bottom:14px;}
+  .cbox{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:var(--sh);}
+  .cbox .cn{font-size:26px;font-weight:800;line-height:1;} .cbox .cl{font-size:11.5px;color:var(--muted);margin-top:5px;}
+  .cbox.hot .cn{color:var(--warn);}
+
+  /* lead list */
+  .lead{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 13px;margin-bottom:10px;box-shadow:var(--sh);}
+  .lead .lt{display:flex;align-items:baseline;gap:8px;}
+  .lead .ln{font-weight:800;font-size:15px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .lead .lp{font-family:var(--num);font-size:13.5px;color:var(--accent);font-weight:700;text-decoration:none;}
+  .lead .meta{font-size:12.5px;color:var(--muted);margin-top:5px;display:flex;flex-wrap:wrap;gap:6px 10px;}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;}
+  .tag.v{background:color-mix(in srgb,var(--vynn) 15%,transparent);color:var(--vynn);}
+  .tag.g{background:color-mix(in srgb,var(--vangarde) 15%,transparent);color:var(--vangarde);}
+  .tag.hot{background:var(--warn-bg);color:var(--warn);}
+  .tag.r{background:color-mix(in srgb,#b8860b 20%,transparent);color:#8a6a12;font-weight:800;}
+  @media (prefers-color-scheme:dark){.tag.r{color:#e5b84e;}}
+  :root[data-theme="dark"] .tag.r{color:#e5b84e;} :root[data-theme="light"] .tag.r{color:#8a6a12;}
+  .tag.dep{background:var(--good-bg);color:var(--good);font-weight:800;}
+  .lead .lact{display:flex;gap:14px;margin-top:9px;}
+  .lead .lact button{background:none;border:none;color:var(--muted);font-family:var(--sans);font-size:12.5px;font-weight:700;cursor:pointer;padding:0;}
+  .lead .lact button.del{color:var(--bad);}
+  .listh{display:flex;align-items:baseline;justify-content:space-between;margin:4px 2px 10px;}
+  .listh h2{font-size:15px;margin:0;font-weight:800;}
+  .empty{text-align:center;color:var(--muted);padding:30px 14px;font-size:14px;}
+
+  .note-info{background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:11px;padding:11px 13px;font-size:12.5px;color:var(--ink);margin-bottom:14px;line-height:1.55;}
+  .note-warn{background:var(--warn-bg);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:11px;padding:11px 13px;font-size:12.5px;margin-top:4px;line-height:1.55;}
+
+  /* toast */
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--good);color:#fff;font-weight:800;font-size:14.5px;padding:12px 20px;border-radius:100px;box-shadow:0 6px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:.25s;z-index:50;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* manager */
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--border);}
+  th{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
+  td.n,th.n{text-align:right;font-family:var(--num);}
+  .bar{height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-top:4px;}
+  .bar>span{display:block;height:100%;background:var(--accent);}
+  .tablewrap{overflow-x:auto;}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+
+<div class="wrap">
+  <div class="appbar">
+    <div class="appbar-in">
+      <div class="logo"><span class="b1">VYNN</span> · <span class="b2">Vangarde</span></div>
+      <div class="who" id="whoBox"></div>
+    </div>
+    <div class="tabs">
+      <button id="tabSales" class="on">📝 บันทึกลูกค้า</button>
+      <button id="tabMgr">📊 สรุป (หัวหน้า)</button>
+    </div>
+  </div>
+
+  <!-- SALES VIEW -->
+  <div id="salesView" class="pad">
+    <!-- setup -->
+    <div class="card" id="setupCard">
+      <div class="eyebrow">ขั้นที่ 1 จาก 2 · ตั้งค่าครั้งแรก</div>
+      <h2 style="margin-top:6px">ใส่ชื่อคุณก่อน แล้วค่อยเก็บลูกค้า</h2>
+      <p class="sub">แค่ตั้งชื่อ 1 ครั้ง (จำไว้ในเครื่องนี้) 👉 พอกดปุ่มด้านล่าง <b>ฟอร์มกรอกลูกค้าเต็ม</b> (ชื่อ/เบอร์/สินค้า/เรท/เงินจอง) จะเปิดให้กรอก และเก็บได้เรื่อยๆ ไม่ต้องตั้งชื่อซ้ำ</p>
+      <div class="f"><label class="fl">ชื่อเซลล์ (คุณ) <span class="req">*</span></label><input id="sName" placeholder="เช่น ณิชา / K.ณิชา" autocomplete="off"></div>
+      <div class="two">
+        <div class="f"><label class="fl">ชื่องาน/อีเวนต์</label><input id="sEvent" placeholder="เช่น งานบ้านและสวน 2026" autocomplete="off"></div>
+        <div class="f"><label class="fl">วันที่งาน</label><input type="date" id="sEventDate"></div>
+      </div>
+      <button class="btn" id="saveSetup">บันทึกชื่อ แล้วเริ่มเก็บลูกค้า →</button>
+    </div>
+
+    <div id="mainSales" style="display:none">
+      <div class="counter">
+        <div class="cbox"><div class="cn num" id="cToday">0</div><div class="cl">วันนี้</div></div>
+        <div class="cbox"><div class="cn num" id="cAll">0</div><div class="cl">ทั้งหมด (คุณ)</div></div>
+        <div class="cbox hot"><div class="cn num" id="cHot">0</div><div class="cl">ใช้งานด่วน 🔥</div></div>
+      </div>
+
+      <!-- add form -->
+      <div class="card">
+        <h2 id="formTitle">＋ เพิ่มลูกค้าใหม่</h2>
+        <p class="sub">กรอกเร็วๆ ที่จำเป็นคือ ชื่อ + เบอร์ (ที่เหลือเว้นได้ ค่อยเติมทีหลัง)</p>
+        <div class="f"><label class="fl">ชื่อลูกค้า <span class="req">*</span></label><input id="fName" placeholder="ชื่อ-นามสกุล / ชื่อเล่น" autocomplete="off"></div>
+        <div class="f"><label class="fl">เบอร์โทร <span class="req">*</span></label><input type="tel" id="fPhone" placeholder="08x-xxx-xxxx" inputmode="tel" autocomplete="off"></div>
+        <div class="f"><label class="fl">ที่อยู่ / พื้นที่ <span class="opt">(ไม่บังคับ)</span></label><textarea id="fAddr" placeholder="บ้าน/คอนโด/โครงการ, เขต/อำเภอ, จังหวัด"></textarea></div>
+
+        <div class="f">
+          <label class="fl">สนใจแบรนด์ไหน <span class="opt">(เลือกได้หลายอัน)</span></label>
+          <div class="chips" id="brandChips">
+            <button type="button" class="chip" data-brand="VYNN">VYNN (ผ้าม่าน/มู่ลี่)</button>
+            <button type="button" class="chip" data-brand="Vangarde">Vangarde (กันแดดกลางแจ้ง)</button>
+          </div>
+          <div class="prodgrp" id="grpVYNN"><div class="gh v">สินค้า VYNN ที่สนใจ</div><div class="chips" id="prodVYNN"></div></div>
+          <div class="prodgrp" id="grpVangarde"><div class="gh g">สินค้า Vangarde ที่สนใจ</div><div class="chips" id="prodVangarde"></div></div>
+        </div>
+
+        <div class="two">
+          <div class="f"><label class="fl">วันที่ (พบลูกค้า)</label><input type="date" id="fDate"></div>
+          <div class="f"><label class="fl">เรทลูกค้า <span class="opt">(โอกาสปิด)</span></label>
+            <select id="fRate">
+              <option value="">— เลือก —</option>
+              <option value="VVIP">👑 VVIP (พร้อมปิด)</option>
+              <option value="VIP">⭐ VIP</option>
+              <option value="สนใจมาก">🔥 สนใจมาก</option>
+              <option value="สนใจ">สนใจ</option>
+              <option value="ดูทั่วไป">ดูทั่วไป</option>
+            </select>
+          </div>
+        </div>
+        <div class="f">
+          <label class="fl">ต้องการใช้งานเมื่อไหร่</label>
+          <div class="chips" id="useChips">
+            <button type="button" class="chip" data-use="ด่วน (ภายในเดือนนี้)">ด่วน 🔥</button>
+            <button type="button" class="chip" data-use="1–3 เดือน">1–3 เดือน</button>
+            <button type="button" class="chip" data-use="3–6 เดือน">3–6 เดือน</button>
+            <button type="button" class="chip" data-use="6 เดือนขึ้นไป">6 เดือน+</button>
+            <button type="button" class="chip" data-use="ยังไม่แน่ใจ">ยังไม่แน่ใจ</button>
+          </div>
+        </div>
+
+        <div class="f">
+          <label class="fl">ช่วงที่ให้ติดต่อกลับ</label>
+          <div class="chips" id="cbChips">
+            <button type="button" class="chip" data-cb="โทรได้เลย">โทรได้เลย</button>
+            <button type="button" class="chip" data-cb="ภายในสัปดาห์นี้">สัปดาห์นี้</button>
+            <button type="button" class="chip" data-cb="สัปดาห์หน้า">สัปดาห์หน้า</button>
+            <button type="button" class="chip" data-cb="ภายในเดือนนี้">เดือนนี้</button>
+            <button type="button" class="chip" data-cb="ระบุช่วงวันที่">ระบุวันที่…</button>
+          </div>
+          <div class="hideblock" id="cbDateBlock" style="margin-top:10px">
+            <div class="two">
+              <div><label class="fl" style="font-size:12px">ตั้งแต่</label><input type="date" id="fCbFrom"></div>
+              <div><label class="fl" style="font-size:12px">ถึง</label><input type="date" id="fCbTo"></div>
+            </div>
+          </div>
+          <div class="chips" id="cbTimeChips" style="margin-top:9px">
+            <button type="button" class="chip" data-cbt="เช้า (9–12)">เช้า</button>
+            <button type="button" class="chip" data-cbt="บ่าย (12–16)">บ่าย</button>
+            <button type="button" class="chip" data-cbt="เย็น (16–19)">เย็น</button>
+          </div>
+        </div>
+
+        <div class="f"><label class="fl">โน้ต / รายละเอียดเพิ่มเติม <span class="opt">(ไม่บังคับ)</span></label><textarea id="fNote" placeholder="เช่น สนใจม่านห้องนอน 3 ห้อง งบ ~50,000 / คุยกับสามีก่อน / เคยเห็นงานที่คอนโดเพื่อน"></textarea></div>
+
+        <div class="f">
+          <label class="fl">การจองในงาน (โปรโมชั่น)</label>
+          <div class="chips" id="depToggle"><button type="button" class="chip" data-dep="1">💰 ลูกค้าวางเงินจอง</button></div>
+          <div class="hideblock" id="depBlock" style="margin-top:11px">
+            <div class="f" style="margin-bottom:10px"><label class="fl" style="font-size:12.5px">ยอดที่วางจอง (บาท)</label><input type="number" id="fDep" inputmode="numeric" placeholder="เช่น 5000"></div>
+            <label class="fl" style="font-size:12.5px">จ่ายแบบไหน</label>
+            <div class="chips" id="payChips"><button type="button" class="chip" data-pay="เงินสด">เงินสด</button><button type="button" class="chip" data-pay="โอน/พร้อมเพย์">โอน/พร้อมเพย์</button><button type="button" class="chip" data-pay="บัตรเครดิต">บัตรเครดิต</button></div>
+          </div>
+        </div>
+        <div class="err" id="formErr"></div>
+        <button class="btn" id="saveLead">✓ บันทึกลูกค้า</button>
+        <button class="btn sec" id="cancelEdit" style="display:none;margin-top:8px">ยกเลิกการแก้ไข</button>
+      </div>
+
+      <!-- export -->
+      <div class="card">
+        <h2>ส่งข้อมูลให้หัวหน้า / สำรอง</h2>
+        <p class="sub">ท้ายวันกด export แล้วส่งไฟล์ให้หัวหน้าทางไลน์ (หัวหน้าเอาไปรวมในแท็บ “สรุป”)</p>
+        <div class="btnrow">
+          <button class="btn sec" id="expJSON">⬇️ ไฟล์รวม (.json)</button>
+          <button class="btn sec" id="expCSV">⬇️ Excel (.csv)</button>
+          <button class="btn sec" id="expShare">📤 แชร์</button>
+        </div>
+        <div class="note-warn" style="margin-top:12px">⚠️ ข้อมูลเก็บอยู่ใน<b>มือถือเครื่องนี้เครื่องเดียว</b> — ท้ายวันควร export/แชร์เก็บไว้ และอย่าล้างข้อมูลเบราว์เซอร์ · แนะนำ “เพิ่มไปหน้าจอโฮม” เพื่อเปิดง่ายและกันแท็บหาย</div>
+      </div>
+
+      <div class="listh"><h2>ลูกค้าของคุณ</h2><span class="sub" id="listCount"></span></div>
+      <div id="myList"></div>
+    </div>
+  </div>
+
+  <!-- MANAGER VIEW -->
+  <div id="mgrView" class="pad" style="display:none">
+    <div class="note-info">📊 หน้านี้สำหรับ <b>หัวหน้า</b> รวมข้อมูลจากเซลล์ทุกคน: ให้เซลล์แต่ละคนกด “⬇️ ไฟล์รวม (.json)” ส่งมาทางไลน์ แล้วกดปุ่มด้านล่างเลือกไฟล์ทั้งหมด (เลือกหลายไฟล์พร้อมกันได้) เพื่อดูว่าใครเก็บได้กี่ราย + รวมส่งเข้า ERP</div>
+    <div class="card">
+      <h2>รวมไฟล์จากเซลล์</h2>
+      <p class="sub">เลือกไฟล์ .json ที่เซลล์ส่งมา (เลือกได้หลายไฟล์)</p>
+      <label class="btn sec" style="display:block;text-align:center;cursor:pointer">📂 เลือกไฟล์ .json<input type="file" id="mgrFiles" accept=".json,application/json" multiple hidden></label>
+      <button class="btn sec" id="mgrClear" style="margin-top:9px;display:none">ล้างข้อมูลที่รวมไว้</button>
+    </div>
+    <div id="mgrSummary"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+(function(){
+ "use strict";
+ var LS='vynn_booth_v1';
+ var PRODUCTS={
+   VYNN:['ผ้าม่าน','ม่านม้วน','มู่ลี่ไม้','ม่านพับ','วอลเปเปอร์','ฟิล์มกันแดด/กันความร้อน','ม่านมอเตอร์/ออโต้','ม่านโรมัน'],
+   Vangarde:['Pergola (ระแนง/หลังคาปรับได้)','Zip Shade (ม่านกันแดด-ฝน)','กันสาดพับได้ (Awning)','Skylight (หลังคากระจก)','ม่านม้วนกลางแจ้ง']
+ };
+ var st={sales:'',event:'',eventDate:'',leads:[]};
+ var draft={brands:[],prodV:[],prodG:[],use:'',cb:'',cbt:'',hasDep:false,pay:'',editId:null};
+ function money(n){return (+n||0).toLocaleString('en-US');}
+ function fmtD(d){if(!d)return '';var p=String(d).split('-');return p.length===3?(+p[2]+'/'+(+p[1])):d;}
+ var merge=null; // manager merged data
+ var ROIK='vynn_booth_roi'; var roi={cost:'',returned:''};
+
+ function $(id){return document.getElementById(id);}
+ function load(){try{var r=localStorage.getItem(LS);if(r)st=Object.assign(st,JSON.parse(r));}catch(e){}}
+ function save(){try{localStorage.setItem(LS,JSON.stringify(st));}catch(e){}}
+ function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+ function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1900);}
+ function digits(s){return String(s||'').replace(/\D/g,'');}
+
+ /* ---------- setup ---------- */
+ function renderWho(){
+   var w=$('whoBox');
+   if(st.sales){w.innerHTML='<b>'+esc(st.sales)+'</b><br>'+(st.event?esc(st.event):'—');}
+   else w.innerHTML='<span style="color:var(--faint)">ยังไม่ตั้งชื่อ</span>';
+ }
+ function showSetupOrMain(){
+   var ready=!!st.sales;
+   $('setupCard').style.display=ready?'none':'';
+   $('mainSales').style.display=ready?'':'none';
+   if(ready){buildProducts();renderList();updateCounters();}
+ }
+ $('saveSetup').onclick=function(){
+   var n=$('sName').value.trim();
+   if(!n){$('sName').focus();toast('ใส่ชื่อคุณก่อนนะ');return;}
+   st.sales=n;st.event=$('sEvent').value.trim();st.eventDate=$('sEventDate').value||'';
+   save();renderWho();showSetupOrMain();toast('บันทึกแล้ว ✓');
+ };
+
+ /* ---------- products / chips ---------- */
+ function buildProducts(){
+   ['VYNN','Vangarde'].forEach(function(b){
+     var box=$('prod'+b);if(box.dataset.built)return;
+     box.innerHTML=PRODUCTS[b].map(function(p){return '<button type="button" class="chip" data-prod="'+esc(p)+'" data-pb="'+b+'">'+esc(p)+'</button>';}).join('');
+     box.dataset.built='1';
+     box.querySelectorAll('.chip').forEach(function(c){c.onclick=function(){
+       c.classList.toggle('on');c.classList.toggle(b==='VYNN'?'bv':'bg');
+       var key=b==='VYNN'?'prodV':'prodG';
+       var v=c.dataset.prod;var i=draft[key].indexOf(v);
+       if(i<0)draft[key].push(v);else draft[key].splice(i,1);
+     };});
+   });
+ }
+ // brand chips
+ $('brandChips').querySelectorAll('.chip').forEach(function(c){
+   var b=c.dataset.brand;
+   c.onclick=function(){
+     c.classList.toggle('on');c.classList.toggle(b==='VYNN'?'bv':'bg');
+     var i=draft.brands.indexOf(b);
+     if(i<0)draft.brands.push(b);else draft.brands.splice(i,1);
+     $('grp'+b).classList.toggle('show',draft.brands.indexOf(b)>=0);
+   };
+ });
+ // single-select groups
+ function singleSel(wrapId,field,cb){
+   $(wrapId).querySelectorAll('.chip').forEach(function(c){
+     c.onclick=function(){
+       var was=c.classList.contains('on');
+       $(wrapId).querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});
+       if(!was){c.classList.add('on');draft[field]=c.dataset[cb];}else draft[field]='';
+       if(field==='cb'){$('cbDateBlock').classList.toggle('show',draft.cb==='ระบุช่วงวันที่');}
+     };
+   });
+ }
+ singleSel('useChips','use','use');
+ singleSel('cbChips','cb','cb');
+ singleSel('cbTimeChips','cbt','cbt');
+ singleSel('payChips','pay','pay');
+ $('depToggle').querySelector('.chip').onclick=function(){var c=$('depToggle').querySelector('.chip');c.classList.toggle('on');draft.hasDep=c.classList.contains('on');$('depBlock').classList.toggle('show',draft.hasDep);};
+
+ function resetForm(){
+   ['fName','fPhone','fAddr','fNote','fCbFrom','fCbTo','fDep'].forEach(function(id){$(id).value='';});
+   $('fDate').value=todayISO();$('fRate').value='';
+   draft={brands:[],prodV:[],prodG:[],use:'',cb:'',cbt:'',hasDep:false,pay:'',editId:null};
+   document.querySelectorAll('#salesView .chip.on').forEach(function(c){c.classList.remove('on','bv','bg');});
+   $('grpVYNN').classList.remove('show');$('grpVangarde').classList.remove('show');
+   $('cbDateBlock').classList.remove('show');$('depBlock').classList.remove('show');
+   $('formErr').classList.remove('show');
+   $('formTitle').textContent='＋ เพิ่มลูกค้าใหม่';
+   $('saveLead').textContent='✓ บันทึกลูกค้า';
+   $('cancelEdit').style.display='none';
+ }
+ $('cancelEdit').onclick=function(){resetForm();};
+
+ /* ---------- save lead ---------- */
+ $('saveLead').onclick=function(){
+   var name=$('fName').value.trim(), phone=$('fPhone').value.trim();
+   var e=$('formErr');
+   if(!name||!phone){e.textContent=!name?'⚠ ใส่ชื่อลูกค้าก่อน':'⚠ ใส่เบอร์โทรก่อน';e.classList.add('show');(!name?$('fName'):$('fPhone')).focus();return;}
+   var products=draft.prodV.map(function(p){return{brand:'VYNN',name:p};}).concat(draft.prodG.map(function(p){return{brand:'Vangarde',name:p};}));
+   var rec={
+     id:draft.editId||('BL-'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)),
+     ts:draft.editId?(st.leads.find(function(x){return x.id===draft.editId;})||{}).ts||new Date().toISOString():new Date().toISOString(),
+     date:$('fDate').value||todayISO(), sales:st.sales, event:st.event, eventDate:st.eventDate,
+     name:name, phone:phone, address:$('fAddr').value.trim(),
+     brands:draft.brands.slice(), products:products,
+     rate:$('fRate').value,
+     useWhen:draft.use, callback:draft.cb, cbFrom:$('fCbFrom').value||'', cbTo:$('fCbTo').value||'', cbTime:draft.cbt,
+     deposit:draft.hasDep?(+$('fDep').value||0):0, payMethod:draft.hasDep?draft.pay:'',
+     note:$('fNote').value.trim(), source:'booth'
+   };
+   if(draft.editId){var idx=st.leads.findIndex(function(x){return x.id===draft.editId;});if(idx>=0)st.leads[idx]=rec;toast('แก้ไขแล้ว ✓');}
+   else{st.leads.unshift(rec);toast('บันทึกลูกค้าแล้ว ✓  (รวม '+st.leads.length+' ราย)');}
+   save();resetForm();renderList();updateCounters();
+   window.scrollTo({top:0,behavior:'smooth'});$('fName').focus();
+ };
+
+ /* ---------- edit / delete ---------- */
+ window._editLead=function(id){
+   var L=st.leads.find(function(x){return x.id===id;});if(!L)return;
+   resetForm();draft.editId=id;
+   $('fName').value=L.name;$('fPhone').value=L.phone;$('fAddr').value=L.address||'';$('fNote').value=L.note||'';
+   $('fCbFrom').value=L.cbFrom||'';$('fCbTo').value=L.cbTo||'';
+   $('fDate').value=L.date||todayISO();$('fRate').value=L.rate||'';
+   if(L.deposit>0){draft.hasDep=true;$('depBlock').classList.add('show');$('depToggle').querySelector('.chip').classList.add('on');$('fDep').value=L.deposit;draft.pay=L.payMethod||'';var pc=$('payChips').querySelector('[data-pay="'+(L.payMethod||'')+'"]');if(pc)pc.classList.add('on');}
+   (L.brands||[]).forEach(function(b){var c=$('brandChips').querySelector('[data-brand="'+b+'"]');if(c){c.classList.add('on',b==='VYNN'?'bv':'bg');draft.brands.push(b);$('grp'+b).classList.add('show');}});
+   (L.products||[]).forEach(function(p){var box=$('prod'+p.brand);if(box){var c=box.querySelector('[data-prod="'+p.name.replace(/"/g,'\\"')+'"]');if(c){c.classList.add('on',p.brand==='VYNN'?'bv':'bg');draft[p.brand==='VYNN'?'prodV':'prodG'].push(p.name);}}});
+   function selChip(wrap,val,field){if(!val)return;var c=$(wrap).querySelector('[data-'+field+'="'+val+'"]');if(c){c.classList.add('on');}}
+   draft.use=L.useWhen||'';selChip('useChips',L.useWhen,'use');
+   draft.cb=L.callback||'';selChip('cbChips',L.callback,'cb');if(draft.cb==='ระบุช่วงวันที่')$('cbDateBlock').classList.add('show');
+   draft.cbt=L.cbTime||'';selChip('cbTimeChips',L.cbTime,'cbt');
+   $('formTitle').textContent='✏️ แก้ไขลูกค้า';$('saveLead').textContent='✓ บันทึกการแก้ไข';$('cancelEdit').style.display='';
+   window.scrollTo({top:$('formTitle').getBoundingClientRect().top+window.scrollY-70,behavior:'smooth'});
+ };
+ window._delLead=function(id){
+   var L=st.leads.find(function(x){return x.id===id;});
+   if(confirm('ลบลูกค้า "'+(L?L.name:'')+'" ?')){st.leads=st.leads.filter(function(x){return x.id!==id;});save();renderList();updateCounters();}
+ };
+
+ /* ---------- render list ---------- */
+ function isHot(L){return (L.useWhen||'').indexOf('ด่วน')>=0;}
+ function prodLine(L){
+   if(!L.products||!L.products.length)return (L.brands||[]).join(', ')||'—';
+   return L.products.map(function(p){return p.name;}).join(', ');
+ }
+ function brandTags(L){return (L.brands||[]).map(function(b){return '<span class="tag '+(b==='VYNN'?'v':'g')+'">'+b+'</span>';}).join(' ');}
+ function cbLine(L){
+   var s=L.callback||'';
+   if(L.callback==='ระบุช่วงวันที่'&&(L.cbFrom||L.cbTo))s=(L.cbFrom||'')+(L.cbTo?' – '+L.cbTo:'');
+   if(L.cbTime)s+=(s?' · ':'')+L.cbTime;
+   return s;
+ }
+ function renderList(){
+   var box=$('myList');
+   if(!st.leads.length){box.innerHTML='<div class="empty">ยังไม่มีลูกค้า — กรอกด้านบนแล้วกด “บันทึกลูกค้า” ได้เลย 🙌</div>';$('listCount').textContent='';return;}
+   $('listCount').textContent=st.leads.length+' ราย';
+   box.innerHTML=st.leads.map(function(L){
+     return '<div class="lead">'+
+       '<div class="lt"><span class="ln">'+esc(L.name)+'</span>'+(L.rate?'<span class="tag r">'+esc(L.rate)+'</span>':'')+(isHot(L)?'<span class="tag hot">ด่วน 🔥</span>':'')+brandTags(L)+'</div>'+
+       '<div class="meta">'+
+         '<a class="lp" href="tel:'+esc(digits(L.phone))+'">📞 '+esc(L.phone)+'</a>'+
+         '<span>📆 '+esc(fmtD(L.date))+'</span>'+
+         (L.address?'<span>📍 '+esc(L.address)+'</span>':'')+
+       '</div>'+
+       '<div class="meta">'+
+         (prodLine(L)!=='—'?'<span>🪟 '+esc(prodLine(L))+'</span>':'')+
+         (L.useWhen?'<span>🕑 ใช้งาน: '+esc(L.useWhen)+'</span>':'')+
+         (cbLine(L)?'<span>📅 ติดต่อ: '+esc(cbLine(L))+'</span>':'')+
+       '</div>'+
+       (L.deposit>0?'<div class="meta"><span class="tag dep">💰 วางจอง ฿'+money(L.deposit)+(L.payMethod?' · '+esc(L.payMethod):'')+'</span></div>':'')+
+       (L.note?'<div class="meta"><span>📝 '+esc(L.note)+'</span></div>':'')+
+       '<div class="lact"><button onclick="_editLead(\''+L.id+'\')">✏️ แก้ไข</button><button class="del" onclick="_delLead(\''+L.id+'\')">🗑 ลบ</button></div>'+
+     '</div>';
+   }).join('');
+ }
+ function updateCounters(){
+   var t=todayISO();
+   $('cAll').textContent=st.leads.length;
+   $('cToday').textContent=st.leads.filter(function(L){return L.date===t;}).length;
+   $('cHot').textContent=st.leads.filter(isHot).length;
+ }
+
+ /* ---------- export ---------- */
+ function fname(ext){return 'booth-'+(st.sales||'sales').replace(/[^\wก-๙]+/g,'_')+'-'+todayISO()+'.'+ext;}
+ function dl(content,type,name){
+   try{var blob=new Blob([content],{type:type});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1500);return true;}catch(e){return false;}
+ }
+ function payload(){return{tool:'vynn-booth',v:1,sales:st.sales,event:st.event,eventDate:st.eventDate,exportedAt:new Date().toISOString(),leads:st.leads};}
+ $('expJSON').onclick=function(){if(!st.leads.length){toast('ยังไม่มีข้อมูล');return;}dl(JSON.stringify(payload(),null,2),'application/json',fname('json'));toast('ดาวน์โหลดไฟล์รวมแล้ว');};
+ function toCSV(leads){
+   var head=['วันที่บันทึก','เซลล์','งาน','แบรนด์','ชื่อลูกค้า','เบอร์โทร','ที่อยู่','สินค้าที่สนใจ','เรทลูกค้า','ต้องการใช้งาน','ช่วงติดต่อกลับ','เวลาที่สะดวก','วางจอง(บาท)','วิธีจ่าย','โน้ต','ที่มา'];
+   function q(s){s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
+   var rows=leads.map(function(L){return [L.date,L.sales,L.event,(L.brands||[]).join('+'),L.name,L.phone,L.address,(L.products||[]).map(function(p){return p.brand+':'+p.name;}).join(' | '),L.rate||'',L.useWhen,(L.callback==='ระบุช่วงวันที่'?((L.cbFrom||'')+(L.cbTo?'–'+L.cbTo:'')):L.callback),L.cbTime,(L.deposit>0?L.deposit:''),L.payMethod||'',L.note,'booth'].map(q).join(',');});
+   return '﻿'+head.join(',')+'\n'+rows.join('\n');
+ }
+ $('expCSV').onclick=function(){if(!st.leads.length){toast('ยังไม่มีข้อมูล');return;}dl(toCSV(st.leads),'text/csv;charset=utf-8',fname('csv'));toast('ดาวน์โหลด Excel/CSV แล้ว');};
+ $('expShare').onclick=function(){
+   if(!st.leads.length){toast('ยังไม่มีข้อมูล');return;}
+   var txt='ลูกค้าหน้าบูธ ('+st.sales+') '+st.leads.length+' ราย\n'+st.leads.map(function(L,i){return (i+1)+'. '+L.name+' '+L.phone+(isHot(L)?' 🔥ด่วน':'');}).join('\n');
+   if(navigator.share){navigator.share({title:'ลูกค้าหน้าบูธ',text:txt}).catch(function(){});}
+   else if(navigator.clipboard){navigator.clipboard.writeText(txt);toast('คัดลอกสรุปแล้ว — วางในไลน์ได้เลย');}
+   else toast('อุปกรณ์นี้แชร์ไม่ได้ ใช้ปุ่มดาวน์โหลดแทน');
+ };
+
+ /* ---------- manager ---------- */
+ $('mgrFiles').onchange=function(e){
+   var files=[].slice.call(e.target.files);if(!files.length)return;
+   if(!merge)merge={leads:[],sources:0};
+   var done=0;
+   files.forEach(function(f){
+     var rd=new FileReader();
+     rd.onload=function(){
+       try{var o=JSON.parse(rd.result);var ls=(o&&o.leads)||[];ls.forEach(function(L){
+         var key=digits(L.phone)+'|'+(L.sales||'');
+         if(!merge.leads.some(function(x){return (digits(x.phone)+'|'+(x.sales||''))===key;}))merge.leads.push(L);
+       });merge.sources++;}catch(err){toast('ไฟล์ '+f.name+' อ่านไม่ได้');}
+       if(++done===files.length){renderMgr();e.target.value='';}
+     };
+     rd.onerror=function(){if(++done===files.length){renderMgr();e.target.value='';}};
+     rd.readAsText(f);
+   });
+ };
+ $('mgrClear').onclick=function(){merge=null;renderMgr();};
+ function saveRoi(){try{localStorage.setItem(ROIK,JSON.stringify(roi));}catch(e){}}
+ function mergeStats(){var s={total:merge.leads.length,hot:0,depCount:0,depSum:0};merge.leads.forEach(function(L){if((L.useWhen||'').indexOf('ด่วน')>=0)s.hot++;if(L.deposit>0){s.depCount++;s.depSum+=+L.deposit||0;}});return s;}
+ function computeRoi(){
+   if(!merge)return;var s=mergeStats();
+   var cost=+($('roiCost')?$('roiCost').value:roi.cost)||0, ret=+($('roiRet')?$('roiRet').value:roi.returned)||0;
+   var cpl=s.total?cost/s.total:0, profit=ret-cost, pct=cost?profit/cost*100:0;
+   function set(id,v){var e=$(id);if(e)e.textContent=v;}
+   set('roiLeads',s.total+' ราย');
+   set('roiDep','฿'+money(s.depSum)+' · '+s.depCount+' ราย');
+   set('roiCPL',cost?'฿'+money(Math.round(cpl))+' /ลีด':'—');
+   set('roiProfit',(cost||ret)?((profit>=0?'฿':'−฿')+money(Math.abs(profit))):'—');
+   var pe=$('roiProfit');if(pe)pe.style.color=profit>=0?'var(--good)':'var(--bad)';
+   set('roiPct',(cost&&ret)?((pct>=0?'+':'')+pct.toFixed(0)+'%'):'—');
+   var v=$('roiVerdict');
+   if(v){if(!cost||!ret){v.textContent='ℹ️ กรอกค่าออกบูธ + ยอดปิดจริง (เติมหลังฟอลโล่วได้) เพื่อดูว่าคุ้มไหม';v.className='note-warn';}
+     else if(profit>=0){v.textContent='✅ คุ้มค่า — กำไรจากการออกบูธ ฿'+money(profit)+' (ROI '+pct.toFixed(0)+'%) · ยอดจองในงานคืนทุนไปแล้ว ฿'+money(s.depSum);v.className='note-info';}
+     else{v.textContent='⚠️ ยังไม่คุ้ม — ขาดอีก ฿'+money(-profit)+' ถึงเท่าทุน (ตอนนี้มีลีดรอฟอลโล่ว '+s.total+' ราย · ด่วน '+s.hot+' ราย)';v.className='note-warn';}}
+ }
+ function renderMgr(){
+   var box=$('mgrSummary');
+   if(!merge||!merge.leads.length){box.innerHTML='';$('mgrClear').style.display='none';return;}
+   $('mgrClear').style.display='';
+   var bySales={};merge.leads.forEach(function(L){var s=L.sales||'(ไม่ระบุ)';bySales[s]=bySales[s]||{n:0,v:0,g:0,hot:0,dep:0,depSum:0};var d=bySales[s];d.n++;if((L.brands||[]).indexOf('VYNN')>=0)d.v++;if((L.brands||[]).indexOf('Vangarde')>=0)d.g++;if((L.useWhen||'').indexOf('ด่วน')>=0)d.hot++;if(L.deposit>0){d.dep++;d.depSum+=+L.deposit||0;}});
+   var rows=Object.keys(bySales).map(function(s){return{s:s,d:bySales[s]};}).sort(function(a,b){return b.d.n-a.d.n;});
+   var max=Math.max.apply(null,rows.map(function(r){return r.d.n;}).concat([1]));
+   var s=mergeStats();
+   box.innerHTML=
+     '<div class="counter"><div class="cbox"><div class="cn num">'+s.total+'</div><div class="cl">ลูกค้ารวม</div></div>'+
+     '<div class="cbox"><div class="cn num">'+rows.length+'</div><div class="cl">เซลล์</div></div>'+
+     '<div class="cbox hot"><div class="cn num">'+s.hot+'</div><div class="cl">ด่วน 🔥</div></div></div>'+
+     '<div class="card"><h2>คุ้มค่าไหม? · ROI การออกบูธ</h2><p class="sub">กรอกค่าใช้จ่าย + ยอดปิดจริงหลังงาน (เติมทีหลังได้) — ระบบเทียบให้</p>'+
+       '<div class="two"><div class="f"><label class="fl" style="font-size:12.5px">ค่าออกบูธทั้งหมด (บาท)</label><input type="number" id="roiCost" inputmode="numeric" placeholder="บูธ+ตกแต่ง+คน+เดินทาง"></div>'+
+       '<div class="f"><label class="fl" style="font-size:12.5px">รายได้ปิดได้จริง (บาท)</label><input type="number" id="roiRet" inputmode="numeric" placeholder="เติมหลังฟอลโล่ว"></div></div>'+
+       '<div class="tablewrap"><table><tbody>'+
+        '<tr><td>ลีดที่ได้</td><td class="n" id="roiLeads">—</td></tr>'+
+        '<tr><td>ยอดจองในงาน</td><td class="n" id="roiDep">—</td></tr>'+
+        '<tr><td>ต้นทุนต่อลีด</td><td class="n" id="roiCPL">—</td></tr>'+
+        '<tr><td>กำไร/ขาดทุนจากบูธ</td><td class="n" id="roiProfit" style="font-weight:800">—</td></tr>'+
+        '<tr><td>ROI</td><td class="n" id="roiPct" style="font-weight:800">—</td></tr>'+
+       '</tbody></table></div><div id="roiVerdict" class="note-warn" style="margin-top:12px"></div></div>'+
+     '<div class="card"><h2>เก็บได้กี่ราย · แยกตามเซลล์</h2><p class="sub">รวมจาก '+merge.sources+' ไฟล์ (ตัดเบอร์ซ้ำอัตโนมัติ) · ประเมินความตั้งใจของแต่ละคน</p>'+
+     '<div class="tablewrap"><table><thead><tr><th>เซลล์</th><th class="n">ราย</th><th class="n">VYNN</th><th class="n">VG</th><th class="n">ด่วน</th><th class="n">จอง</th><th class="n">ยอดจอง</th></tr></thead><tbody>'+
+     rows.map(function(r){return '<tr><td><b>'+esc(r.s)+'</b><div class="bar"><span style="width:'+Math.round(r.d.n/max*100)+'%"></span></div></td><td class="n">'+r.d.n+'</td><td class="n">'+r.d.v+'</td><td class="n">'+r.d.g+'</td><td class="n">'+r.d.hot+'</td><td class="n">'+r.d.dep+'</td><td class="n">'+(r.d.depSum?money(r.d.depSum):'—')+'</td></tr>';}).join('')+
+     '</tbody></table></div></div>'+
+     '<div class="card"><h2>ส่งออกรวม (เข้า ERP)</h2><p class="sub">รวมทุกคนเป็นไฟล์เดียว เอาไปนำเข้า VYNN·OS ภายหลัง</p>'+
+     '<div class="btnrow"><button class="btn sec" id="mgrCSV">⬇️ รวม CSV</button><button class="btn sec" id="mgrJSON">⬇️ รวม JSON</button></div></div>';
+   if($('roiCost')){$('roiCost').value=roi.cost||'';$('roiRet').value=roi.returned||'';
+     $('roiCost').oninput=function(){roi.cost=this.value;saveRoi();computeRoi();};
+     $('roiRet').oninput=function(){roi.returned=this.value;saveRoi();computeRoi();};}
+   computeRoi();
+   $('mgrCSV').onclick=function(){dl(toCSV(merge.leads),'text/csv;charset=utf-8','booth-รวมทุกคน-'+todayISO()+'.csv');toast('ดาวน์โหลดแล้ว');};
+   $('mgrJSON').onclick=function(){dl(JSON.stringify({tool:'vynn-booth',merged:true,exportedAt:new Date().toISOString(),leads:merge.leads},null,2),'application/json','booth-รวมทุกคน-'+todayISO()+'.json');toast('ดาวน์โหลดแล้ว');};
+ }
+
+ /* ---------- tabs ---------- */
+ $('tabSales').onclick=function(){$('tabSales').classList.add('on');$('tabMgr').classList.remove('on');$('salesView').style.display='';$('mgrView').style.display='none';};
+ $('tabMgr').onclick=function(){$('tabMgr').classList.add('on');$('tabSales').classList.remove('on');$('mgrView').style.display='';$('salesView').style.display='none';renderMgr();};
+
+ /* ---------- init ---------- */
+ load();
+ try{roi=Object.assign(roi,JSON.parse(localStorage.getItem(ROIK)||'{}'));}catch(e){}
+ $('fDate').value=todayISO();
+ if(!st.eventDate)$('sEventDate').value=todayISO();else $('sEventDate').value=st.eventDate;
+ $('sName').value=st.sales||'';$('sEvent').value=st.event||'';
+ renderWho();showSetupOrMain();
+})();
+</script>
+
+</body>
+</html>
