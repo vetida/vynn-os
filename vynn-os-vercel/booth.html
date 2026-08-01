@@ -108,6 +108,8 @@
   .listh{display:flex;align-items:baseline;justify-content:space-between;margin:4px 2px 10px;}
   .listh h2{font-size:15px;margin:0;font-weight:800;}
   .empty{text-align:center;color:var(--muted);padding:30px 14px;font-size:14px;}
+  .dayhead{font-size:13px;font-weight:800;color:var(--accent);background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 12px;margin:16px 0 10px;position:sticky;top:96px;z-index:5;}
+  .dayhead:first-child{margin-top:2px;}
 
   .note-info{background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:11px;padding:11px 13px;font-size:12.5px;color:var(--ink);margin-bottom:14px;line-height:1.55;}
   .note-warn{background:var(--warn-bg);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:11px;padding:11px 13px;font-size:12.5px;margin-top:4px;line-height:1.55;}
@@ -286,17 +288,20 @@
 
       <!-- export -->
       <div class="card">
-        <h2>ส่งข้อมูลให้หัวหน้า / สำรอง</h2>
-        <p class="sub">ท้ายวันกด export แล้วส่งไฟล์ให้หัวหน้าทางไลน์ (หัวหน้าเอาไปรวมในแท็บ “สรุป”)</p>
+        <h2>ส่งไฟล์ให้หัวหน้า / สำรอง</h2>
+        <p class="sub">ส่ง Excel ให้หัวหน้าได้ <b>ทุกวัน</b> · วันสุดท้ายส่ง <b>ไฟล์รวมทุกวัน</b> (ตารางเดียวตั้งแต่วันแรกถึงวันสุดท้าย)</p>
         <div class="btnrow">
-          <button class="btn sec" id="expJSON">⬇️ ไฟล์รวม (.json)</button>
-          <button class="btn sec" id="expCSV">⬇️ Excel (.csv)</button>
+          <button class="btn" id="expDayCSV">⬇️ Excel — <span id="expDayLbl">วันนี้</span></button>
+        </div>
+        <div class="btnrow" style="margin-top:9px">
+          <button class="btn sec" id="expCSV">⬇️ Excel รวมทุกวัน</button>
+          <button class="btn sec" id="expJSON">⬇️ ไฟล์รวม .json</button>
           <button class="btn sec" id="expShare">📤 แชร์</button>
         </div>
         <div class="note-warn" style="margin-top:12px">⚠️ ข้อมูลเก็บอยู่ใน<b>มือถือเครื่องนี้เครื่องเดียว</b> — ท้ายวันควร export/แชร์เก็บไว้ และอย่าล้างข้อมูลเบราว์เซอร์ · แนะนำ “เพิ่มไปหน้าจอโฮม” เพื่อเปิดง่ายและกันแท็บหาย</div>
       </div>
 
-      <div class="listh"><h2>ลูกค้าของคุณ</h2><span class="sub" id="listCount"></span></div>
+      <div class="listh"><h2>ลูกค้าของคุณ</h2><select id="dayFilter" style="padding:7px 10px;font-size:13px;width:auto"></select></div>
       <div id="myList"></div>
     </div>
   </div>
@@ -329,6 +334,11 @@
  function fmtD(d){if(!d)return '';var p=String(d).split('-');return p.length===3?(+p[2]+'/'+(+p[1])):d;}
  function slipThumb(url,sz){sz=sz||40;return '<img src="'+url+'" style="width:'+sz+'px;height:'+sz+'px;object-fit:cover;border-radius:6px;border:1px solid var(--border2)">';}
  var draftSlips=[];
+ var dayFilter='';
+ function leadDates(){var s={};st.leads.forEach(function(L){if(L.date)s[L.date]=1;});return Object.keys(s).sort();}
+ function leadsOfDay(d){return st.leads.filter(function(L){return L.date===d;});}
+ function depSum(arr){return arr.reduce(function(a,L){return a+(+L.deposit||0);},0);}
+ function byNewest(a,b){return ((b.date||'')+(b.createdAt||'')).localeCompare((a.date||'')+(a.createdAt||''));}
  var merge=null; // manager merged data
  var ROIK='vynn_booth_roi'; var roi={cost:'',returned:''};
 
@@ -566,11 +576,7 @@
    if(L.cbTime)s+=(s?' · ':'')+L.cbTime;
    return s;
  }
- function renderList(){
-   var box=$('myList');
-   if(!st.leads.length){box.innerHTML='<div class="empty">ยังไม่มีลูกค้า — กรอกด้านบนแล้วกด “บันทึกลูกค้า” ได้เลย 🙌</div>';$('listCount').textContent='';return;}
-   $('listCount').textContent=st.leads.length+' ราย';
-   box.innerHTML=st.leads.map(function(L){
+ function leadCardHtml(L){
      return '<div class="lead">'+
        '<div class="lt"><span class="ln">'+esc(L.name)+'</span>'+(L.rate?'<span class="tag r">'+esc(L.rate)+'</span>':'')+(isHot(L)?'<span class="tag hot">ด่วน 🔥</span>':'')+brandTags(L)+'</div>'+
        '<div class="meta">'+
@@ -587,7 +593,23 @@
        (L.note?'<div class="meta"><span>📝 '+esc(L.note)+'</span></div>':'')+
        '<div class="lact">'+(L.deposit>0?'<button onclick="_receipt(\''+L.id+'\')" style="color:var(--good)">🧾 ใบจอง / PDF</button>':'')+'<button onclick="_editLead(\''+L.id+'\')">✏️ แก้ไข</button><button class="del" onclick="_delLead(\''+L.id+'\')">🗑 ลบ</button></div>'+
      '</div>';
-   }).join('');
+ }
+ function renderList(){
+   var box=$('myList'),sel=$('dayFilter');
+   var dates=leadDates();
+   if(dayFilter===''){dayFilter=st.leads.some(function(L){return L.date===todayISO();})?todayISO():'all';}
+   if(dayFilter!=='all'&&dates.indexOf(dayFilter)<0)dayFilter=st.leads.length?'all':'';
+   if(sel){var o='<option value="all">ทุกวัน (รวม '+st.leads.length+' ราย)</option>';dates.slice().reverse().forEach(function(d){o+='<option value="'+d+'">'+fmtD(d)+' · '+leadsOfDay(d).length+' ราย'+(d===todayISO()?' (วันนี้)':'')+'</option>';});sel.innerHTML=o;sel.value=dayFilter;sel.onchange=function(){dayFilter=this.value;renderList();};}
+   var expDay=(dayFilter==='all')?todayISO():dayFilter,dlab=$('expDayLbl');if(dlab)dlab.textContent=(expDay===todayISO()?'วันนี้':fmtD(expDay));
+   if(!st.leads.length){box.innerHTML='<div class="empty">ยังไม่มีลูกค้า — กรอกด้านบนแล้วกด “บันทึกลูกค้า” ได้เลย 🙌</div>';return;}
+   var html='';
+   if(dayFilter==='all'){
+     dates.slice().reverse().forEach(function(d){var ls=leadsOfDay(d).slice().sort(byNewest),dp=depSum(ls);html+='<div class="dayhead">📅 '+fmtD(d)+' · '+ls.length+' ราย'+(dp?' · จอง ฿'+money(dp):'')+'</div>'+ls.map(leadCardHtml).join('');});
+   }else{
+     var ls2=leadsOfDay(dayFilter).slice().sort(byNewest);
+     html=ls2.length?ls2.map(leadCardHtml).join(''):'<div class="empty">ไม่มีลูกค้าในวันที่เลือก</div>';
+   }
+   box.innerHTML=html;
  }
  function updateCounters(){
    var t=todayISO();
@@ -597,7 +619,7 @@
  }
 
  /* ---------- export ---------- */
- function fname(ext){return 'booth-'+(st.sales||'sales').replace(/[^\wก-๙]+/g,'_')+'-'+todayISO()+'.'+ext;}
+ function fname(ext,day){return 'booth-'+(st.sales||'sales').replace(/[^\wก-๙]+/g,'_')+'-'+(day||todayISO())+'.'+ext;}
  function dl(content,type,name){
    try{var blob=new Blob([content],{type:type});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1500);return true;}catch(e){return false;}
  }
@@ -609,7 +631,8 @@
    var rows=leads.map(function(L){return [L.date,L.sales,L.event,(L.brands||[]).join('+'),L.name,L.phone,L.address,(L.products||[]).map(function(p){return p.brand+':'+p.name;}).join(' | '),L.rate||'',L.useWhen,(L.callback==='ระบุช่วงวันที่'?((L.cbFrom||'')+(L.cbTo?'–'+L.cbTo:'')):L.callback),L.cbTime,(L.deposit>0?L.deposit:''),L.payMethod||'',L.note,'booth'].map(q).join(',');});
    return '﻿'+head.join(',')+'\n'+rows.join('\n');
  }
- $('expCSV').onclick=function(){if(!st.leads.length){toast('ยังไม่มีข้อมูล');return;}dl(toCSV(st.leads),'text/csv;charset=utf-8',fname('csv'));toast('ดาวน์โหลด Excel/CSV แล้ว');};
+ $('expDayCSV').onclick=function(){var d=(dayFilter==='all'||!dayFilter)?todayISO():dayFilter;var ls=leadsOfDay(d);if(!ls.length){toast('วันที่เลือกยังไม่มีข้อมูล');return;}dl(toCSV(ls),'text/csv;charset=utf-8',fname('csv',d));toast('ดาวน์โหลด Excel ('+fmtD(d)+' · '+ls.length+' ราย) แล้ว');};
+ $('expCSV').onclick=function(){if(!st.leads.length){toast('ยังไม่มีข้อมูล');return;}dl(toCSV(st.leads.slice().sort(function(a,b){return((a.date||'')+(a.createdAt||'')).localeCompare((b.date||'')+(b.createdAt||''));})),'text/csv;charset=utf-8',fname('csv','ทุกวัน'));toast('ดาวน์โหลด Excel รวมทุกวัน ('+st.leads.length+' ราย) แล้ว');};
  $('expShare').onclick=function(){
    if(!st.leads.length){toast('ยังไม่มีข้อมูล');return;}
    var txt='ลูกค้าหน้าบูธ ('+st.sales+') '+st.leads.length+' ราย\n'+st.leads.map(function(L,i){return (i+1)+'. '+L.name+' '+L.phone+(isHot(L)?' 🔥ด่วน':'');}).join('\n');
