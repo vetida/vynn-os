@@ -141,6 +141,10 @@
   #rcpPaper .rc-amt{background:#eef5ff;border:1px solid #cfe0fb;border-radius:10px;padding:11px 14px;margin:13px 0;display:flex;justify-content:space-between;align-items:center;}
   #rcpPaper .rc-amt .k{font-size:12.5px;color:#3a5680;font-weight:700;} #rcpPaper .rc-amt .v{font-size:22px;font-weight:800;color:#1d4ed8;font-family:var(--num);}
   #rcpPaper .rc-slip{margin-top:12px;} #rcpPaper .rc-slip img{max-width:100%;border-radius:8px;border:1px solid #e2e7f0;margin-top:6px;}
+  #rcpPaper .rc-oa{margin-top:14px;border-top:1px solid #eceff4;padding-top:12px;text-align:center;}
+  #rcpPaper .rc-oa-t{font-weight:800;font-size:13px;color:#14203a;}
+  #rcpPaper .rc-oa img{width:128px;height:128px;object-fit:contain;margin:8px auto 4px;display:block;border:1px solid #e2e7f0;border-radius:8px;padding:4px;background:#fff;}
+  #rcpPaper .rc-oa-id{font-size:13px;color:#06c755;font-weight:800;}
   #rcpPaper .rc-note{font-size:10px;color:#8b98ad;line-height:1.55;margin-top:14px;border-top:1px solid #eceff4;padding-top:10px;}
   #rcpPaper .rc-sign{display:flex;justify-content:space-between;margin-top:20px;font-size:10.5px;color:#66738a;text-align:center;}
   #rcpPaper .rc-sign div{flex:1;} #rcpPaper .rc-sign .line{border-top:1px solid #b9c2d0;margin:26px 12px 5px;}
@@ -319,7 +323,7 @@
    VYNN:['ผ้าม่าน','ม่านม้วน','มู่ลี่ไม้','ม่านพับ','วอลเปเปอร์','ฟิล์มกันแดด/กันความร้อน','ม่านมอเตอร์/ออโต้','ม่านโรมัน'],
    Vangarde:['Pergola (ระแนง/หลังคาปรับได้)','Zip Shade (ม่านกันแดด-ฝน)','กันสาดพับได้ (Awning)','Skylight (หลังคากระจก)','ม่านม้วนกลางแจ้ง']
  };
- var st={sales:'',event:'',eventDate:'',leads:[]};
+ var st={sales:'',event:'',eventDate:'',oaId:'',oaQr:'',leads:[]};
  var draft={brands:[],prodV:[],prodG:[],use:'',cb:'',cbt:'',hasDep:false,pay:'',editId:null};
  function money(n){return (+n||0).toLocaleString('en-US');}
  function fmtD(d){if(!d)return '';var p=String(d).split('-');return p.length===3?(+p[2]+'/'+(+p[1])):d;}
@@ -464,7 +468,7 @@
    var slips=(L.slips||[]).map(function(u){return '<img src="'+u+'" alt="สลิป">';}).join('');
    return '<div id="rcpPaper">'+
      '<div class="rc-head"><div class="rc-co">VYNN Collection · Vangarde<small>บริษัท วีวายเอ็นเอ็น คอลเล็คชั่น แอนด์ดีไซน์ จำกัด<br>710 พัฒนาการ สวนหลวง กรุงเทพฯ 10250 · โทร 082-989-8984<br>www.VYNNCollection.com</small></div><div class="rc-badge">เลขที่<br><b>'+esc(bookNo)+'</b></div></div>'+
-     '<div class="rc-title">ใบหลักฐานการจอง<small>Booking Confirmation</small></div>'+
+     '<div class="rc-title">ใบหลักฐานการจอง<small>Promotion Confirmation</small></div>'+
      '<div class="rc-row"><span class="k">วันที่จอง</span><span class="v">'+esc(fmtD(L.date))+'</span></div>'+
      '<div class="rc-row"><span class="k">งาน/อีเวนต์</span><span class="v">'+esc(L.event||'-')+'</span></div>'+
      '<div class="rc-row"><span class="k">ชื่อลูกค้า</span><span class="v">'+esc(L.name)+'</span></div>'+
@@ -475,6 +479,7 @@
      '<div class="rc-row"><span class="k">วิธีชำระ</span><span class="v">'+esc(L.payMethod||'-')+'</span></div>'+
      '<div class="rc-row"><span class="k">พนักงานขาย</span><span class="v">'+esc(L.sales||'-')+'</span></div>'+
      (slips?'<div class="rc-slip"><div style="font-size:11px;color:#66738a;font-weight:700">หลักฐานการโอน/ชำระ</div>'+slips+'</div>':'')+
+     ((st.oaQr||st.oaId)?'<div class="rc-oa"><div class="rc-oa-t">📱 แอดไลน์บริษัท เพื่อรับสิทธิ์โปรโมชัน + ติดตามงานติดตั้ง</div>'+(st.oaQr?'<img src="'+st.oaQr+'" alt="LINE QR">':'')+(st.oaId?'<div class="rc-oa-id">'+esc(st.oaId)+'</div>':'')+'</div>':'')+
      '<div class="rc-note">* หลักฐานนี้ยืนยันการวางเงินจอง/มัดจำเพื่อรับสิทธิ์โปรโมชันภายในงาน · ยอดที่วางจะถูกนำไปหักในยอดชำระจริงเมื่อสรุปแบบ/ใบเสนอราคา · กรุณาเก็บไว้เพื่ออ้างอิง</div>'+
      '<div class="rc-sign"><div><div class="line"></div>ผู้รับเงิน (พนักงาน)</div><div><div class="line"></div>ผู้วางเงินจอง (ลูกค้า)</div></div>'+
    '</div>';
@@ -482,8 +487,9 @@
  function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
  function loadImg(src){return new Promise(function(res){if(!src){res(null);return;}var im=new Image();im.onload=function(){res(im);};im.onerror=function(){res(null);};im.src=src;});}
  function buildReceiptImage(L,cb){
-   loadImg((L.slips||[])[0]).then(function(slipImg){
-     var W=720,pad=44,SC=2,maxH=2800,y=48;
+   Promise.all([loadImg((L.slips||[])[0]),loadImg(st.oaQr)]).then(function(_imgs){
+     var slipImg=_imgs[0],oaImg=_imgs[1];
+     var W=720,pad=44,SC=2,maxH=3000,y=48;
      var c=document.createElement('canvas');c.width=W*SC;c.height=maxH*SC;
      var ctx=c.getContext('2d');ctx.scale(SC,SC);
      ctx.fillStyle='#fff';ctx.fillRect(0,0,W,maxH);ctx.textBaseline='top';
@@ -493,7 +499,7 @@
      text('VYNN Collection · Vangarde','bold 26px','#14203a',pad);y+=34;
      ['บริษัท วีวายเอ็นเอ็น คอลเล็คชั่น แอนด์ดีไซน์ จำกัด','710 พัฒนาการ สวนหลวง กรุงเทพฯ 10250 · โทร 082-989-8984','www.VYNNCollection.com'].forEach(function(l){text(l,'15px','#66738a',pad);y+=21;});
      y+=10;ctx.strokeStyle='#e3e8f0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();y+=18;
-     text('ใบหลักฐานการจอง  ·  Booking Confirmation','bold 23px','#14203a',W/2,'center');y+=42;
+     text('ใบหลักฐานการจอง  ·  Promotion Confirmation','bold 23px','#14203a',W/2,'center');y+=42;
      var bookNo='BK-'+String(L.date||'').replace(/-/g,'').slice(2)+'-'+String(L.id||'').slice(-4).toUpperCase();
      function field(k,v){if(v==null||v==='')return;text(k,'14px','#8b98ad',pad);y+=21;wrap(v,'bold 18px','#1a2233',pad,W-pad*2,25);y+=9;}
      field('เลขที่ใบจอง',bookNo);field('วันที่จอง',fmtD(L.date));field('งาน/อีเวนต์',L.event);
@@ -510,6 +516,7 @@
      wrap('* หลักฐานนี้ยืนยันการวางเงินจอง/มัดจำเพื่อรับสิทธิ์โปรโมชันภายในงาน ยอดที่วางจะถูกนำไปหักในยอดชำระจริงเมื่อสรุปแบบ/ใบเสนอราคา กรุณาเก็บไว้เพื่ออ้างอิง','13px','#8b98ad',pad,W-pad*2,19);y+=26;
      ctx.strokeStyle='#b9c2d0';ctx.beginPath();ctx.moveTo(pad+20,y+28);ctx.lineTo(pad+250,y+28);ctx.stroke();ctx.beginPath();ctx.moveTo(W-pad-250,y+28);ctx.lineTo(W-pad-20,y+28);ctx.stroke();
      y+=36;text('ผู้รับเงิน (พนักงาน)','13px','#66738a',pad+135,'center');text('ผู้วางเงินจอง (ลูกค้า)','13px','#66738a',W-pad-135,'center');y+=30;
+     if(oaImg||st.oaId){y+=6;ctx.strokeStyle='#eceff4';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();y+=16;text('แอดไลน์บริษัท เพื่อรับสิทธิ์โปรโมชัน + ติดตามงาน','bold 15px','#14203a',W/2,'center');y+=26;if(oaImg){var q=142;ctx.drawImage(oaImg,(W-q)/2,y,q,q);y+=q+8;}if(st.oaId){text(st.oaId,'bold 17px','#06c755',W/2,'center');y+=26;}}
      var finalH=y+8,out=document.createElement('canvas');out.width=W*SC;out.height=finalH*SC;var octx=out.getContext('2d');
      octx.fillStyle='#fff';octx.fillRect(0,0,out.width,out.height);octx.drawImage(c,0,0,W*SC,finalH*SC,0,0,W*SC,finalH*SC);
      cb(out);
