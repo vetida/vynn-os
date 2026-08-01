@@ -158,6 +158,8 @@
   #imgResult .ir-in{max-width:440px;margin:0 auto;display:flex;flex-direction:column;align-items:center;}
   #imgResult .ir-hint{color:#e7edf6;font-size:13.5px;text-align:center;margin-bottom:12px;line-height:1.55;font-weight:600;}
   #imgResult .ir-img{max-width:100%;height:auto;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.5);-webkit-touch-callout:default;}
+  .inapp-warn{margin:12px 15px 0;background:var(--warn-bg);border:1px solid color-mix(in srgb,var(--warn) 38%,transparent);border-radius:11px;padding:11px 13px;font-size:12.5px;line-height:1.55;color:var(--ink);}
+  .inapp-warn b{color:var(--warn);}
 </style>
 
 <div class="wrap">
@@ -171,6 +173,8 @@
       <button id="tabMgr">📊 สรุป (หัวหน้า)</button>
     </div>
   </div>
+
+  <div id="inAppWarn" class="inapp-warn" style="display:none"></div>
 
   <!-- SALES VIEW -->
   <div id="salesView" class="pad">
@@ -514,7 +518,7 @@
  function showImageResult(dataUrl,blob,L){
    var ov=document.getElementById('imgResult');
    if(!ov){ov=document.createElement('div');ov.id='imgResult';document.body.appendChild(ov);}
-   ov.innerHTML='<div class="ir-in"><div class="ir-hint">👇 กดค้างที่รูป แล้วเลือก “บันทึกภาพ” หรือ “แชร์” เข้าไลน์ได้เลย<br><span style="opacity:.75">(หรือกดปุ่มแชร์ด้านล่าง)</span></div><img src="'+dataUrl+'" class="ir-img" alt="ใบจอง"><div class="rcp-tools"><button class="btn" id="irShare">📲 แชร์เข้าไลน์</button><button class="btn sec" id="irClose">ปิด</button></div></div>';
+   ov.innerHTML='<div class="ir-in"><div class="ir-hint">📸 <b>แคปหน้าจอรูปนี้ ส่งเข้าไลน์ได้เลย</b> — ง่ายและใช้ได้ทุกเครื่อง<br><span style="opacity:.8">หรือกดค้างที่รูป → บันทึก/แชร์ · หรือปุ่มด้านล่าง (ต้องเปิดใน Safari/Chrome)</span></div><img src="'+dataUrl+'" class="ir-img" alt="ใบจอง"><div class="rcp-tools"><button class="btn" id="irShare">📲 แชร์เข้าไลน์</button><button class="btn sec" id="irClose">ปิด</button></div></div>';
    ov.classList.add('show');document.body.style.overflow='hidden';
    document.getElementById('irClose').onclick=function(){ov.classList.remove('show');ov.innerHTML='';document.body.style.overflow='';};
    document.getElementById('irShare').onclick=function(){
@@ -691,6 +695,7 @@
  if(!st.eventDate)$('sEventDate').value=todayISO();else $('sEventDate').value=st.eventDate;
  $('sName').value=st.sales||'';$('sEvent').value=st.event||'';
  renderWho();showSetupOrMain();
+ (function(){var ua=navigator.userAgent||'';if(/Line\//i.test(ua)||/FBAN|FBAV|Instagram/i.test(ua)){var w=$('inAppWarn');if(w){w.innerHTML='⚠️ <b>กำลังเปิดในเบราว์เซอร์ของไลน์</b> — ปุ่มแชร์/เซฟรูปอาจใช้ไม่ได้ และข้อมูลอาจไม่ถูกเก็บถาวร<br>👉 แนะนำ: กดเมนู <b>⋯</b> มุมขวาบน → <b>เปิดใน Safari / Chrome</b> แล้วค่อยกรอกงาน (ปุ่มจะทำงาน + ข้อมูลอยู่ครบ) · หรือ <b>แคปหน้าจอ</b>ส่งไลน์ก็ได้';w.style.display='';}}})();
 })();
 </script>
 
