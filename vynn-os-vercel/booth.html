@@ -125,6 +125,34 @@
   .bar>span{display:block;height:100%;background:var(--accent);}
   .tablewrap{overflow-x:auto;}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+
+  /* booking receipt */
+  #rcpOverlay{position:fixed;inset:0;z-index:100;background:rgba(10,15,25,.62);display:none;flex-direction:column;align-items:center;overflow:auto;padding:14px;}
+  #rcpOverlay.show{display:flex;}
+  #rcpPaper{background:#fff;color:#1a2233;width:100%;max-width:440px;border-radius:12px;padding:22px 20px;box-shadow:0 10px 40px rgba(0,0,0,.4);}
+  #rcpPaper .rc-head{display:flex;align-items:flex-start;gap:10px;border-bottom:2px solid #eceff4;padding-bottom:12px;margin-bottom:10px;}
+  #rcpPaper .rc-co{font-weight:800;font-size:15px;color:#14203a;line-height:1.3;}
+  #rcpPaper .rc-co small{display:block;font-weight:500;font-size:10px;color:#66738a;margin-top:3px;line-height:1.45;}
+  #rcpPaper .rc-badge{margin-left:auto;text-align:right;font-size:10px;color:#66738a;white-space:nowrap;}
+  #rcpPaper .rc-title{text-align:center;font-weight:800;font-size:16px;margin:4px 0 12px;color:#14203a;}
+  #rcpPaper .rc-title small{display:block;font-weight:600;font-size:10px;color:#8b98ad;letter-spacing:.1em;text-transform:uppercase;margin-top:2px;}
+  #rcpPaper .rc-row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:6px 0;border-bottom:1px dashed #eceff4;}
+  #rcpPaper .rc-row .k{color:#66738a;flex:none;} #rcpPaper .rc-row .v{font-weight:700;text-align:right;color:#1a2233;}
+  #rcpPaper .rc-amt{background:#eef5ff;border:1px solid #cfe0fb;border-radius:10px;padding:11px 14px;margin:13px 0;display:flex;justify-content:space-between;align-items:center;}
+  #rcpPaper .rc-amt .k{font-size:12.5px;color:#3a5680;font-weight:700;} #rcpPaper .rc-amt .v{font-size:22px;font-weight:800;color:#1d4ed8;font-family:var(--num);}
+  #rcpPaper .rc-slip{margin-top:12px;} #rcpPaper .rc-slip img{max-width:100%;border-radius:8px;border:1px solid #e2e7f0;margin-top:6px;}
+  #rcpPaper .rc-note{font-size:10px;color:#8b98ad;line-height:1.55;margin-top:14px;border-top:1px solid #eceff4;padding-top:10px;}
+  #rcpPaper .rc-sign{display:flex;justify-content:space-between;margin-top:20px;font-size:10.5px;color:#66738a;text-align:center;}
+  #rcpPaper .rc-sign div{flex:1;} #rcpPaper .rc-sign .line{border-top:1px solid #b9c2d0;margin:26px 12px 5px;}
+  .rcp-tools{display:flex;gap:8px;max-width:440px;width:100%;margin:10px auto 4px;position:sticky;bottom:0;}
+  .rcp-tools .btn{flex:1;box-shadow:0 4px 14px rgba(0,0,0,.25);}
+  @media print{
+    body{visibility:hidden;background:#fff;}
+    #rcpOverlay{position:static;background:none;padding:0;display:block;overflow:visible;}
+    #rcpPaper,#rcpPaper *{visibility:visible;}
+    #rcpPaper{box-shadow:none;max-width:100%;border-radius:0;padding:0;}
+    .rcp-tools{display:none!important;}
+  }
 </style>
 
 <div class="wrap">
@@ -234,6 +262,8 @@
             <div class="f" style="margin-bottom:10px"><label class="fl" style="font-size:12.5px">ยอดที่วางจอง (บาท)</label><input type="number" id="fDep" inputmode="numeric" placeholder="เช่น 5000"></div>
             <label class="fl" style="font-size:12.5px">จ่ายแบบไหน</label>
             <div class="chips" id="payChips"><button type="button" class="chip" data-pay="เงินสด">เงินสด</button><button type="button" class="chip" data-pay="โอน/พร้อมเพย์">โอน/พร้อมเพย์</button><button type="button" class="chip" data-pay="บัตรเครดิต">บัตรเครดิต</button></div>
+            <label class="fl" style="font-size:12.5px;margin-top:11px">แนบสลิป/หลักฐานการโอน <span class="opt">(ใส่ในใบจองได้)</span></label>
+            <div style="display:flex;align-items:center;gap:8px"><label class="btn sec sm" style="cursor:pointer;margin:0">📎 แนบสลิป<input type="file" id="fSlip" accept="image/*" multiple hidden></label><span id="slipThumbs" style="display:flex;gap:5px;flex-wrap:wrap"></span></div>
           </div>
         </div>
         <div class="err" id="formErr"></div>
@@ -284,6 +314,8 @@
  var draft={brands:[],prodV:[],prodG:[],use:'',cb:'',cbt:'',hasDep:false,pay:'',editId:null};
  function money(n){return (+n||0).toLocaleString('en-US');}
  function fmtD(d){if(!d)return '';var p=String(d).split('-');return p.length===3?(+p[2]+'/'+(+p[1])):d;}
+ function slipThumb(url,sz){sz=sz||40;return '<img src="'+url+'" style="width:'+sz+'px;height:'+sz+'px;object-fit:cover;border-radius:6px;border:1px solid var(--border2)">';}
+ var draftSlips=[];
  var merge=null; // manager merged data
  var ROIK='vynn_booth_roi'; var roi={cost:'',returned:''};
 
@@ -354,10 +386,12 @@
  singleSel('cbTimeChips','cbt','cbt');
  singleSel('payChips','pay','pay');
  $('depToggle').querySelector('.chip').onclick=function(){var c=$('depToggle').querySelector('.chip');c.classList.toggle('on');draft.hasDep=c.classList.contains('on');$('depBlock').classList.toggle('show',draft.hasDep);};
+ $('fSlip').onchange=function(e){var files=[].slice.call(e.target.files);if(!files.length)return;files.forEach(function(f){var rd=new FileReader();rd.onload=function(){draftSlips.push(rd.result);$('slipThumbs').innerHTML=draftSlips.map(function(u){return slipThumb(u,40);}).join('');};rd.readAsDataURL(f);});e.target.value='';};
 
  function resetForm(){
    ['fName','fPhone','fAddr','fNote','fCbFrom','fCbTo','fDep'].forEach(function(id){$(id).value='';});
    $('fDate').value=todayISO();$('fRate').value='';
+   draftSlips=[];if($('slipThumbs'))$('slipThumbs').innerHTML='';
    draft={brands:[],prodV:[],prodG:[],use:'',cb:'',cbt:'',hasDep:false,pay:'',editId:null};
    document.querySelectorAll('#salesView .chip.on').forEach(function(c){c.classList.remove('on','bv','bg');});
    $('grpVYNN').classList.remove('show');$('grpVangarde').classList.remove('show');
@@ -383,7 +417,7 @@
      brands:draft.brands.slice(), products:products,
      rate:$('fRate').value,
      useWhen:draft.use, callback:draft.cb, cbFrom:$('fCbFrom').value||'', cbTo:$('fCbTo').value||'', cbTime:draft.cbt,
-     deposit:draft.hasDep?(+$('fDep').value||0):0, payMethod:draft.hasDep?draft.pay:'',
+     deposit:draft.hasDep?(+$('fDep').value||0):0, payMethod:draft.hasDep?draft.pay:'', slips:draft.hasDep?draftSlips.slice():[],
      note:$('fNote').value.trim(), source:'booth'
    };
    if(draft.editId){var idx=st.leads.findIndex(function(x){return x.id===draft.editId;});if(idx>=0)st.leads[idx]=rec;toast('แก้ไขแล้ว ✓');}
@@ -399,7 +433,7 @@
    $('fName').value=L.name;$('fPhone').value=L.phone;$('fAddr').value=L.address||'';$('fNote').value=L.note||'';
    $('fCbFrom').value=L.cbFrom||'';$('fCbTo').value=L.cbTo||'';
    $('fDate').value=L.date||todayISO();$('fRate').value=L.rate||'';
-   if(L.deposit>0){draft.hasDep=true;$('depBlock').classList.add('show');$('depToggle').querySelector('.chip').classList.add('on');$('fDep').value=L.deposit;draft.pay=L.payMethod||'';var pc=$('payChips').querySelector('[data-pay="'+(L.payMethod||'')+'"]');if(pc)pc.classList.add('on');}
+   if(L.deposit>0){draft.hasDep=true;$('depBlock').classList.add('show');$('depToggle').querySelector('.chip').classList.add('on');$('fDep').value=L.deposit;draft.pay=L.payMethod||'';var pc=$('payChips').querySelector('[data-pay="'+(L.payMethod||'')+'"]');if(pc)pc.classList.add('on');draftSlips=(L.slips||[]).slice();$('slipThumbs').innerHTML=draftSlips.map(function(u){return slipThumb(u,40);}).join('');}
    (L.brands||[]).forEach(function(b){var c=$('brandChips').querySelector('[data-brand="'+b+'"]');if(c){c.classList.add('on',b==='VYNN'?'bv':'bg');draft.brands.push(b);$('grp'+b).classList.add('show');}});
    (L.products||[]).forEach(function(p){var box=$('prod'+p.brand);if(box){var c=box.querySelector('[data-prod="'+p.name.replace(/"/g,'\\"')+'"]');if(c){c.classList.add('on',p.brand==='VYNN'?'bv':'bg');draft[p.brand==='VYNN'?'prodV':'prodG'].push(p.name);}}});
    function selChip(wrap,val,field){if(!val)return;var c=$(wrap).querySelector('[data-'+field+'="'+val+'"]');if(c){c.classList.add('on');}}
@@ -414,6 +448,43 @@
    if(confirm('ลบลูกค้า "'+(L?L.name:'')+'" ?')){st.leads=st.leads.filter(function(x){return x.id!==id;});save();renderList();updateCounters();}
  };
 
+ /* ---------- booking receipt (PDF) ---------- */
+ function rcpHtml(L){
+   var bookNo='BK-'+String(L.date||'').replace(/-/g,'').slice(2)+'-'+String(L.id||'').slice(-4).toUpperCase();
+   var prods=(L.products&&L.products.length)?L.products.map(function(p){return p.name;}).join(', '):((L.brands||[]).join(', ')||'-');
+   var slips=(L.slips||[]).map(function(u){return '<img src="'+u+'" alt="สลิป">';}).join('');
+   return '<div id="rcpPaper">'+
+     '<div class="rc-head"><div class="rc-co">VYNN Collection · Vangarde<small>บริษัท วีวายเอ็นเอ็น คอลเล็คชั่น แอนด์ดีไซน์ จำกัด<br>710 พัฒนาการ สวนหลวง กรุงเทพฯ 10250 · โทร 082-989-8984<br>www.VYNNCollection.com</small></div><div class="rc-badge">เลขที่<br><b>'+esc(bookNo)+'</b></div></div>'+
+     '<div class="rc-title">ใบหลักฐานการจอง<small>Booking Confirmation</small></div>'+
+     '<div class="rc-row"><span class="k">วันที่จอง</span><span class="v">'+esc(fmtD(L.date))+'</span></div>'+
+     '<div class="rc-row"><span class="k">งาน/อีเวนต์</span><span class="v">'+esc(L.event||'-')+'</span></div>'+
+     '<div class="rc-row"><span class="k">ชื่อลูกค้า</span><span class="v">'+esc(L.name)+'</span></div>'+
+     '<div class="rc-row"><span class="k">เบอร์โทร</span><span class="v">'+esc(L.phone)+'</span></div>'+
+     (L.address?'<div class="rc-row"><span class="k">ที่อยู่</span><span class="v">'+esc(L.address)+'</span></div>':'')+
+     '<div class="rc-row"><span class="k">สินค้าที่จอง</span><span class="v">'+esc(prods)+'</span></div>'+
+     '<div class="rc-amt"><span class="k">ยอดเงินจอง / มัดจำ</span><span class="v">฿'+money(L.deposit)+'</span></div>'+
+     '<div class="rc-row"><span class="k">วิธีชำระ</span><span class="v">'+esc(L.payMethod||'-')+'</span></div>'+
+     '<div class="rc-row"><span class="k">พนักงานขาย</span><span class="v">'+esc(L.sales||'-')+'</span></div>'+
+     (slips?'<div class="rc-slip"><div style="font-size:11px;color:#66738a;font-weight:700">หลักฐานการโอน/ชำระ</div>'+slips+'</div>':'')+
+     '<div class="rc-note">* หลักฐานนี้ยืนยันการวางเงินจอง/มัดจำเพื่อรับสิทธิ์โปรโมชันภายในงาน · ยอดที่วางจะถูกนำไปหักในยอดชำระจริงเมื่อสรุปแบบ/ใบเสนอราคา · กรุณาเก็บไว้เพื่ออ้างอิง</div>'+
+     '<div class="rc-sign"><div><div class="line"></div>ผู้รับเงิน (พนักงาน)</div><div><div class="line"></div>ผู้วางเงินจอง (ลูกค้า)</div></div>'+
+   '</div>';
+ }
+ window._receipt=function(id){
+   var L=st.leads.find(function(x){return x.id===id;});if(!L)return;
+   var ov=document.getElementById('rcpOverlay');
+   if(!ov){ov=document.createElement('div');ov.id='rcpOverlay';document.body.appendChild(ov);}
+   ov.innerHTML=rcpHtml(L)+'<div class="rcp-tools"><button class="btn" id="rcpPrint">📄 บันทึก / ส่ง PDF</button><button class="btn sec" id="rcpShare">📤 แชร์</button><button class="btn sec" id="rcpClose">ปิด</button></div>';
+   ov.classList.add('show');document.body.style.overflow='hidden';
+   document.getElementById('rcpClose').onclick=function(){ov.classList.remove('show');ov.innerHTML='';document.body.style.overflow='';};
+   document.getElementById('rcpPrint').onclick=function(){window.print();};
+   document.getElementById('rcpShare').onclick=function(){
+     var txt='🧾 หลักฐานการจอง\nลูกค้า: '+L.name+'\nวางเงินจอง: ฿'+money(L.deposit)+(L.payMethod?' ('+L.payMethod+')':'')+'\nสินค้า: '+prodLine(L)+'\nวันที่: '+fmtD(L.date)+'\nโดย: '+(L.sales||'')+' · '+(L.event||'');
+     if(navigator.share)navigator.share({title:'หลักฐานการจอง',text:txt}).catch(function(){});
+     else if(navigator.clipboard){navigator.clipboard.writeText(txt);toast('คัดลอกข้อความแล้ว');}
+     else toast('กด "บันทึก/ส่ง PDF" เพื่อส่งไฟล์แทน');
+   };
+ };
  /* ---------- render list ---------- */
  function isHot(L){return (L.useWhen||'').indexOf('ด่วน')>=0;}
  function prodLine(L){
@@ -446,7 +517,7 @@
        '</div>'+
        (L.deposit>0?'<div class="meta"><span class="tag dep">💰 วางจอง ฿'+money(L.deposit)+(L.payMethod?' · '+esc(L.payMethod):'')+'</span></div>':'')+
        (L.note?'<div class="meta"><span>📝 '+esc(L.note)+'</span></div>':'')+
-       '<div class="lact"><button onclick="_editLead(\''+L.id+'\')">✏️ แก้ไข</button><button class="del" onclick="_delLead(\''+L.id+'\')">🗑 ลบ</button></div>'+
+       '<div class="lact">'+(L.deposit>0?'<button onclick="_receipt(\''+L.id+'\')" style="color:var(--good)">🧾 ใบจอง / PDF</button>':'')+'<button onclick="_editLead(\''+L.id+'\')">✏️ แก้ไข</button><button class="del" onclick="_delLead(\''+L.id+'\')">🗑 ลบ</button></div>'+
      '</div>';
    }).join('');
  }
