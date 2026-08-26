@@ -516,6 +516,19 @@ const DEFAULT_PRICES={
  blindMinSqm:1.5, blindMotorAddPerSqm:1200,
  vangarde:[{type:'Pergola',price:12000,cost:6500},{type:'Zip Shade',price:5500,cost:2800},{type:'Awning',price:8500,cost:4200},{type:'Skylight',price:9500,cost:5000},{type:'Outdoor Roller',price:4200,cost:2000}], vgMinSqm:1,
  installPerPoint:600, installLaborPerPoint:350, shipConsolidateFee:8000, fabricDefaultPerM:800, fabricDefaultCostPerM:350,
+ /* ===== VYNN curtain pricing (อ้างอิงไฟล์ราคา VYNN – 2 เวอร์ชัน หน้าผ้า/ตร.ม.) ===== */
+ curtainMode:'naapha',
+ curtainMult:2.5,
+ sqmMargin:0.15,
+ fabDisc:{opaque:15, sheer:15, blind:20},
+ curtainRail:{
+  'ม่านลอน':{price:450,cost:190},
+  'ม่านลอนรางโซ่':{price:450,cost:190},
+  'ม่านตาไก่':{price:450,cost:190},
+  'ม่านจีบใต้ราง':{price:450,cost:120},
+  'ม่านจีบบังราง':{price:450,cost:120},
+  'ม่านพับ':{price:800,cost:200},
+ },
 };
 
 /* ============ SEED DATA ============ */
@@ -682,6 +695,7 @@ function migrateState(){
  if(state.leads)state.leads.forEach(l=>{if(!l.custCode)l.custCode=nextCustCode(l.brand);});
  if(!state.tickets)state.tickets=[];state.tickets.forEach(t=>{t.photos=t.photos||[];t.log=t.log||[];});
  if(!state.company)state.company=defaultCompany();Object.values(state.company).forEach(co=>{if(co.logo===undefined)co.logo='';});
+ if(state.prices){['curtainMode','curtainMult','sqmMargin','fabDisc','curtainRail'].forEach(k=>{if(state.prices[k]===undefined)state.prices[k]=structuredClone(DEFAULT_PRICES[k]);});}
  if(state.surveys)state.surveys.forEach(s=>s.points.forEach(migratePoint));
  if(state.quotes)state.quotes.forEach(migrateQuote);
  if(!state.travelClaims)state.travelClaims=[];
@@ -860,38 +874,64 @@ function roofAwnPrice(vg,wM,lenM){
  let rk=rowKeys.find(r=>r>=lenM-1e-9); if(rk==null)rk=rowKeys[rowKeys.length-1];
  return {price:rw.rows[String(rk)][ci], w:cols[ci], len:rk};
 }
-function calcPoint(pt){
+// จำแนกตระกูลม่าน + ค่าเผื่อ (ตามไฟล์ราคา VYNN)
+function curtainFam(t){t=t||'';const fold=t.includes('พับ');const pleat=t.includes('จีบ');
+ return {fold,pleat,tolP:fold?0.35:(pleat?0.35:0.25),tolQ:fold?0.20:(pleat?0.35:0.25)};}
+function calcPoint(pt,mode){
  const p=P();
  if(pt.amt!=null){const o=pt.aOpaque||0,s=pt.aSheer||0,t=pt.aTrack||0;const sum=o+s+t;const sell=sum||pt.amt;return {kind:pt.kind||'curtain',imported:true,sell,cost:pt.cost||0,inst:0,meters:0,widths:0,layers:[],sellOpaque:sum?o:sell,sellSheer:s,sellTrack:t,code1:pt.code1||'',code2:pt.code2||'',order:[{t:pt.prodLabel||'รายการนำเข้า',code:pt.code1||'',q:pt.qty+' '+(pt.kind==='curtain'?'ชุด':'รายการ')}]};}
  if(pt.kind==='curtain'){
-   const full=CURTAIN_FULLNESS[pt.curtainType]||p.fullness;
+   /* ===== สูตรราคาม่าน VYNN — 2 เวอร์ชัน: 'naapha' (หน้าผ้า) / 'sqm' (ตร.ม.) ===== */
+   const md=mode||p.curtainMode||'naapha';
+   const full=p.curtainMult||2.5;
+   const fam=curtainFam(pt.curtainType);
+   const Wm=pt.w/100, Hm=pt.h/100;
+   const disc=pt.fabDisc||p.fabDisc||{opaque:15,sheer:15,blind:20};
    const layers=[];
    (pt.fabrics||[]).forEach(fl=>{
      if(!fl.code)return;
-     const fw=fl.w||140;const price=fl.price||p.fabricDefaultPerM||800;const costM=fl.cost||p.fabricDefaultCostPerM||350;
-     const w=Math.ceil((pt.w*full)/fw);
-     const m=+(w*(pt.h+p.hemCm)/100*(1+p.wastePct/100)).toFixed(2);
-     layers.push({label:fl.layer,code:fl.code,name:fl.code,widths:w,meters:m,sell:m*price,cost:m*costM});
+     const isSh=fl.layer==='โปร่ง';
+     const dPct=(isSh?disc.sheer:disc.opaque)||0;
+     let qtyUnit=0,pieces=0,lenPer=0,meters=0,unit='หลา',listUnit=0,costUnit=0;
+     if(md==='sqm'){
+       const mg=(p.sqmMargin!=null?p.sqmMargin:0.15);
+       const a=(Wm+mg)*(Hm+mg);
+       const sqm=fam.fold?Math.max(1.5,Math.ceil(a*2)/2):Math.ceil(a*full);
+       qtyUnit=sqm; meters=+sqm.toFixed(2); unit='ตร.ม.';
+       listUnit=fl.priceSqm||0; costUnit=fl.costSqm||0;
+     } else {
+       const fw=(fl.w||140)/100;
+       if(fw>=(Hm+fam.tolP))pieces=1;
+       else pieces=Math.ceil(((Wm*(fam.fold?1:full))+0.2)/fw);
+       if(fw>=(Hm+fam.tolQ))lenPer=fam.fold?(Wm+0.2):(Wm*full+0.3);
+       else lenPer=Hm+fam.tolQ;
+       qtyUnit=Math.ceil(((pieces*lenPer)/0.9)*2)/2;
+       meters=+(pieces*lenPer).toFixed(2); unit='หลา';
+       listUnit=fl.price||0; costUnit=fl.cost||0;
+     }
+     const sellFull=qtyUnit*listUnit;
+     const sell=Math.ceil(sellFull*(1-dPct/100));
+     const cost=Math.ceil(qtyUnit*costUnit);
+     layers.push({label:fl.layer,code:fl.code,name:fl.code,widths:pieces,pieces,lenPer:+(+lenPer).toFixed(2),qtyUnit:+qtyUnit.toFixed(2),unit,meters,listUnit,disc:dPct,sellFull:Math.round(sellFull),sell,cost});
    });
    const fabSell=layers.reduce((a,l)=>a+l.sell,0),fabCost=layers.reduce((a,l)=>a+l.cost,0);
-   const raw=pt.w/100;
-   const tlen= pt.track==='motor' ? Math.max(1,Math.ceil(raw*2)/2) : Math.max(1,Math.ceil(raw*10)/10);
-   const trate= pt.track==='motor'? p.trackMotorPerM : p.trackNormalPerM;
-   const tSell=tlen*trate, tCost=tlen*trate*0.55;
-   let mSell=0,mCost=0,motorName='';
-   if(pt.track==='motor'){const mt=p.motors.find(m=>m.model===pt.motorModel)||p.motors[0];mSell=mt.price;mCost=mt.cost;motorName=mt.model;}
+   const railInfo=(p.curtainRail&&p.curtainRail[pt.curtainType])||{price:450,cost:190};
+   const tlen=Math.max(1,Math.ceil((pt.w/100)*10)/10);
+   let tSell,tCost,motorName='';
+   if(pt.track==='motor'){const mt=p.motors.find(m=>m.model===pt.motorModel)||p.motors[0];tSell=mt.price;tCost=mt.cost;motorName=mt.model;}
+   else{tSell=Math.ceil(tlen*railInfo.price);tCost=Math.ceil(tlen*railInfo.cost);}
    const inst=p.installPerPoint*pt.qty;
-   const sell=(fabSell+tSell+mSell)*pt.qty+inst, cost=(fabCost+tCost+mCost)*pt.qty;
-   const order=layers.map(l=>({t:l.label+' ('+l.code+')',code:l.code,q:(l.meters*pt.qty).toFixed(2)+' ม.'}));
+   const sell=(fabSell+tSell)*pt.qty+inst, cost=(fabCost+tCost)*pt.qty;
+   const order=layers.map(l=>({t:l.label+' ('+l.code+')',code:l.code,q:(l.meters*pt.qty).toFixed(2)+' '+l.unit}));
    order.push({t:pt.track==='motor'?'รางมอเตอร์':'รางธรรมดา',code:'',q:(tlen*pt.qty).toFixed(1)+' ม.'});
    order.push({t:'ตะขอเกี่ยวม่าน',code:'',q:pt.qty+' ชุด'});
    if(pt.track==='motor')order.push({t:'มอเตอร์ '+motorName+(pt.motorSide?' (ฝั่ง'+pt.motorSide+')':''),code:'',q:pt.qty+' ตัว'});
    const sellOpaque=layers.filter(l=>l.label!=='โปร่ง').reduce((a,l)=>a+l.sell,0)*pt.qty;
    const sellSheer=layers.filter(l=>l.label==='โปร่ง').reduce((a,l)=>a+l.sell,0)*pt.qty;
-   const sellTrack=(tSell+mSell)*pt.qty;
+   const sellTrack=tSell*pt.qty;
    const code1=((pt.fabrics||[]).find(f=>f.code&&f.layer!=='โปร่ง')||{}).code||'';
    const code2=((pt.fabrics||[]).find(f=>f.code&&f.layer==='โปร่ง')||{}).code||'';
-   return {kind:'curtain',layers,widths:layers[0]?layers[0].widths:0,meters:+layers.reduce((a,l)=>a+l.meters,0).toFixed(2),tlen,trate,motorName,sell,cost,inst,order,sellOpaque,sellSheer,sellTrack,code1,code2};
+   return {kind:'curtain',mode:md,layers,widths:layers[0]?layers[0].widths:0,meters:+layers.reduce((a,l)=>a+l.meters,0).toFixed(2),tlen,trate:railInfo.price,motorName,sell,cost,inst,order,sellOpaque,sellSheer,sellTrack,code1,code2};
  } else if(pt.kind==='vangarde'){
    // price from the REAL VG price list (retail/MSRP); Pergola/Zip=per m² by series, Awning=fixed by W×ยื่น
    const vg=state.vgPricing||defaultVgPricing();
@@ -939,7 +979,7 @@ function calcPoint(pt){
 function calcQuote(q){
  const sv=surveyById(q.surveyId); const pts=(q.points&&q.points.length)?q.points:(sv?sv.points:null); if(!pts) return {sub:0,service:0,discount:0,adjust:0,netBeforeVat:0,vat:0,total:0,cost:0,margin:0,lines:[],order:[]};
  const lines=[],order=[]; let sub=0,cost=0,service=0;
- pts.forEach((pt,i)=>{const c=calcPoint(pt);sub+=c.sell;cost+=c.cost;service+=(c.inst||0);
+ pts.forEach((pt,i)=>{const c=calcPoint(pt,q.priceMode);sub+=c.sell;cost+=c.cost;service+=(c.inst||0);
    const fabNames=pt.kind==='curtain'?((pt.fabrics||[]).filter(f=>f.code).map(f=>f.code).join(' + ')):'';
    const desc=pt.prodLabel?`${pt.prodLabel}${pt.detail?' · '+pt.detail:''}`:pt.kind==='curtain'?`${pt.curtainType} · ${fabNames}${pt.track==='motor'?' + มอเตอร์':''}`:pt.kind==='vangarde'?`${pt.vgProduct} · เฟรม ${pt.frameColor||'-'} / ผ้า ${pt.fabricCode||'-'}${vgHasMotor(pt)?' + มอเตอร์':''}`:`${pt.blindType}${pt.track==='motor'?' + มอเตอร์':''}`;
    lines.push({room:pt.room,desc,qty:pt.qty,sell:c.sell,product:c.sell-(c.inst||0),cost:c.cost,c,pt});
@@ -1005,8 +1045,8 @@ function addQuoteOption(leadId){
  state.payments[nid]=[{n:1,pct:50,st:'pending',d:''},{n:2,pct:30,st:'pending',d:''},{n:3,pct:20,st:'pending',d:''}];
  save();openReviseModal(nid);
 }
-function newPoint(kind){const p=P();return kind==='vangarde'?{kind:'vangarde',room:'',w:0,h:0,d:0,vgExtend:150,vgGrade:'poly',detail:'',vgProduct:'',vgSeries:'',frameColor:'',fabricCode:'',systems:{},accessories:{},install:{},track:'normal',qty:1,note:'',photos:[]}:kind==='blind'?{kind:'blind',room:'',w:0,h:0,blindType:p.blinds[0].type,track:'normal',motorModel:p.motors[0].model,openSide:'',slanted:false,slantNote:'',qty:1,note:'',photos:[]}:{kind:'curtain',room:'',w:0,h:0,curtainType:CURTAIN_TYPES[0],fabrics:[{layer:'ทึบ',code:'',w:140,price:0,cost:0},{layer:'โปร่ง',code:'',w:150,price:0,cost:0},{layer:'ซับใน',code:'',w:150,price:0,cost:0}],track:'normal',hooks:'ตะขอมาตรฐาน',motorModel:p.motors[0].model,motorSide:'ขวา',openSide:'',mountType:'ชิดฝ้า',mountAboveCm:0,sideAllowCm:2,slanted:false,slantNote:'',qty:1,note:'',photos:[]};}
-function migratePoint(pt){if(typeof pt.photos==='number')pt.photos=ph(pt.photos);pt.photos=pt.photos||[];pt.note=pt.note||'';pt.qty=pt.qty||1;pt.track=pt.track||'normal';if(pt.kind==='vangarde'){pt.vgProduct=VANGARDE_PRODUCTS.includes(pt.vgProduct)?pt.vgProduct:'';if(pt.d===undefined)pt.d=0;if(pt.vgExtend===undefined)pt.vgExtend=150;if(pt.vgGrade===undefined)pt.vgGrade='poly';if(pt.frameColor===undefined)pt.frameColor=pt.frameCode?({'FR-BK':'ดำด้าน','FR-WH':'ขาว','FR-GY':'เทา','FR-BR':'น้ำตาลไม้','FR-CH':'แชมเปญ'}[pt.frameCode]||''):'';pt.fabricCode=pt.fabricCode||'';pt.detail=pt.detail||'';pt.systems=pt.systems||{};pt.accessories=pt.accessories||{};pt.install=pt.install||{};pt.track=vgHasMotor(pt)?'motor':(pt.track||'normal');}if(pt.kind==='blind'){pt.openSide=pt.openSide||'';pt.slanted=pt.slanted||false;pt.slantNote=pt.slantNote||'';}if(pt.kind==='curtain'){pt.openSide=pt.openSide||'';pt.slantNote=pt.slantNote||'';if(pt.fabricBlackout===undefined&&!pt.fabrics){const code=pt.fabricCode||'';if(code){if(isSheer(code)){pt.fabricSheer=code;pt.fabricBlackout='';}else{pt.fabricBlackout=code;pt.fabricSheer='';}}else{pt.fabricBlackout='';pt.fabricSheer='';}pt.fabricLining='';}if(!pt.fabrics){const mk=(layer,code)=>{const f=code?findFabric(code):null;return {layer,code:code||'',w:f?f.widthCm:140,price:f?f.price:0,cost:f?f.cost:0};};pt.fabrics=[mk('ทึบ',pt.fabricBlackout),mk('โปร่ง',pt.fabricSheer),mk('ซับใน',pt.fabricLining)];}pt.curtainType=(pt.curtainType&&CURTAIN_TYPES.includes(pt.curtainType))?pt.curtainType:CURTAIN_TYPES[1];pt.motorModel=pt.motorModel||pt.motor||P().motors[0].model;pt.motorSide=pt.motorSide||'ขวา';pt.mountType=pt.mountType||'ชิดฝ้า';if(pt.mountAboveCm===undefined)pt.mountAboveCm=0;if(pt.sideAllowCm===undefined)pt.sideAllowCm=2;pt.slanted=pt.slanted||false;pt.hooks=pt.hooks||'ตะขอมาตรฐาน';}}
+function newPoint(kind){const p=P();return kind==='vangarde'?{kind:'vangarde',room:'',w:0,h:0,d:0,vgExtend:150,vgGrade:'poly',detail:'',vgProduct:'',vgSeries:'',frameColor:'',fabricCode:'',systems:{},accessories:{},install:{},track:'normal',qty:1,note:'',photos:[]}:kind==='blind'?{kind:'blind',room:'',w:0,h:0,blindType:p.blinds[0].type,track:'normal',motorModel:p.motors[0].model,openSide:'',slanted:false,slantNote:'',qty:1,note:'',photos:[]}:{kind:'curtain',room:'',w:0,h:0,curtainType:CURTAIN_TYPES[0],fabrics:[{layer:'ทึบ',code:'',w:140,price:0,cost:0,priceSqm:0,costSqm:0},{layer:'โปร่ง',code:'',w:150,price:0,cost:0,priceSqm:0,costSqm:0},{layer:'ซับใน',code:'',w:150,price:0,cost:0,priceSqm:0,costSqm:0}],track:'normal',hooks:'ตะขอมาตรฐาน',motorModel:p.motors[0].model,motorSide:'ขวา',openSide:'',mountType:'ชิดฝ้า',mountAboveCm:0,sideAllowCm:2,slanted:false,slantNote:'',qty:1,note:'',photos:[]};}
+function migratePoint(pt){if(typeof pt.photos==='number')pt.photos=ph(pt.photos);pt.photos=pt.photos||[];pt.note=pt.note||'';pt.qty=pt.qty||1;pt.track=pt.track||'normal';if(pt.kind==='vangarde'){pt.vgProduct=VANGARDE_PRODUCTS.includes(pt.vgProduct)?pt.vgProduct:'';if(pt.d===undefined)pt.d=0;if(pt.vgExtend===undefined)pt.vgExtend=150;if(pt.vgGrade===undefined)pt.vgGrade='poly';if(pt.frameColor===undefined)pt.frameColor=pt.frameCode?({'FR-BK':'ดำด้าน','FR-WH':'ขาว','FR-GY':'เทา','FR-BR':'น้ำตาลไม้','FR-CH':'แชมเปญ'}[pt.frameCode]||''):'';pt.fabricCode=pt.fabricCode||'';pt.detail=pt.detail||'';pt.systems=pt.systems||{};pt.accessories=pt.accessories||{};pt.install=pt.install||{};pt.track=vgHasMotor(pt)?'motor':(pt.track||'normal');}if(pt.kind==='blind'){pt.openSide=pt.openSide||'';pt.slanted=pt.slanted||false;pt.slantNote=pt.slantNote||'';}if(pt.kind==='curtain'){pt.openSide=pt.openSide||'';pt.slantNote=pt.slantNote||'';if(pt.fabricBlackout===undefined&&!pt.fabrics){const code=pt.fabricCode||'';if(code){if(isSheer(code)){pt.fabricSheer=code;pt.fabricBlackout='';}else{pt.fabricBlackout=code;pt.fabricSheer='';}}else{pt.fabricBlackout='';pt.fabricSheer='';}pt.fabricLining='';}if(!pt.fabrics){const mk=(layer,code)=>{const f=code?findFabric(code):null;return {layer,code:code||'',w:f?f.widthCm:140,price:f?f.price:0,cost:f?f.cost:0,priceSqm:0,costSqm:0};};pt.fabrics=[mk('ทึบ',pt.fabricBlackout),mk('โปร่ง',pt.fabricSheer),mk('ซับใน',pt.fabricLining)];}(pt.fabrics||[]).forEach(fl=>{if(fl.priceSqm===undefined)fl.priceSqm=0;if(fl.costSqm===undefined)fl.costSqm=0;});pt.curtainType=(pt.curtainType&&CURTAIN_TYPES.includes(pt.curtainType))?pt.curtainType:CURTAIN_TYPES[1];pt.motorModel=pt.motorModel||pt.motor||P().motors[0].model;pt.motorSide=pt.motorSide||'ขวา';pt.mountType=pt.mountType||'ชิดฝ้า';if(pt.mountAboveCm===undefined)pt.mountAboveCm=0;if(pt.sideAllowCm===undefined)pt.sideAllowCm=2;pt.slanted=pt.slanted||false;pt.hooks=pt.hooks||'ตะขอมาตรฐาน';}}
 
 /* ============ PAYMENTS ============ */
 function payInfo(qid){
@@ -1106,8 +1146,8 @@ function renderOverview(){
  const revenue=won.reduce((a,l)=>a+dealTotal(l.id),0);
  const active=L.filter(l=>isActiveStage(l.stage)&&!['won','production','installing'].includes(l.stage));
  const pipeline=L.filter(l=>['quoted','approved'].includes(l.stage)).reduce((a,l)=>a+dealTotal(l.id),0);
- const closed=L.filter(l=>['won','production','installing','done','lost'].includes(l.stage));
- const winRate=closed.length?Math.round(won.length/closed.length*100):0;
+ const quotedLeads=L.filter(l=>quoteOfLead(l.id));
+ const winRate=quotedLeads.length?Math.round(won.length/quotedLeads.length*100):0;
  const newLeads=L.filter(l=>l.stage==='new').length;
  // outstanding money
  let outstanding=0; state.quotes.forEach(q=>{const l=leadById(q.leadId);if(brand!=='all'&&l.brand!==brand)return;const pi=payInfo(q.id);if(pi)outstanding+=pi.total-pi.paid;});
@@ -1216,7 +1256,7 @@ function renderQuote(){
    ${ready.map(l=>{const sv=surveyOfLead(l.id);return `<tr class="clickable" data-lead="${l.id}"><td style="font-weight:600">${bn(l)}<div class="mini-note">${l.site}</div></td><td>${sv?sv.points.length+' จุด':'—'}</td><td style="text-align:right"><span class="pill accent">⚡ คำนวณ+สร้างใบเสนอราคา →</span></td></tr>`;}).join('')}
    </tbody></table></div></div>`:''}
   <div class="card"><div class="card-head">${svg('doc')}<h3>ใบเสนอราคาทั้งหมด</h3><span class="spacer"></span><span class="hint">${Q.length} ใบ · VAT ${P().vat}%</span></div>
-   <div class="table-wrap"><table><thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>วันที่</th><th class="num">ยอดรวม VAT</th>${canSeeCost()?'<th class="num">กำไร</th>':''}<th>สถานะ</th><th></th></tr></thead><tbody>
+   <div class="table-wrap"><table><thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>วันที่</th><th class="num">ยอดรวม VAT</th>${canSeeCost()?'<th class="num">กำไรขั้นต้น</th>':''}<th>สถานะ</th><th></th></tr></thead><tbody>
    ${Q.length?Q.map(q=>{const l=leadById(q.leadId);const cc=calcQuote(q);const st=stMap[q.status]||stMap.draft;const nrev=(q.revisions||[]).length;const isOpt=quotesOfLead(q.leadId).length>1;return `<tr class="clickable" data-lead="${q.leadId}"><td class="mono" style="font-size:12px;color:var(--text-muted)">${q.id}${nrev>1?`<div class="mini-note">แก้ไข ${nrev} ฉบับ</div>`:''}</td><td style="font-weight:600">${bn(l)}${isOpt?` <span class="pill ${q.selected?'good':'neutral'}" style="font-size:10px">ตัวเลือก ${q.optionLabel}${q.selected?' ✓':''}</span>`:''}</td><td>${fmtDate(q.date)}</td><td class="num" style="font-weight:650">${THB(cc.total)}</td>${canSeeCost()?`<td class="num" style="color:var(--good)">${THB(cc.margin)}</td>`:''}<td><span class="pill ${st.c}">${st.l}</span></td><td style="text-align:right"><span class="linkish">เปิด →</span></td></tr>`;}).join(''):emptyRow(canSeeCost()?7:6,'ยังไม่มีใบเสนอราคา')}
    </tbody></table></div></div>`;
  wireRows(c);
@@ -1534,7 +1574,7 @@ function openSurveyEditor(leadId){
 function openQuoteEditor(quoteId){
  const q=quoteById(quoteId);if(!q)return;const l=leadById(q.leadId);
  const src=(q.points&&q.points.length)?q.points:((surveyById(q.surveyId)||{points:[]}).points);
- editState={mode:'quote',leadId:q.leadId,quoteId,points:JSON.parse(JSON.stringify(src)),title:'แก้ไขรายการม่าน — '+q.id+' · ตัวเลือก '+q.optionLabel,sub:l.name+' · เปลี่ยนชนิดม่าน/ผ้า รายจุดได้ (บันทึกเป็นฉบับแก้ไขใหม่)'};
+ editState={mode:'quote',leadId:q.leadId,quoteId,priceMode:q.priceMode||P().curtainMode||'naapha',points:JSON.parse(JSON.stringify(src)),title:'แก้ไขรายการม่าน — '+q.id+' · ตัวเลือก '+q.optionLabel,sub:l.name+' · เปลี่ยนชนิดม่าน/ผ้า รายจุดได้ (บันทึกเป็นฉบับแก้ไขใหม่)'};
  editState.points.forEach(migratePoint);
  renderSurveyEditor();
 }
@@ -1547,6 +1587,7 @@ function renderSurveyEditor(){
  const saveLabel=editState.mode==='survey'?`บันทึกการวัด (${pts.length} จุด)`:`บันทึกเป็นฉบับใหม่ (${pts.length} รายการ)`;
  ov.innerHTML=`
   <div class="sv-head">${svg(editState.mode==='survey'?'ruler':'doc')}<div style="flex:1;min-width:0"><b>${editState.title}</b><div class="mini-note">${editState.sub}</div></div>
+   ${editState.mode==='quote'?`<div style="display:inline-flex;border:1px solid var(--border-strong);border-radius:8px;overflow:hidden;margin-right:6px" title="สลับวิธีคิดราคาม่าน VYNN"><button class="btn sm" id="modeNaapha" style="border:0;border-radius:0;${editState.priceMode!=='sqm'?'background:var(--accent);color:#fff':''}">คิดตามหน้าผ้า</button><button class="btn sm" id="modeSqm" style="border:0;border-radius:0;border-left:1px solid var(--border-strong);${editState.priceMode==='sqm'?'background:var(--accent);color:#fff':''}">คิดตาม ตร.ม.</button></div>`:''}
    <button class="btn" id="svCancel">ปิด</button><button class="btn primary" id="svSave">${svg('check','ico')} ${saveLabel}</button></div>
   <div class="sv-body">
    ${pts.map((pt,i)=>ptCard(pt,i,fabOpt,sel)).join('')}
@@ -1557,6 +1598,8 @@ function renderSurveyEditor(){
  ov.style.display='block';
  ov.querySelector('#svCancel').onclick=closeEditor;
  ov.querySelector('#svSave').onclick=saveEdit;
+ const mN=ov.querySelector('#modeNaapha');if(mN)mN.onclick=()=>{editState.priceMode='naapha';renderSurveyEditor();};
+ const mS=ov.querySelector('#modeSqm');if(mS)mS.onclick=()=>{editState.priceMode='sqm';renderSurveyEditor();};
  const bC=ov.querySelector('#addCurtain');if(bC)bC.onclick=()=>{pts.push(newPoint('curtain'));renderSurveyEditor();};
  const bB=ov.querySelector('#addBlind');if(bB)bB.onclick=()=>{pts.push(newPoint('blind'));renderSurveyEditor();};
  const bV=ov.querySelector('#addVg');if(bV)bV.onclick=()=>{pts.push(newPoint('vangarde'));renderSurveyEditor();};
@@ -1607,7 +1650,7 @@ function curtainAltSection(pt,i){
   </div>`;
 }
 function ptCard(pt,i,fabOpt,sel){
- const p=P();const est=calcPoint(pt);
+ const p=P();const est=calcPoint(pt,editState.priceMode);
  const kindLabel=pt.kind==='curtain'?'ผ้าม่าน':pt.kind==='vangarde'?('จุดติดตั้ง'+(pt.vgProduct?' · '+pt.vgProduct:'')):'มู่ลี่/ม่านม้วน';
  const head=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>จุดที่ ${i+1} · ${kindLabel}</b><button class="btn sm" data-rm="${i}">ลบจุด</button></div>`;
  const photoField=`<div class="field col4"><label>รูปภาพหน้างานจุดนี้</label><input type="file" accept="image/*" multiple data-photo="${i}"><div id="ptThumbs-${i}" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${(pt.photos||[]).map(x=>photoThumb(x,44)).join('')}</div></div>`;
@@ -1661,7 +1704,7 @@ function ptCard(pt,i,fabOpt,sel){
    ${photoField}
   </div><div class="mini-note" style="margin-top:8px">📐 ${est.area||0} ตร.ม.${pt.openSide?' · ฝั่ง'+pt.openSide:''}${pt.slanted?' · เอียง'+(pt.slantNote?' ('+pt.slantNote+')':''):''} · ราคาประเมิน ${THB(est.sell)}</div></div>`;
  }
- const est2=`ผ้า ${est.layers.map(x=>x.label+' '+x.meters+'ม.').join(' + ')||'—'} · ราง ${est.tlen}ม.${pt.openSide?' · ฝั่ง'+pt.openSide:''}${pt.slanted?' · เอียง'+(pt.slantNote?' ('+pt.slantNote+')':''):''} · ราคาประเมิน ${THB(est.sell)}`;
+ const est2=`<b>${est.mode==='sqm'?'ตร.ม.':'หน้าผ้า'}</b> · ผ้า ${est.layers.map(x=>x.label+' '+x.qtyUnit+(x.unit||'หลา')).join(' + ')||'—'} · ราง ${est.tlen}ม.${pt.openSide?' · ฝั่ง'+pt.openSide:''}${pt.slanted?' · เอียง'+(pt.slantNote?' ('+pt.slantNote+')':''):''} · ราคาประเมิน ${THB(est.sell)}`;
  return `<div class="pt-card">${head}<div class="pt-grid">
    <div class="field col2"><label>ชื่อจุด/ห้อง</label><input data-i="${i}" data-f="room" value="${pt.room||''}"></div>
    <div class="field"><label>กว้าง (cm)</label><input type="number" data-i="${i}" data-f="w" value="${pt.w}"></div>
@@ -1671,7 +1714,7 @@ function ptCard(pt,i,fabOpt,sel){
    <div class="field"><label>ฝั่งเปิด/รวบผ้า</label><select data-i="${i}" data-f="openSide"><option value="">— เลือก —</option>${OPEN_SIDES.map(o=>`<option value="${o}" ${pt.openSide===o?'selected':''}>${o}</option>`).join('')}</select></div>
    <div class="field col2"><label>ผ้าเอียง?</label><div style="display:flex;align-items:center;gap:8px"><label style="display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap"><input type="checkbox" data-i="${i}" data-f="slanted" ${pt.slanted?'checked':''}> เอียง</label><input data-i="${i}" data-f="slantNote" value="${pt.slantNote||''}" placeholder="โน้ต เช่น เอียงซ้าย 5° / เพดานลาด" style="flex:1"></div></div>
    <div class="pt-sec">ผ้า (พิมพ์รหัส + หน้าผ้า · เว้นว่างชั้นที่ไม่ใช้)</div>
-   ${(pt.fabrics||[]).map((fl,li)=>`<div class="field"><label>${fl.layer} · รหัสผ้า</label><input data-i="${i}" data-fl="${li}" data-flf="code" value="${fl.code||''}" list="fabCodes" placeholder="${li===0?'เช่น BK-280':li===1?'เช่น SH-300':'เช่น LN-150'}"></div><div class="field"><label>หน้าผ้า (cm)</label><input type="number" data-i="${i}" data-fl="${li}" data-flf="w" value="${fl.w||0}"></div><div class="field"><label>ราคา/ม.</label><input type="number" data-i="${i}" data-fl="${li}" data-flf="price" value="${fl.price||0}"></div>`).join('')}
+   ${(pt.fabrics||[]).map((fl,li)=>`<div class="field"><label>${fl.layer} · รหัสผ้า</label><input data-i="${i}" data-fl="${li}" data-flf="code" value="${fl.code||''}" list="fabCodes" placeholder="${li===0?'เช่น BK-280':li===1?'เช่น SH-300':'เช่น LN-150'}"></div><div class="field"><label>หน้าผ้า (cm)</label><input type="number" data-i="${i}" data-fl="${li}" data-flf="w" value="${fl.w||0}"></div><div class="field"><label>ราคา/หลา</label><input type="number" data-i="${i}" data-fl="${li}" data-flf="price" value="${fl.price||0}"></div><div class="field"><label>ราคา/ตร.ม.</label><input type="number" data-i="${i}" data-fl="${li}" data-flf="priceSqm" value="${fl.priceSqm||0}"></div>`).join('')}
    <div class="field col2"><label>ตะขอเกี่ยวม่าน</label><input data-i="${i}" data-f="hooks" value="${pt.hooks||''}"></div>
    ${curtainAltSection(pt,i)}
    <div class="pt-sec">อุปกรณ์ราง / มอเตอร์</div>
@@ -1695,7 +1738,7 @@ function saveEdit(){
   save();closeEditor();render();openLead(editState.leadId);
  } else {
   const q=quoteById(editState.quoteId);if(!q)return;
-  q.points=editState.points;q.date='2026-07-12';
+  q.points=editState.points;q.date='2026-07-12';q.priceMode=editState.priceMode;
   const total=calcQuote(q).total;
   q.revisions.push({rev:q.revisions.length+1,date:'2026-07-12',discount:q.discount||0,adjust:q.adjust||0,note:'แก้ไขรายการม่าน (จุด/ชนิด/ผ้า)',status:q.status,total,by:'a1'});
   save();closeEditor();render();openLead(editState.leadId);
@@ -1785,12 +1828,12 @@ function renderKPI(){
   const quoted=all.filter(l=>quoteOfLead(l.id));
   const won=all.filter(l=>['won','production','installing','done'].includes(l.stage));
   const lost=all.filter(l=>l.stage==='lost');
-  const closed=won.length+lost.length;
   const revenue=won.reduce((a,l)=>a+dealTotal(l.id),0);
   const quotedVal=quoted.reduce((a,l)=>a+dealTotal(l.id),0);
   let collected=0;won.forEach(l=>{const q=quoteOfLead(l.id);if(q){const pi=payInfo(q.id);if(pi)collected+=pi.paid;}});
   const visits=state.surveys.filter(sv=>sv.by===s.id).length;
-  return{s,customers:all.length,quotesN:quoted.length,quotedVal,wonN:won.length,revenue,winRate:closed?Math.round(won.length/closed*100):0,lostN:lost.length,visits,collected,quota:250000};
+  const newThisMonth=all.filter(l=>(l.created||'').slice(0,7)==='2026-07').length;
+  return{s,customers:all.length,newThisMonth,quotesN:quoted.length,quotedVal,wonN:won.length,revenue,winRate:quoted.length?Math.round(won.length/quoted.length*100):0,lostN:lost.length,visits,collected,quota:250000};
  }).sort((a,b)=>b.revenue-a.revenue);
  const depts=[
   {name:'ฝ่ายขาย',metric:'ยอดปิดการขาย',val:THB(salesRows.reduce((a,r)=>a+r.revenue,0)),sub:`${salesRows.reduce((a,r)=>a+r.newThisMonth,0)} ลูกค้าใหม่เดือนนี้`,prog:.82,col:'var(--good)'},

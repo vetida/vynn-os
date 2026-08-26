@@ -1146,8 +1146,8 @@ function renderOverview(){
  const revenue=won.reduce((a,l)=>a+dealTotal(l.id),0);
  const active=L.filter(l=>isActiveStage(l.stage)&&!['won','production','installing'].includes(l.stage));
  const pipeline=L.filter(l=>['quoted','approved'].includes(l.stage)).reduce((a,l)=>a+dealTotal(l.id),0);
- const closed=L.filter(l=>['won','production','installing','done','lost'].includes(l.stage));
- const winRate=closed.length?Math.round(won.length/closed.length*100):0;
+ const quotedLeads=L.filter(l=>quoteOfLead(l.id));
+ const winRate=quotedLeads.length?Math.round(won.length/quotedLeads.length*100):0;
  const newLeads=L.filter(l=>l.stage==='new').length;
  // outstanding money
  let outstanding=0; state.quotes.forEach(q=>{const l=leadById(q.leadId);if(brand!=='all'&&l.brand!==brand)return;const pi=payInfo(q.id);if(pi)outstanding+=pi.total-pi.paid;});
@@ -1256,7 +1256,7 @@ function renderQuote(){
    ${ready.map(l=>{const sv=surveyOfLead(l.id);return `<tr class="clickable" data-lead="${l.id}"><td style="font-weight:600">${bn(l)}<div class="mini-note">${l.site}</div></td><td>${sv?sv.points.length+' จุด':'—'}</td><td style="text-align:right"><span class="pill accent">⚡ คำนวณ+สร้างใบเสนอราคา →</span></td></tr>`;}).join('')}
    </tbody></table></div></div>`:''}
   <div class="card"><div class="card-head">${svg('doc')}<h3>ใบเสนอราคาทั้งหมด</h3><span class="spacer"></span><span class="hint">${Q.length} ใบ · VAT ${P().vat}%</span></div>
-   <div class="table-wrap"><table><thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>วันที่</th><th class="num">ยอดรวม VAT</th>${canSeeCost()?'<th class="num">กำไร</th>':''}<th>สถานะ</th><th></th></tr></thead><tbody>
+   <div class="table-wrap"><table><thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>วันที่</th><th class="num">ยอดรวม VAT</th>${canSeeCost()?'<th class="num">กำไรขั้นต้น</th>':''}<th>สถานะ</th><th></th></tr></thead><tbody>
    ${Q.length?Q.map(q=>{const l=leadById(q.leadId);const cc=calcQuote(q);const st=stMap[q.status]||stMap.draft;const nrev=(q.revisions||[]).length;const isOpt=quotesOfLead(q.leadId).length>1;return `<tr class="clickable" data-lead="${q.leadId}"><td class="mono" style="font-size:12px;color:var(--text-muted)">${q.id}${nrev>1?`<div class="mini-note">แก้ไข ${nrev} ฉบับ</div>`:''}</td><td style="font-weight:600">${bn(l)}${isOpt?` <span class="pill ${q.selected?'good':'neutral'}" style="font-size:10px">ตัวเลือก ${q.optionLabel}${q.selected?' ✓':''}</span>`:''}</td><td>${fmtDate(q.date)}</td><td class="num" style="font-weight:650">${THB(cc.total)}</td>${canSeeCost()?`<td class="num" style="color:var(--good)">${THB(cc.margin)}</td>`:''}<td><span class="pill ${st.c}">${st.l}</span></td><td style="text-align:right"><span class="linkish">เปิด →</span></td></tr>`;}).join(''):emptyRow(canSeeCost()?7:6,'ยังไม่มีใบเสนอราคา')}
    </tbody></table></div></div>`;
  wireRows(c);
@@ -1828,12 +1828,12 @@ function renderKPI(){
   const quoted=all.filter(l=>quoteOfLead(l.id));
   const won=all.filter(l=>['won','production','installing','done'].includes(l.stage));
   const lost=all.filter(l=>l.stage==='lost');
-  const closed=won.length+lost.length;
   const revenue=won.reduce((a,l)=>a+dealTotal(l.id),0);
   const quotedVal=quoted.reduce((a,l)=>a+dealTotal(l.id),0);
   let collected=0;won.forEach(l=>{const q=quoteOfLead(l.id);if(q){const pi=payInfo(q.id);if(pi)collected+=pi.paid;}});
   const visits=state.surveys.filter(sv=>sv.by===s.id).length;
-  return{s,customers:all.length,quotesN:quoted.length,quotedVal,wonN:won.length,revenue,winRate:closed?Math.round(won.length/closed*100):0,lostN:lost.length,visits,collected,quota:250000};
+  const newThisMonth=all.filter(l=>(l.created||'').slice(0,7)==='2026-07').length;
+  return{s,customers:all.length,newThisMonth,quotesN:quoted.length,quotedVal,wonN:won.length,revenue,winRate:quoted.length?Math.round(won.length/quoted.length*100):0,lostN:lost.length,visits,collected,quota:250000};
  }).sort((a,b)=>b.revenue-a.revenue);
  const depts=[
   {name:'ฝ่ายขาย',metric:'ยอดปิดการขาย',val:THB(salesRows.reduce((a,r)=>a+r.revenue,0)),sub:`${salesRows.reduce((a,r)=>a+r.newThisMonth,0)} ลูกค้าใหม่เดือนนี้`,prog:.82,col:'var(--good)'},
