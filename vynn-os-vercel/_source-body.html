@@ -287,6 +287,8 @@
   .logout-btn{width:100%;margin-top:7px;padding:8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center}
   .logout-btn:hover{background:var(--surface-2);color:var(--text)}
   .role-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:700}
+  /* mobile: >=16px inputs prevent iOS zoom-on-focus */
+  @media (max-width:760px){input,select,textarea,.field input,.field select,.field textarea,.login-field input,.pt-card input,.pt-card select,.pt-card textarea{font-size:16px !important}}
 </style>
 
 <div class="app">
