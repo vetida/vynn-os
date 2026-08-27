@@ -356,16 +356,7 @@
       <input id="loginPw" type="password" placeholder="••••••" autocomplete="current-password">
     </div>
     <button class="login-btn" type="submit">เข้าสู่ระบบ</button>
-    <details class="login-demo">
-      <summary>รหัสสำหรับทดสอบ (เดโม) ▾</summary>
-      <table>
-        <tr><td>แอดมิน</td><td><code>A001</code></td><td><code>admin123</code></td></tr>
-        <tr><td>ผู้จัดการ</td><td><code>M001</code></td><td><code>1234</code></td></tr>
-        <tr><td>ซัพพอร์ต</td><td><code>SP01</code></td><td><code>1234</code></td></tr>
-        <tr><td>เซลล์ (ณิชา)</td><td><code>E101</code></td><td><code>1234</code></td></tr>
-        <tr><td>เซลล์ (ธนกร)</td><td><code>E102</code></td><td><code>1234</code></td></tr>
-      </table>
-    </details>
+    <div class="login-demo" style="text-align:center;color:var(--text-faint);font-size:11.5px">ลืมรหัสผ่าน? ติดต่อแอดมิน</div>
   </form>
 </div>
 
@@ -402,20 +393,26 @@ function svg(n,cls){return `<svg class="${cls||''}" viewBox="0 0 24 24" fill="no
 
 /* ============ TEAM ============ */
 const USERS=[
- {id:'a1',name:'พิมพ์ชนก (แอดมิน)',short:'พ',color:'#7A4FB5',role:'admin',login:'A001',pw:'admin123'},
- {id:'a2',name:'สุริยา (แอดมิน)',short:'ส',color:'#7A4FB5',role:'admin',login:'A002',pw:'admin123'},
- {id:'a3',name:'มนัสนันท์ (แอดมิน)',short:'ม',color:'#7A4FB5',role:'admin',login:'A003',pw:'admin123'},
- {id:'mg',name:'คุณวีระ (ผู้จัดการ)',short:'ว',color:'#B77504',role:'manager',login:'M001',pw:'1234'},
- {id:'sp1',name:'อรวรรณ (ซัพพอร์ต)',short:'อ',color:'#0E7C86',role:'sales_support',login:'SP01',pw:'1234'},
+ {id:'a1',name:'Vetida',short:'Ve',color:'#7A4FB5',role:'admin',login:'Kikimz018764',pw:'admin2026',phone:'0889659244'},
+ {id:'a2',name:'Thanasarn',short:'Th',color:'#7A4FB5',role:'admin',login:'A002',pw:'admin2026'},
+ {id:'mg',name:'Preechaya',short:'Pr',color:'#B77504',role:'manager',login:'M001',pw:'mgr2026'},
+ {id:'mg2',name:'Nichkarn',short:'Ni',color:'#B77504',role:'manager',login:'M002',pw:'mgr2026'},
+ {id:'sp1',name:'Hanan',short:'Ha',color:'#0E7C86',role:'sales_support',login:'SP01',pw:'sup2026'},
+ {id:'sp2',name:'Oraya',short:'Or',color:'#0E7C86',role:'sales_support',login:'SP02',pw:'sup2026'},
 ];
 const SALES=[
- {id:'s1',name:'ณิชา พงษ์ไพบูลย์',short:'ณิชา',color:'#0F6E68',brand:'VYNN',role:'sales',login:'E101',pw:'1234'},
- {id:'s2',name:'ธนกร วัฒนศิริ',short:'ธนกร',color:'#B65C36',brand:'Vangarde',role:'sales',login:'E102',pw:'1234'},
- {id:'s3',name:'ปวีณา ศรีสมบัติ',short:'ปวีณา',color:'#2C6BB3',brand:'VYNN',role:'sales',login:'E103',pw:'1234'},
- {id:'s4',name:'กิตติพงศ์ อารีย์',short:'กิตติ',color:'#C0392B',brand:'Vangarde',role:'sales',login:'E104',pw:'1234'},
+ {id:'s1',name:'Atikarn',short:'At',color:'#0F6E68',brand:'VYNN',role:'sales',login:'E101',pw:'sale2026'},
+ {id:'s2',name:'Chuchart',short:'Ch',color:'#B65C36',brand:'Vangarde',role:'sales',login:'E102',pw:'sale2026'},
 ];
-// every account that can log in (admins + manager + support + sales)
-const ACCOUNTS=[...USERS,...SALES];
+const INSTALLERS=[
+ {id:'in1',name:'Suradit',short:'Su',color:'#C0392B',role:'installer',login:'IN01',pw:'tech2026'},
+ {id:'in2',name:'Roytawan',short:'Ro',color:'#C0392B',role:'installer',login:'IN02',pw:'tech2026'},
+ {id:'in3',name:'Bounma',short:'Bo',color:'#C0392B',role:'installer',login:'IN03',pw:'tech2026'},
+ {id:'in4',name:'Pantamit',short:'Pa',color:'#C0392B',role:'installer',login:'IN04',pw:'tech2026'},
+ {id:'in5',name:'Yea',short:'Ye',color:'#C0392B',role:'installer',login:'IN05',pw:'tech2026'},
+];
+// every account that can log in (admins + managers + support + sales + installers)
+const ACCOUNTS=[...USERS,...SALES,...INSTALLERS];
 const accountByLogin=lid=>ACCOUNTS.find(u=>u.login.toLowerCase()===String(lid||'').trim().toLowerCase());
 const accountByUid=uid=>ACCOUNTS.find(u=>u.id===uid);
 const personById=id=>SALES.find(s=>s.id===id)||USERS.find(u=>u.id===id)||{name:'ยังไม่มอบหมาย',short:'—',color:'#9A9186'};
@@ -651,6 +648,7 @@ const ACCESS={
  sales_support:['overview','leads','survey','quote','vgprice','sewing','china','install','service','finance','expenses','settings'],
  sales:['overview','leads','survey','quote','vgprice','install','service','finance','expenses','saleshist'],
  hr:['overview','expenses','hr'],
+ installer:['install'],
 };
 function canView(v){const a=ACCESS[role];return a==='*'||(a&&a.includes(v));}
 function firstAllowedView(){if(canView('overview'))return 'overview';const a=ACCESS[role];return (a==='*')?'overview':(a&&a[0])||'overview';}
@@ -678,8 +676,8 @@ function logAudit(action,detail){
  state.audit=state.audit.filter(e=>new Date(e.ts).getTime()>=cut).slice(-600);
  save();
 }
-const ROLE_LABEL={admin:'แอดมิน',manager:'ผู้จัดการ',sales_support:'ซัพพอร์ต',sales:'เซลล์',hr:'ฝ่ายบุคคล'};
-const ROLE_COLOR={admin:'#7A4FB5',manager:'#B77504',sales_support:'#0E7C86',sales:'#0F6E68',hr:'#2C6BB3'};
+const ROLE_LABEL={admin:'แอดมิน',manager:'ผู้จัดการ',sales_support:'ซัพพอร์ต',sales:'เซลล์',hr:'ฝ่ายบุคคล',installer:'ช่างติดตั้ง'};
+const ROLE_COLOR={admin:'#7A4FB5',manager:'#B77504',sales_support:'#0E7C86',sales:'#0F6E68',hr:'#2C6BB3',installer:'#C0392B'};
 function showLogin(){document.getElementById('loginScreen').style.display='flex';document.querySelector('.app').style.display='none';const e=document.getElementById('loginErr');e.classList.remove('show');document.getElementById('loginForm').reset();setTimeout(()=>document.getElementById('loginId').focus(),50);}
 function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';if(!canView(view))view=firstAllowedView();renderUserChip();render();}
 function renderUserChip(){
