@@ -393,8 +393,8 @@ const USERS=[
  {id:'sp2',name:'Oraya',short:'Or',color:'#0E7C86',role:'sales_support',login:'SP02',pw:'sup2026'},
 ];
 const SALES=[
- {id:'s1',name:'Atikarn',short:'At',color:'#0F6E68',brand:'VYNN',role:'sales',login:'E101',pw:'sale2026'},
- {id:'s2',name:'Chuchart',short:'Ch',color:'#B65C36',brand:'Vangarde',role:'sales',login:'E102',pw:'sale2026'},
+ {id:'s1',name:'Atikarn',short:'At',color:'#0F6E68',role:'sales',login:'E101',pw:'sale2026'},
+ {id:'s2',name:'Chuchart',short:'Ch',color:'#B65C36',role:'sales',login:'E102',pw:'sale2026'},
 ];
 const INSTALLERS=[
  {id:'in1',name:'Suradit',short:'Su',color:'#C0392B',role:'installer',login:'IN01',pw:'tech2026'},
@@ -1178,10 +1178,10 @@ function sourceBreak(L){
   ${interiorN?`<div class="mini-note" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">${svg('palette','')} มีลูกค้าอินทีเรีย ${interiorN} ราย — ต้องจ่ายค่าแนะนำ</div>`:''}`;
 }
 function leaderboard(){
- const rows=SALES.filter(s=>brand==='all'||s.brand===brand).map(s=>{const won=state.leads.filter(l=>l.assignedTo===s.id&&['won','production','installing','done'].includes(l.stage));return{s,sum:won.reduce((a,l)=>a+dealTotal(l.id),0),n:won.length};}).sort((a,b)=>b.sum-a.sum);
+ const rows=SALES.map(s=>{const won=state.leads.filter(l=>l.assignedTo===s.id&&['won','production','installing','done'].includes(l.stage));return{s,sum:won.reduce((a,l)=>a+dealTotal(l.id),0),n:won.length};}).sort((a,b)=>b.sum-a.sum);
  const max=Math.max(...rows.map(r=>r.sum),1);
  if(!rows.length)return '<div class="empty">ไม่มีข้อมูล</div>';
- return rows.map(r=>`<div class="lb-row"><div class="who">${avatar(r.s.id)}<span style="font-size:12.5px">${r.s.short} ${brandChip(r.s.brand)}</span></div><div class="lb-track"><div class="lb-fill" style="width:${r.sum/max*100}%;background:${r.s.color}"></div></div><div style="text-align:right"><span style="font-weight:700" class="tnum">${THBk(r.sum)}</span> <span class="mini-note">${r.n} ดีล</span></div></div>`).join('');
+ return rows.map(r=>`<div class="lb-row"><div class="who">${avatar(r.s.id)}<span style="font-size:12.5px">${r.s.short}</span></div><div class="lb-track"><div class="lb-fill" style="width:${r.sum/max*100}%;background:${r.s.color}"></div></div><div style="text-align:right"><span style="font-weight:700" class="tnum">${THBk(r.sum)}</span> <span class="mini-note">${r.n} ดีล</span></div></div>`).join('');
 }
 let queueActions=[];
 function actionQueue(){
@@ -1813,7 +1813,7 @@ function renderKPI(){
  const c=document.getElementById('content');
  const rev=state.monthly.slice();const curRev=brandLeads().filter(l=>['won','production','installing','done'].includes(l.stage)).reduce((a,l)=>a+dealTotal(l.id),0);rev[rev.length-1]={m:'ก.ค.',v:curRev};
  const maxRev=Math.max(...rev.map(r=>r.v));const target=750000;
- const salesRows=SALES.filter(s=>brand==='all'||s.brand===brand).map(s=>{
+ const salesRows=SALES.map(s=>{
   const all=state.leads.filter(l=>l.assignedTo===s.id);
   const quoted=all.filter(l=>quoteOfLead(l.id));
   const won=all.filter(l=>['won','production','installing','done'].includes(l.stage));
@@ -1839,7 +1839,7 @@ function renderKPI(){
   </div>
   <div class="card"><div class="card-head">${svg('user')}<h3>KPI รายบุคคล (เซลล์)</h3><span class="spacer"></span><span class="hint">ผลงานสะสม · คลิกดูรายบิล →</span></div>
    <div class="table-wrap"><table><thead><tr><th>เซลล์</th><th class="num">ลูกค้า</th><th class="num">ลงพื้นที่</th><th class="num">เสนอราคา (บิล)</th><th class="num">ปิดได้ (บิล)</th><th class="num">ปิด %</th><th class="num">ยอดปิด</th><th class="num">เก็บแล้ว</th><th style="width:118px">เทียบเป้า</th></tr></thead><tbody>
-   ${salesRows.map(r=>`<tr class="clickable" data-skpi="${r.s.id}"><td>${who(r.s.id)} ${brandChip(r.s.brand)}</td><td class="num">${r.customers}</td><td class="num">${r.visits}</td><td class="num"><b style="font-size:14px">${r.quotesN}</b> <span class="mini-note">${THBk(r.quotedVal)}</span></td><td class="num"><b style="font-size:14px;color:var(--good)">${r.wonN}</b></td><td class="num"><span class="pill ${r.winRate>=60?'good':r.winRate>=40?'warn':'crit'}">${r.winRate}%</span></td><td class="num" style="font-weight:700;color:var(--good)">${THB(r.revenue)}</td><td class="num">${THB(r.collected)}</td><td><div class="progress-mini"><span style="width:${Math.min(r.revenue/r.quota*100,100)}%;background:${r.revenue>=r.quota?'var(--good)':'var(--accent)'}"></span></div><div class="mini-note" style="margin-top:2px">${THBk(r.revenue)} / ${THBk(r.quota)}</div></td></tr>`).join('')}
+   ${salesRows.map(r=>`<tr class="clickable" data-skpi="${r.s.id}"><td>${who(r.s.id)}</td><td class="num">${r.customers}</td><td class="num">${r.visits}</td><td class="num"><b style="font-size:14px">${r.quotesN}</b> <span class="mini-note">${THBk(r.quotedVal)}</span></td><td class="num"><b style="font-size:14px;color:var(--good)">${r.wonN}</b></td><td class="num"><span class="pill ${r.winRate>=60?'good':r.winRate>=40?'warn':'crit'}">${r.winRate}%</span></td><td class="num" style="font-weight:700;color:var(--good)">${THB(r.revenue)}</td><td class="num">${THB(r.collected)}</td><td><div class="progress-mini"><span style="width:${Math.min(r.revenue/r.quota*100,100)}%;background:${r.revenue>=r.quota?'var(--good)':'var(--accent)'}"></span></div><div class="mini-note" style="margin-top:2px">${THBk(r.revenue)} / ${THBk(r.quota)}</div></td></tr>`).join('')}
    </tbody></table></div>
    <div class="card-pad" style="border-top:1px solid var(--border)"><span class="mini-note">💡 คลิกที่เซลล์แต่ละคน เพื่อดูรายการบิลที่เสนอ · ปิดได้ · เสียโอกาส</span></div></div>`;
  document.querySelectorAll('[data-skpi]').forEach(r=>r.onclick=()=>openSalesDrawer(r.dataset.skpi));
@@ -1860,7 +1860,7 @@ function openSalesDrawer(sid){
  let collected=0;won.forEach(l=>{const q=quoteOfLead(l.id);if(q){const pi=payInfo(q.id);if(pi)collected+=pi.paid;}});
  const noQuote=all.length-bills.length;
  const head=document.getElementById('drawerHead'),body=document.getElementById('drawerBody');
- head.innerHTML=`<div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">${avatar(sid)} ${brandChip(s.brand)}</div><h2 style="font-size:17px">${s.name}</h2><div class="mini-note" style="margin-top:2px">สรุปผลงานเซลล์ (สะสม)</div></div><button class="icon-btn" id="drawerClose">${svg('x')}</button>`;
+ head.innerHTML=`<div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">${avatar(sid)}</div><h2 style="font-size:17px">${s.name}</h2><div class="mini-note" style="margin-top:2px">สรุปผลงานเซลล์ (สะสม)</div></div><button class="icon-btn" id="drawerClose">${svg('x')}</button>`;
  body.innerHTML=`
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
    <div class="stat" style="padding:13px 15px"><div class="label">เสนอราคา</div><div class="value" style="font-size:23px">${bills.length}<small> บิล</small></div><div class="mini-note" style="margin-top:5px">${THB(bills.reduce((a,l)=>a+dealTotal(l.id),0))}</div></div>
@@ -2389,7 +2389,7 @@ function openLead(id){
  const steps=[];
  steps.push({done:true,ico:'inbox',color:'var(--info)',title:'รับลีดเข้าระบบ',meta:`${SOURCE[l.source].l} · ${fmtDate(l.created)}`,
   card:`<div class="kv"><dt>เบอร์</dt><dd>${l.phone}</dd>${l.desiredInstall?`<dt>วันติดตั้งที่ต้องการ</dt><dd>${fmtDate(l.desiredInstall)}</dd>`:''}${l.source==='interior'?`<dt>ผู้แนะนำ</dt><dd>${l.referrer||'—'} · ค่าแนะนำ ${l.referralPct||0}%</dd>`:''}</div>${l.note?`<div class="mini-note" style="margin-top:8px">📝 ${l.note}</div>`:''}`});
- steps.push({done:!!l.assignedTo,ico:'user',color:'var(--accent)',title:l.assignedTo?'มอบหมายให้เซลล์':'รอมอบหมายเซลล์',meta:l.assignedTo?personById(l.assignedTo).name:'ยังไม่มอบหมาย',card:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="assignSel" style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px">${SALES.map(s=>`<option value="${s.id}" ${((l.assignedTo||(SALES.find(x=>x.brand===l.brand)||SALES[0]).id)===s.id)?'selected':''}>${s.name} (${s.brand})</option>`).join('')}</select><button class="btn primary" id="assignBtn">${l.assignedTo?'เปลี่ยนผู้รับผิดชอบ':'＋ มอบหมาย'}</button></div>`});
+ steps.push({done:!!l.assignedTo,ico:'user',color:'var(--accent)',title:l.assignedTo?'มอบหมายให้เซลล์':'รอมอบหมายเซลล์',meta:l.assignedTo?personById(l.assignedTo).name:'ยังไม่มอบหมาย',card:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="assignSel" style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px">${SALES.map(s=>`<option value="${s.id}" ${((l.assignedTo||SALES[0].id)===s.id)?'selected':''}>${s.name}</option>`).join('')}</select><button class="btn primary" id="assignBtn">${l.assignedTo?'เปลี่ยนผู้รับผิดชอบ':'＋ มอบหมาย'}</button></div>`});
  const svPhotos=sv?sv.points.reduce((a,p)=>a+(p.photos||[]).length,0):0;
  steps.push({done:!!sv,ico:'ruler',color:'var(--warn)',title:sv?`วัดหน้างานแล้ว · ${sv.points.length} จุด`:'รอวัดหน้างาน',meta:sv?`${fmtDate(sv.date)} · โดย ${personById(sv.by).short} · ${svPhotos} รูป`:'—',
   card:sv?`${sv.points.map((pt,pi)=>surveyPointSummary(pt,pi)).join('')}<button class="btn sm" id="editSurveyBtn" style="margin-top:6px">${svg('ruler','ico')} ดู / แก้ไขการวัดแบบละเอียด</button>`:(l.assignedTo&&l.stage==='assigned'?`<button class="btn primary" id="surveyBtn">${svg('ruler','ico')} บันทึกการวัดหน้างาน</button>`:'')});
@@ -2503,7 +2503,7 @@ function openAddLead(){
    <div class="field-row"><div class="field"><label>เบอร์</label><input id="f-phone" placeholder="08x-xxx-xxxx"></div><div class="field"><label>แบรนด์</label><select id="f-brand"><option>VYNN</option><option>Vangarde</option></select></div></div>
    <div class="field-row"><div class="field"><label>ช่องทาง</label><select id="f-src">${Object.entries(SOURCE).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('')}</select></div><div class="field"><label>วันติดตั้งที่ต้องการ</label><input id="f-install" type="date"></div></div>
    <div id="referralWrap" style="display:none"><div class="field-row"><div class="field"><label>ผู้แนะนำ (อินทีเรีย)</label><input id="f-ref" placeholder="ชื่อดีไซน์เนอร์/สตูดิโอ"></div><div class="field"><label>ค่าแนะนำ (%)</label><input id="f-refpct" type="number" value="10"></div></div></div>
-   <div class="field"><label>มอบหมายเซลล์</label><select id="f-sales"><option value="">— รอมอบหมาย —</option>${SALES.map(s=>`<option value="${s.id}">${s.name} (${s.brand})</option>`).join('')}</select></div>
+   <div class="field"><label>มอบหมายเซลล์</label><select id="f-sales"><option value="">— รอมอบหมาย —</option>${SALES.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
    <div class="field"><label>บันทึก</label><textarea id="f-note" rows="2" placeholder="รายละเอียดความต้องการ"></textarea></div>
    <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" id="mCancel">ยกเลิก</button><button class="btn primary" id="mSave">＋ บันทึกลีด</button></div>
   </div>`;
@@ -2549,7 +2549,7 @@ function renderSalesHist(){
  const months=last12Months();
  if(!state.salesHist)state.salesHist=seedSalesHist();
  const mine=myScopeId();
- let list=mine?SALES.filter(s=>s.id===mine):SALES.filter(s=>brand==='all'||s.brand===brand);
+ let list=mine?SALES.filter(s=>s.id===mine):SALES;
  const totalOf=s=>{const h=(state.salesHist[s.id]||[]).slice();if(h.length)h[h.length-1]={m:months[months.length-1].key,v:liveMonthRevenue(s.id)};return h.reduce((a,x)=>a+x.v,0);};
  const rowsHtml=list.map(s=>{
   const hist=(state.salesHist[s.id]||[]).slice();
@@ -2558,7 +2558,7 @@ function renderSalesHist(){
   const max=Math.max(...hist.map(x=>x.v),1);
   const bars=hist.map((x,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;height:74px;background:var(--surface-2);border-radius:3px;display:flex;align-items:flex-end"><div title="${months[i].label}: ${THB(x.v)}" style="width:100%;background:${s.color};border-radius:3px;height:${Math.max(x.v/max*100,3)}%"></div></div><div style="font-size:9px;color:var(--text-faint);white-space:nowrap">${months[i].label}</div></div>`).join('');
   const avg=Math.round(total/12);
-  return `<div class="card" style="margin-bottom:14px"><div class="card-head">${avatar(s.id)}<h3 style="margin-left:2px">${s.name}</h3> ${brandChip(s.brand)}<span class="spacer"></span><div style="text-align:right"><div class="mini-note">ยอดสะสม 12 เดือน</div><div style="font-size:19px;font-weight:800;color:var(--good)">${THB(total)}</div><div class="mini-note">เฉลี่ย ${THBk(avg)}/เดือน</div></div></div><div class="card-pad"><div style="display:flex;gap:5px;align-items:flex-end">${bars}</div></div></div>`;
+  return `<div class="card" style="margin-bottom:14px"><div class="card-head">${avatar(s.id)}<h3 style="margin-left:2px">${s.name}</h3><span class="spacer"></span><div style="text-align:right"><div class="mini-note">ยอดสะสม 12 เดือน</div><div style="font-size:19px;font-weight:800;color:var(--good)">${THB(total)}</div><div class="mini-note">เฉลี่ย ${THBk(avg)}/เดือน</div></div></div><div class="card-pad"><div style="display:flex;gap:5px;align-items:flex-end">${bars}</div></div></div>`;
  }).join('');
  const grand=list.reduce((a,s)=>a+totalOf(s),0);
  c.innerHTML=`${mine?'<div class="banner-info">'+svg('user')+'มุมมองเซลล์ — เห็นเฉพาะยอดขายสะสมของตัวเอง</div>':`<div class="stat-row" style="margin-bottom:16px"><div class="stat"><div class="tile-ico">${svg('trend')}</div><div class="label">ยอดขายรวมทุกเซลล์ (12 เดือน)</div><div class="value">${THB(grand)}</div><div class="mini-note" style="margin-top:6px">${list.length} คน · ย้อนหลังถึง ${months[0].label}</div></div></div>`}${rowsHtml||'<div class="card"><div class="empty">ไม่มีข้อมูล</div></div>'}`;
