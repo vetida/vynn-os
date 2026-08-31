@@ -437,7 +437,7 @@ const PAY_METHODS=['โอนเงินผ่านธนาคาร','พร
 const PRODUCT_EN={'ม่านลอน':'Wave Curtain','ม่านจีบใต้ราง':'Pinch Pleat (under-track)','ม่านจีบบังราง':'Pinch Pleat (rail-cover)','ม่านตาไก่':'Eyelet Curtain','ม่านพับ':'Roman Blind','ม่านลอนรางโซ่':'Wave (chain track)','มู่ลี่ไม้':'Wood Blind','ม่านม้วน':'Roller Blind','วอลล์เปเปอร์':'Wallpaper'};
 const MOUNT_EN={'ชิดฝ้า':'Flush to ceiling','เหนือกรอบวงกบ':'Above window frame'};
 const SIDE_EN={'ซ้าย':'L · Left','ขวา':'R · Right','':'—'};
-const VANGARDE_PRODUCTS=['Pergola','Zip Shade','Awning','Skylight','Outdoor Roller'];
+const VANGARDE_PRODUCTS=['Pergola','Zip Shade','Awning','Skylight','Roof PRO','Retractable','Outdoor Roller'];
 const VYNN_PRODUCTS=['ม่านลอน','ม่านจีบใต้ราง','ม่านจีบบังราง','ม่านตาไก่','ม่านพับ','ม่านลอนรางโซ่','มู่ลี่ไม้','ม่านม้วน','วอลล์เปเปอร์'];
 const VG_SYSTEMS=[['spring','ระบบสปริง'],['handcrank','ระบบมือหมุน'],['somfy','Somfy Motor'],['vangardeMotor','Vangarde Motor'],['motorLeft','มอเตอร์ซ้าย'],['motorRight','มอเตอร์ขวา'],['remote1ch','รีโมท 1ch'],['remote15ch','รีโมท 15ch']];
 const VG_ACCESSORIES=[['handcrankHybrid','+มือหมุน (Hybrid)'],['led','+LED'],['rainSensor','+Rain Sensor'],['shakeSensor','+Shake Sensor'],['waterCurtain','+ฉากกันน้ำ']];
@@ -452,6 +452,10 @@ const VG_PROD={
    systems:['handcrank','vangardeMotor','remote1ch','remote15ch'], accessories:['shakeSensor','led','waterCurtain'], install:['frontWall','flashing']},
  'Skylight':  {dims:[['w','กว้าง'],['d','ยาว']], price:'roof', list:'roofawning',
    systems:['handcrank','vangardeMotor','remote1ch','remote15ch'], accessories:['led','waterCurtain'], install:['frontWall','flashing']},
+ 'Roof PRO':  {dims:[['w','กว้าง'],['d','ยื่น']], price:'roofpro', list:'roofpro',
+   systems:['vangardeMotor','remote1ch','remote15ch'], accessories:[], install:['frontWall','flashing']},
+ 'Retractable':{dims:[['w','กว้าง'],['vgExtend','ยื่น']], price:'nocass', list:'nocassette',
+   systems:['handcrank','vangardeMotor','remote1ch','remote15ch'], accessories:[], install:['frontWall']},
  'Outdoor Roller':{dims:[['w','กว้าง'],['h','สูง']], price:'flat', list:null,
    systems:['handcrank','vangardeMotor'], accessories:['rainSensor'], install:['frontWall']},
 };
@@ -706,7 +710,7 @@ function migrateState(){
  if(!state.passwords)state.passwords={}; // per-user password overrides (uid -> pw)
  if(!state.audit)state.audit=[]; // audit log
  if(!state.salesHist)state.salesHist=seedSalesHist(); // 12-month per-sales history
- if(!state.vgPricing||!(state.vgPricing.v>=7))state.vgPricing=defaultVgPricing(); // Vangarde price list (v7 = official V7 Awning)
+ if(!state.vgPricing||!(state.vgPricing.v>=8))state.vgPricing=defaultVgPricing(); // Vangarde price list (v8 = + Roof PRO & No-Cassette)
  (state.accounts||[]).forEach(a=>{if(a.qr===undefined)a.qr='';}); // QR field for bank transfer
  {const nv=(state.accounts||[]).find(a=>a.id==='acc-novat');if(nv&&!nv.bank){nv.legalName=nv.legalName||'เวทิดา ยิ้มถนอม';nv.bank='ธ.กสิกรไทย เลขที่ 035-320-4475 (เวทิดา ยิ้มถนอม)';}}
 }
@@ -794,7 +798,7 @@ function isSheer(code){return P().fabricsSheer.some(f=>f.code===code);}
 /* ---- VG (Vangarde) real price list — 25 Nov 2025. MSRP = retail sell.
    Tiers: dealer=MSRP×0.7, agent=MSRP×0.85. Sales see MSRP only; mgr/admin/support see all 3. ---- */
 function defaultVgPricing(){return {
- v:7, // bump to force-refresh reference prices on load (v7 = official V7 Awning table w/ LED + water baffle + arms)
+ v:8, // bump to force-refresh reference prices on load (v8 = + Roof PRO (NiV) & Retractable No-Cassette matrices)
  tiers:{dealer:0.70, agent:0.85},
  pergola:[
   {series:'V180', max:'4.5×4.5×2.7', msrp:14000, moq:10},
@@ -869,6 +873,28 @@ function defaultVgPricing(){return {
   '5.5':[58490,61880,66320,69680,72800,77480,82680,87880,93080],
   '6':[61090,64480,68920,72280,75400,80600,85800,91000,96200],
  }},
+ // Roof Awning PRO (NiV) — by ยื่น(rows)×กว้าง(cols). null=ไม่มีขนาดนั้น. (ถอดจากภาพ — ควรตรวจซ้ำกับไฟล์จริง)
+ roofpro:{widths:[1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6], rows:{
+  '1':[35300,36800,38300,41500,43000,49300,50800,54300,55800,null,null],
+  '1.5':[38000,39800,41500,45300,47000,53800,55500,59300,61000,null,null],
+  '2':[40000,41800,43500,47300,49000,55500,57300,61000,62800,null,null],
+  '2.5':[42800,44800,46800,50800,53000,60000,62000,66000,68300,71300,73500],
+  '3':[44500,46800,48800,53000,55000,62000,64000,68000,70000,73300,75300],
+  '3.5':[47000,49000,51300,55300,57300,64300,66300,70500,72500,75800,77800],
+  '4':[49800,52000,54500,58800,61300,68500,71000,75300,77800,81300,83800],
+  '4.5':[52000,54300,56800,61300,63500,70800,73300,77800,80000,83500,86000],
+  '5':[54800,57300,60000,63800,67500,75000,78000,82800,85300,89300,92000],
+  '5.5':[null,59500,62300,67000,69800,77500,80000,84800,87500,91500,94300],
+  '6':[null,62500,65800,70800,73800,81800,84800,89800,92800,97000,100300],
+ }},
+ // Retractable Awning (No Cassette) — by ยื่น(rows)×กว้าง(cols). null=ไม่มีขนาดนั้น
+ nocassette:{widths:[2,3,4,5,6], rows:{
+  '1.5':[16000,16000,16000,17500,19950],
+  '2':[null,18000,18000,19500,21500],
+  '2.5':[null,20000,20000,21500,23500],
+  '3':[null,null,21000,22500,24500],
+  '3.5':[null,null,22000,23500,26500],
+ }},
  addons:{
   pergola:[{n:'LED strip (คาน+เสา+ราง)',price:800,u:'ม.'},{n:'Rain Sensor',price:6000,u:'ตัว'},{n:'Broadlink Automation',price:3500,u:'ตัว'},{n:'เพิ่มความสูงเป็น 3.0 ม.',price:6000,u:'ชุด'}],
   zipshade:[{n:'มอเตอร์ Somfy (ฝรั่งเศส)',price:19800,u:'ชุด'},{n:'มอเตอร์ Vangarde',price:9900,u:'ชุด'},{n:'มอเตอร์ Vangarde Hybrid (ไม่ใช้ไฟ ≤4×3ม.)',price:14000,u:'ชุด'},{n:'รีโมท 1Ch/15Ch',price:1200,u:'ตัว'},{n:'Rain Sensor',price:6000,u:'ตัว'}],
@@ -908,6 +934,17 @@ function roofAwnPrice(vg,wM,lenM){
  const rowKeys=Object.keys(rw.rows).map(Number).sort((a,b)=>a-b);
  let rk=rowKeys.find(r=>r>=lenM-1e-9); if(rk==null)rk=rowKeys[rowKeys.length-1];
  return {price:rw.rows[String(rk)][ci], w:cols[ci], len:rk};
+}
+// generic W×Extend matrix lookup with null-cell fallback (round up)
+function matPrice(mat,wM,extM){
+ if(!mat||!mat.widths)return {price:0,w:0,len:0};
+ const cols=mat.widths; let ci=cols.findIndex(c=>c>=wM-1e-9); if(ci<0)ci=cols.length-1;
+ const rowKeys=Object.keys(mat.rows).map(Number).sort((a,b)=>a-b);
+ let rk=rowKeys.find(r=>r>=extM-1e-9); if(rk==null)rk=rowKeys[rowKeys.length-1];
+ const row=mat.rows[String(rk)]||[]; let price=row[ci];
+ if(price==null){for(let j=ci+1;j<cols.length;j++){if(row[j]!=null){price=row[j];ci=j;break;}}}
+ if(price==null){const start=rowKeys.indexOf(rk);for(let ri=start+1;ri<rowKeys.length;ri++){const r2=mat.rows[String(rowKeys[ri])];if(r2&&r2[ci]!=null){price=r2[ci];rk=rowKeys[ri];break;}}}
+ return {price:price||0, w:cols[ci], len:rk};
 }
 // จำแนกตระกูลม่าน + ค่าเผื่อ (ตามไฟล์ราคา VYNN)
 function curtainFam(t){t=t||'';const fold=t.includes('พับ');const pleat=t.includes('จีบ');
@@ -1028,6 +1065,10 @@ function calcPoint(pt,mode){
        inst:0,vgUnit:aunit,sellOpaque:abase*aq,sellSheer:0,sellTrack:(amotor+aled+avib+awb)*aq,code1:pt.fabricCode||'',code2:'',order:aorder};
    } else if(prod==='Skylight'){               // fixed by กว้าง × ยาว (roof matrix)
      const rp=roofAwnPrice(vg,wM,depthM); base=rp.price; areaEach=wM*depthM; unit='Skylight '+rp.w+'×'+rp.len+' ม.';
+   } else if(prod==='Roof PRO'){               // Roof Awning PRO (NiV) matrix กว้าง×ยื่น
+     const rp=matPrice(vg.roofpro,wM,depthM); base=rp.price; areaEach=wM*depthM; unit='Roof PRO '+rp.w+'×'+rp.len+' ม.';
+   } else if(prod==='Retractable'){            // Retractable Awning (No Cassette) matrix กว้าง×ยื่น
+     const rp=matPrice(vg.nocassette,wM,extM); base=rp.price; areaEach=wM*extM; unit='Retractable '+rp.w+'×'+rp.len+' ม. (No Cassette)';
    } else {                                    // Outdoor Roller — flat fallback
      const vp=(p.vangarde||[]).find(x=>x.type===prod)||{price:6000};
      areaEach=Math.max(p.vgMinSqm||1,wM*hM); base=areaEach*vp.price;
@@ -1036,7 +1077,7 @@ function calcPoint(pt,mode){
    const sellBase=base*pt.qty;
    const hasMotor=vgHasMotor(pt);
    let motorAdd=0;
-   if(hasMotor){const m=prod==='Awning'?12000:prod==='Zip Shade'?9900:0;motorAdd=m*pt.qty;}
+   if(hasMotor){motorAdd=9900*pt.qty;}   // Vangarde motor for shared-path products (Awning/ZipShade already returned earlier)
    const inst=p.installPerPoint*pt.qty;
    const sell=sellBase+motorAdd+inst;
    const cost=Math.round((sellBase+motorAdd)*(vg.tiers.dealer||0.7));   // cost ≈ dealer purchase tier (ประมาณ)
