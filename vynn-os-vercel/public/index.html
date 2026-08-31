@@ -1078,7 +1078,7 @@ function calcPoint(pt,mode){
    const hasMotor=vgHasMotor(pt);
    let motorAdd=0;
    if(hasMotor){motorAdd=9900*pt.qty;}   // Vangarde motor for shared-path products (Awning/ZipShade already returned earlier)
-   const inst=p.installPerPoint*pt.qty;
+   const inst=(prod==='Pergola'?10000:p.installPerPoint)*pt.qty;   // Pergola ค่าติดตั้ง 10,000/ชุด; Skylight/Roof/Roller ใช้ค่ากลาง
    const sell=sellBase+motorAdd+inst;
    const cost=Math.round((sellBase+motorAdd)*(vg.tiers.dealer||0.7));   // cost ≈ dealer purchase tier (ประมาณ)
    return {kind:'vangarde',area,areaEach:+areaEach.toFixed(2),sell,cost,inst,vgUnit:unit,sellOpaque:sellBase,sellSheer:0,sellTrack:motorAdd,code1:pt.fabricCode||'',code2:'',order:[{t:unit+' · เฟรม '+(pt.frameColor||'-')+' · ผ้า '+(pt.fabricCode||'-'),code:'',q:area+' ตร.ม. ('+pt.qty+' จุด)'},...(hasMotor?[{t:'มอเตอร์ + รีโมท',code:'',q:pt.qty+' ชุด'}]:[])]};
