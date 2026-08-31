@@ -401,6 +401,7 @@ const USERS=[
  {id:'mg2',name:'Nichkarn',short:'Ni',color:'#B77504',role:'manager',login:'M002',pw:'mgr2026'},
  {id:'sp1',name:'Hanan',short:'Ha',color:'#0E7C86',role:'sales_support',login:'SP01',pw:'sup2026'},
  {id:'sp2',name:'Oraya',short:'Or',color:'#0E7C86',role:'sales_support',login:'SP02',pw:'sup2026'},
+ {id:'ac1',name:'Kunyanuch',short:'Ku',color:'#2C6BB3',role:'accounting',login:'AC01',pw:'acc2026'},
 ];
 const SALES=[
  {id:'s1',name:'Atikarn',short:'At',color:'#0F6E68',role:'sales',login:'E101',pw:'sale2026'},
@@ -654,6 +655,7 @@ const ACCESS={
  sales_support:['overview','leads','survey','quote','vgprice','sewing','china','install','service','finance','expenses','settings'],
  sales:['overview','leads','survey','quote','vgprice','install','service','finance','expenses','saleshist'],
  hr:['overview','expenses','hr'],
+ accounting:['overview','expenses','hr'],
  installer:['install'],
 };
 function canView(v){const a=ACCESS[role];return a==='*'||(a&&a.includes(v));}
@@ -682,8 +684,8 @@ function logAudit(action,detail){
  state.audit=state.audit.filter(e=>new Date(e.ts).getTime()>=cut).slice(-600);
  save();
 }
-const ROLE_LABEL={admin:'แอดมิน',manager:'ผู้จัดการ',sales_support:'ซัพพอร์ต',sales:'เซลล์',hr:'ฝ่ายบุคคล',installer:'ช่างติดตั้ง'};
-const ROLE_COLOR={admin:'#7A4FB5',manager:'#B77504',sales_support:'#0E7C86',sales:'#0F6E68',hr:'#2C6BB3',installer:'#C0392B'};
+const ROLE_LABEL={admin:'แอดมิน',manager:'ผู้จัดการ',sales_support:'ซัพพอร์ต',sales:'เซลล์',hr:'ฝ่ายบุคคล',accounting:'ฝ่ายบัญชี',installer:'ช่างติดตั้ง'};
+const ROLE_COLOR={admin:'#7A4FB5',manager:'#B77504',sales_support:'#0E7C86',sales:'#0F6E68',hr:'#2C6BB3',accounting:'#0E7C86',installer:'#C0392B'};
 function showLogin(){document.getElementById('loginScreen').style.display='flex';document.querySelector('.app').style.display='none';const e=document.getElementById('loginErr');e.classList.remove('show');document.getElementById('loginForm').reset();setTimeout(()=>document.getElementById('loginId').focus(),50);}
 function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';if(!canView(view))view=firstAllowedView();renderUserChip();render();}
 function renderUserChip(){
@@ -992,8 +994,8 @@ function calcPoint(pt,mode){
    let tSell,tCost,motorName='';
    if(pt.track==='motor'){const mt=p.motors.find(m=>m.model===pt.motorModel)||p.motors[0];tSell=mt.price;tCost=mt.cost;motorName=mt.model;}
    else{tSell=Math.ceil(tlen*railInfo.price);tCost=Math.ceil(tlen*railInfo.cost);}
-   const inst=p.installPerPoint*pt.qty;
-   const sell=(fabSell+tSell)*pt.qty+inst, cost=(fabCost+tCost)*pt.qty;
+   const inst=0;   // VYNN install is job-level (see calcQuote): 3,000/งาน if order < 30,000 pre-VAT
+   const sell=(fabSell+tSell)*pt.qty, cost=(fabCost+tCost)*pt.qty;
    const order=layers.map(l=>({t:l.label+' ('+l.code+')',code:l.code,q:(l.meters*pt.qty).toFixed(2)+' '+l.unit}));
    order.push({t:pt.track==='motor'?'รางมอเตอร์':'รางธรรมดา',code:'',q:(tlen*pt.qty).toFixed(1)+' ม.'});
    order.push({t:'ตะขอเกี่ยวม่าน',code:'',q:pt.qty+' ชุด'});
@@ -1078,7 +1080,7 @@ function calcPoint(pt,mode){
    const hasMotor=vgHasMotor(pt);
    let motorAdd=0;
    if(hasMotor){motorAdd=9900*pt.qty;}   // Vangarde motor for shared-path products (Awning/ZipShade already returned earlier)
-   const inst=(prod==='Pergola'?10000:p.installPerPoint)*pt.qty;   // Pergola ค่าติดตั้ง 10,000/ชุด; Skylight/Roof/Roller ใช้ค่ากลาง
+   const inst=(prod==='Pergola'?10000:3000)*pt.qty;   // Vangarde install: Pergola 10,000/ชุด, สินค้าอื่น 3,000/ชุด (กทม.+ปริมณฑล)
    const sell=sellBase+motorAdd+inst;
    const cost=Math.round((sellBase+motorAdd)*(vg.tiers.dealer||0.7));   // cost ≈ dealer purchase tier (ประมาณ)
    return {kind:'vangarde',area,areaEach:+areaEach.toFixed(2),sell,cost,inst,vgUnit:unit,sellOpaque:sellBase,sellSheer:0,sellTrack:motorAdd,code1:pt.fabricCode||'',code2:'',order:[{t:unit+' · เฟรม '+(pt.frameColor||'-')+' · ผ้า '+(pt.fabricCode||'-'),code:'',q:area+' ตร.ม. ('+pt.qty+' จุด)'},...(hasMotor?[{t:'มอเตอร์ + รีโมท',code:'',q:pt.qty+' ชุด'}]:[])]};
@@ -1087,9 +1089,9 @@ function calcPoint(pt,mode){
    const areaEach=Math.max(p.blindMinSqm,(pt.w/100)*(pt.h/100));
    const area=+(areaEach*pt.qty).toFixed(2);
    const motorAdd=pt.track==='motor'?p.blindMotorAddPerSqm*area:0;
-   const sell=area*bl.price+motorAdd+p.installPerPoint*pt.qty;
+   const sell=area*bl.price+motorAdd;   // VYNN install is job-level (see calcQuote)
    const cost=area*bl.cost+motorAdd*0.5;
-   return {kind:'blind',area,areaEach:+areaEach.toFixed(2),sell,cost,inst:p.installPerPoint*pt.qty,sellOpaque:(area*bl.price),sellSheer:0,sellTrack:motorAdd,code1:pt.blindType||'',code2:'',
+   return {kind:'blind',area,areaEach:+areaEach.toFixed(2),sell,cost,inst:0,sellOpaque:(area*bl.price),sellSheer:0,sellTrack:motorAdd,code1:pt.blindType||'',code2:'',
      order:[{t:pt.blindType,code:'',q:area+' ตร.ม. ('+pt.qty+' จุด)'},...(pt.track==='motor'?[{t:'ระบบมอเตอร์',code:'',q:area+' ตร.ม.'}]:[])]};
  }
 }
@@ -1102,8 +1104,11 @@ function calcQuote(q){
    const desc=pt.prodLabel?`${pt.prodLabel}${pt.detail?' · '+pt.detail:''}`:pt.kind==='curtain'?`${pt.curtainType} · ${fabNames}${pt.track==='motor'?' + มอเตอร์':''}`:pt.kind==='vangarde'?`${pt.vgProduct} · เฟรม ${pt.frameColor||'-'} / ผ้า ${pt.fabricCode||'-'}${vgHasMotor(pt)?' + มอเตอร์':''}`:`${pt.blindType}${pt.track==='motor'?' + มอเตอร์':''}`;
    lines.push({room:pt.room,desc,qty:pt.qty,sell:c.sell,product:c.sell-(c.inst||0),cost:c.cost,c,pt});
    c.order.forEach(o=>order.push(o));});
+ const vynnSub=lines.filter(l=>l.pt.kind==='curtain'||l.pt.kind==='blind').reduce((a,l)=>a+l.sell,0);
+ const vynnInst=vynnSub>0?(vynnSub<30000?3000:0):0;   // VYNN ค่าติดตั้ง 3,000/งาน ถ้ายอด < 30,000 ก่อน VAT (ยอด ≥ 30,000 = ฟรี)
+ if(vynnInst)service+=vynnInst;
  const discount=q.discount||0;const adjust=q.adjust||0;
- const netBeforeVat=sub-discount+adjust;
+ const netBeforeVat=sub+vynnInst-discount+adjust;
  const vatRate=accVatRate(q);
  const vat=netBeforeVat*vatRate/100;
  const total=netBeforeVat+vat;
@@ -2222,7 +2227,7 @@ function renderExpenses(){
  const brandOpts=['กลาง','VYNN','Vangarde'].map(b=>`<option value="${b}"${expLast.brand===b?' selected':''}>${b==='กลาง'?'กลาง (ส่วนกลางบริษัท)':b}</option>`).join('');
  const methodOpts=EXP_METHODS.map(m=>`<option value="${m[0]}"${expLast.method===m[0]?' selected':''}>${m[1]}</option>`).join('');
  const defBy=expLast.by||(currentUser&&currentUser.id);
- const byOpts=ACCOUNTS.map(a=>`<option value="${a.id}"${defBy===a.id?' selected':''}>${a.short||a.name}</option>`).join('');
+ const byOpts=ACCOUNTS.map(a=>`<option value="${a.id}"${defBy===a.id?' selected':''}>${a.name}</option>`).join('');
  const list=monthList.slice().sort((a,b)=>((b.date||'')+(b.createdAt||'')).localeCompare((a.date||'')+(a.createdAt||'')));
  const canDel=e=>role!=='sales'||e.createdBy===myScopeId()||e.by===myScopeId();
  c.innerHTML=`
@@ -2260,7 +2265,7 @@ function renderExpenses(){
     <input type="month" id="exp-month" value="${expMonth}" style="padding:6px 8px;margin-right:8px">
     <select id="exp-catf" style="padding:6px 8px">${catFilterOpts}</select></div>
    <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>หมวด</th><th>รายละเอียด</th><th>ผู้จ่าย</th><th>วิธี</th><th>หน่วยงาน</th><th>บิล</th><th class="num">ยอด</th><th></th></tr></thead><tbody>
-   ${list.length?list.map(e=>{const p=personById(e.by)||{};const ph=(e.photos||[])[0];return `<tr><td style="white-space:nowrap">${fmtDate(e.date)}</td><td>${catChip(e.category)}</td><td>${e.note||'<span style="color:var(--text-faint)">—</span>'}</td><td>${p.short||p.name||e.by||'—'}</td><td class="mini-note">${methodLabel(e.method)}</td><td>${e.brand==='กลาง'?'<span class="pill neutral">กลาง</span>':brandChip(e.brand)}</td><td>${ph?`<span class="clickable" data-expimg="${e.id}">${photoThumb(ph,32)}</span>`:'<span style="color:var(--text-faint)">—</span>'}</td><td class="num" style="font-weight:700">${THB(e.amount)}</td><td>${canDel(e)?`<button class="btn sm" data-expdel="${e.id}">ลบ</button>`:''}</td></tr>`;}).join(''):emptyRow(9,'ยังไม่มีค่าใช้จ่ายในเดือนนี้ — พิมพ์ในช่องด้านบนแล้วกด Enter ได้เลย')}
+   ${list.length?list.map(e=>{const p=personById(e.by)||{};const ph=(e.photos||[])[0];return `<tr><td style="white-space:nowrap">${fmtDate(e.date)}</td><td>${catChip(e.category)}</td><td>${e.note||'<span style="color:var(--text-faint)">—</span>'}</td><td>${p.name||e.by||'—'}</td><td class="mini-note">${methodLabel(e.method)}</td><td>${e.brand==='กลาง'?'<span class="pill neutral">กลาง</span>':brandChip(e.brand)}</td><td>${ph?`<span class="clickable" data-expimg="${e.id}">${photoThumb(ph,32)}</span>`:'<span style="color:var(--text-faint)">—</span>'}</td><td class="num" style="font-weight:700">${THB(e.amount)}</td><td>${canDel(e)?`<button class="btn sm" data-expdel="${e.id}">ลบ</button>`:''}</td></tr>`;}).join(''):emptyRow(9,'ยังไม่มีค่าใช้จ่ายในเดือนนี้ — พิมพ์ในช่องด้านบนแล้วกด Enter ได้เลย')}
    </tbody>${list.length?`<tfoot><tr style="border-top:2px solid var(--border-strong)"><td colspan="7" style="font-weight:700;padding:11px 14px">รวมเดือน ${monthLabel(expMonth)}${expCatFilter!=='all'?' · '+catById(expCatFilter).label:''}</td><td class="num" style="font-weight:700;padding:11px 14px">${THB(sum(list))}</td><td></td></tr></tfoot>`:''}</table></div></div>`;
  const submit=()=>{
   const inp=document.getElementById('expText');const raw=(inp.value||'').trim();const p=parseExpense(raw);
@@ -2305,7 +2310,7 @@ function opexPnlCard(){
 /* ============ HR / PAYROLL ============ */
 function renderHR(){
  const c=document.getElementById('content');
- if(!(role==='hr'||role==='admin')){c.innerHTML=`<div class="card"><div class="empty">${svg('lock')}<div>เฉพาะฝ่ายบุคคล (HR) เท่านั้นที่เข้าถึงข้อมูลเงินเดือน/พนักงานได้</div></div></div>`;return;}
+ if(!(role==='hr'||role==='admin'||role==='accounting')){c.innerHTML=`<div class="card"><div class="empty">${svg('lock')}<div>เฉพาะฝ่ายบุคคล (HR) เท่านั้นที่เข้าถึงข้อมูลเงินเดือน/พนักงานได้</div></div></div>`;return;}
  const emps=state.employees||[];const month=hrMonth;
  const bdays=emps.map(e=>({e,days:daysToBirthday(e.dob)})).filter(x=>x.days!=null&&x.days<=30).sort((a,b)=>a.days-b.days);
  let totSalary=0,totSso=0,totNet=0,totEarn=0;
