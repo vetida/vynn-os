@@ -706,7 +706,7 @@ function migrateState(){
  if(!state.passwords)state.passwords={}; // per-user password overrides (uid -> pw)
  if(!state.audit)state.audit=[]; // audit log
  if(!state.salesHist)state.salesHist=seedSalesHist(); // 12-month per-sales history
- if(!state.vgPricing||!(state.vgPricing.v>=6))state.vgPricing=defaultVgPricing(); // Vangarde price list (v6 = official V6/V15 ZipShade)
+ if(!state.vgPricing||!(state.vgPricing.v>=7))state.vgPricing=defaultVgPricing(); // Vangarde price list (v7 = official V7 Awning)
  (state.accounts||[]).forEach(a=>{if(a.qr===undefined)a.qr='';}); // QR field for bank transfer
  {const nv=(state.accounts||[]).find(a=>a.id==='acc-novat');if(nv&&!nv.bank){nv.legalName=nv.legalName||'เวทิดา ยิ้มถนอม';nv.bank='ธ.กสิกรไทย เลขที่ 035-320-4475 (เวทิดา ยิ้มถนอม)';}}
 }
@@ -794,7 +794,7 @@ function isSheer(code){return P().fabricsSheer.some(f=>f.code===code);}
 /* ---- VG (Vangarde) real price list — 25 Nov 2025. MSRP = retail sell.
    Tiers: dealer=MSRP×0.7, agent=MSRP×0.85. Sales see MSRP only; mgr/admin/support see all 3. ---- */
 function defaultVgPricing(){return {
- v:6, // bump to force-refresh reference prices on load (v6 = OFFICIAL V6/V15 ZipShade spec, flat price/m² per variant)
+ v:7, // bump to force-refresh reference prices on load (v7 = official V7 Awning table w/ LED + water baffle + arms)
  tiers:{dealer:0.70, agent:0.85},
  pergola:[
   {series:'V180', max:'4.5×4.5×2.7', msrp:14000, moq:10},
@@ -843,15 +843,19 @@ function defaultVgPricing(){return {
  zip:{motorSomfy:19800, motorVangarde:9900, motorHybrid:14000, remoteSomfy:2900, remoteVangarde:1200, sensor:6000, install:3000},
  // Retractable Awning — fixed price by กว้าง(W)×ยื่น(Extend), Polyester(จีน) grade. Acrylic Sauleda(สเปน) = higher grade (col T, add later).
  // Retractable Awning V7 — poly=Polyester(จีน), acr=Sauleda Acrylic(สเปน)
+ // V7 Retractable Awning (official) — fixed by กว้าง(w)×ยื่น(ext); poly=Polyester(จีน), acr=Sauleda Acrylic(สเปน); led=LED, wb=ฝาครอบกันน้ำ(ต่อความกว้าง), arms=จำนวนแขน
  awning:[
-  {w:2,ext:1.5,poly:30000,acr:33000},{w:2.5,ext:1.5,poly:32000,acr:37500},{w:2.5,ext:2,poly:33000,acr:40000},
-  {w:3,ext:1.5,poly:34000,acr:39500},{w:3,ext:2,poly:35000,acr:42000},{w:3,ext:2.5,poly:36000,acr:45000},
-  {w:3.5,ext:1.5,poly:37000,acr:42000},{w:3.5,ext:2,poly:38000,acr:45000},{w:3.5,ext:2.5,poly:39000,acr:47500},{w:3.5,ext:3,poly:40500,acr:50000},
-  {w:4,ext:1.5,poly:38000,acr:45000},{w:4,ext:2,poly:39500,acr:48500},{w:4,ext:2.5,poly:40500,acr:52000},{w:4,ext:3,poly:41500,acr:55000},{w:4,ext:3.5,poly:44000,acr:60000},
-  {w:4.5,ext:1.5,poly:42000,acr:49000},{w:4.5,ext:2,poly:43000,acr:52500},{w:4.5,ext:2.5,poly:44500,acr:55500},{w:4.5,ext:3,poly:45500,acr:59000},{w:4.5,ext:3.5,poly:48500,acr:64500},{w:4.5,ext:4,poly:51000,acr:73000},
-  {w:5,ext:1.5,poly:43000,acr:52000},{w:5,ext:2,poly:44500,acr:56000},{w:5,ext:2.5,poly:45500,acr:60000},{w:5,ext:3,poly:47000,acr:63500},{w:5,ext:3.5,poly:51500,acr:71000},{w:5,ext:4,poly:56000,acr:79500},
-  {w:5.5,ext:1.5,poly:51500,acr:60000},{w:5.5,ext:2,poly:53000,acr:64500},{w:5.5,ext:2.5,poly:54500,acr:68500},{w:5.5,ext:3,poly:56000,acr:73000},{w:5.5,ext:3.5,poly:55500,acr:75000},{w:5.5,ext:4,poly:60500,acr:83500},
-  {w:6,ext:1.5,poly:52000,acr:60500},{w:6,ext:2,poly:53500,acr:65000},{w:6,ext:2.5,poly:55000,acr:69000},{w:6,ext:3,poly:56500,acr:73500},{w:6,ext:3.5,poly:56000,acr:75500},{w:6,ext:4,poly:61000,acr:84000},
+  {w:2,ext:1.5,arms:2,poly:30000,acr:33000,led:4500,wb:1200},
+  {w:2.5,ext:1.5,arms:2,poly:32000,acr:37500,led:4500,wb:1500},{w:2.5,ext:2,arms:2,poly:33000,acr:40000,led:5000,wb:1500},
+  {w:3,ext:1.5,arms:2,poly:34000,acr:39500,led:5000,wb:1800},{w:3,ext:2,arms:2,poly:35000,acr:42000,led:5000,wb:1800},{w:3,ext:2.5,arms:2,poly:36000,acr:45000,led:5500,wb:1800},
+  {w:3.5,ext:1.5,arms:2,poly:37000,acr:42000,led:5000,wb:2100},{w:3.5,ext:2,arms:2,poly:38000,acr:45000,led:5500,wb:2100},{w:3.5,ext:2.5,arms:2,poly:39000,acr:47500,led:5500,wb:2100},{w:3.5,ext:3,arms:2,poly:40500,acr:50000,led:6000,wb:2100},
+  {w:4,ext:1.5,arms:2,poly:38000,acr:45000,led:5000,wb:2400},{w:4,ext:2,arms:2,poly:39500,acr:48500,led:5500,wb:2400},{w:4,ext:2.5,arms:2,poly:40500,acr:52000,led:6000,wb:2400},{w:4,ext:3,arms:2,poly:41500,acr:55000,led:6000,wb:2400},{w:4,ext:3.5,arms:2,poly:44000,acr:60000,led:6500,wb:2400},
+  {w:4.5,ext:1.5,arms:2,poly:42000,acr:49000,led:5500,wb:2700},{w:4.5,ext:2,arms:2,poly:43000,acr:52500,led:5500,wb:2700},{w:4.5,ext:2.5,arms:2,poly:44500,acr:55500,led:6000,wb:2700},{w:4.5,ext:3,arms:2,poly:45500,acr:59000,led:6500,wb:2700},{w:4.5,ext:3.5,arms:2,poly:48500,acr:64500,led:6500,wb:2700},{w:4.5,ext:4,arms:2,poly:51000,acr:73000,led:7000,wb:2700},
+  {w:5,ext:1.5,arms:2,poly:43000,acr:52000,led:5500,wb:3000},{w:5,ext:2,arms:2,poly:44500,acr:56000,led:6000,wb:3000},{w:5,ext:2.5,arms:2,poly:45500,acr:60000,led:6000,wb:3000},{w:5,ext:3,arms:2,poly:47000,acr:63500,led:6500,wb:3000},{w:5,ext:3.5,arms:2,poly:51500,acr:71000,led:6500,wb:3000},{w:5,ext:4,arms:2,poly:56000,acr:79500,led:7000,wb:3000},
+  {w:5.5,ext:1.5,arms:3,poly:51500,acr:60000,led:6000,wb:3300},{w:5.5,ext:2,arms:3,poly:53000,acr:64500,led:6500,wb:3300},{w:5.5,ext:2.5,arms:3,poly:54500,acr:68500,led:7000,wb:3300},{w:5.5,ext:3,arms:3,poly:56000,acr:73000,led:7500,wb:3300},{w:5.5,ext:3.5,arms:2,poly:55500,acr:75000,led:7000,wb:3300},{w:5.5,ext:4,arms:2,poly:60500,acr:83500,led:7000,wb:3300},
+  {w:6,ext:1.5,arms:3,poly:52000,acr:60500,led:6000,wb:3600},{w:6,ext:2,arms:3,poly:53500,acr:65000,led:6500,wb:3600},{w:6,ext:2.5,arms:3,poly:55000,acr:69000,led:7000,wb:3600},{w:6,ext:3,arms:3,poly:56500,acr:73500,led:7500,wb:3600},{w:6,ext:3.5,arms:2,poly:56000,acr:75500,led:7000,wb:3600},{w:6,ext:4,arms:2,poly:61000,acr:84000,led:7500,wb:3600},
+  {w:6.5,ext:1.5,arms:3,poly:56000,acr:66500,led:6500,wb:3900},{w:6.5,ext:2,arms:3,poly:58000,acr:71500,led:7000,wb:3900},{w:6.5,ext:2.5,arms:3,poly:59500,acr:76500,led:7500,wb:3900},{w:6.5,ext:3,arms:3,poly:61000,acr:81000,led:8000,wb:3900},{w:6.5,ext:3.5,arms:3,poly:66000,acr:89000,led:8500,wb:3900},{w:6.5,ext:4,arms:2,poly:66000,acr:93500,led:7500,wb:3900},
+  {w:7,ext:1.5,arms:3,poly:56500,acr:66500,led:6500,wb:4200},{w:7,ext:2,arms:3,poly:58000,acr:72000,led:7000,wb:4200},{w:7,ext:2.5,arms:3,poly:59500,acr:76500,led:7500,wb:4200},{w:7,ext:3,arms:3,poly:61500,acr:81500,led:8000,wb:4200},{w:7,ext:3.5,arms:3,poly:66000,acr:89500,led:8000,wb:4200},{w:7,ext:4,arms:3,poly:72500,acr:99000,led:8000,wb:4200},
  ],
  // Roof Awning / Skylight (Full Cassette) — fixed by กว้าง(width cols)×ยาว(length rows)
  roofawning:{widths:[2,2.5,3,3.5,4,4.5,5,5.5,6], rows:{
@@ -1003,10 +1007,25 @@ function calcPoint(pt,mode){
        cost:Math.round((shadeEach+motor+remote+sensor)*qty*((vg.tiers&&vg.tiers.dealer)||0.7)),
        inst:0,vgUnit:zunit,listTotal:(shadeEach+motor+remote+sensor+installFee)*qty,discTotal:(dInstall+dMotor+dSensor)*qty,discountLines,
        sellOpaque:shadeEach*qty,sellSheer:0,sellTrack:(motor+remote+sensor)*qty,code1:pt.fabricCode||'',code2:'',order:zorder};
-   } else if(prod==='Awning'){                 // fixed by กว้าง × ยื่น (poly/acrylic)
-     const cand=vg.awning.filter(a=>a.w>=wM-1e-9&&a.ext>=extM-1e-9).sort((a,b)=>(a.w-b.w)||(a.ext-b.ext))[0]||vg.awning[vg.awning.length-1];
-     base=pt.vgGrade==='acr'?cand.acr:cand.poly; areaEach=wM*extM;
-     unit='Awning '+cand.w+'×'+cand.ext+' ม.'+(pt.vgGrade==='acr'?' (สเปน)':' (จีน)');
+   } else if(prod==='Awning'){                 // V7 official: fixed base by กว้าง×ยื่น (poly/acr) + LED/ฝากันน้ำ/เซนเซอร์/มอเตอร์ + ค่าติดตั้ง 3000
+     const cand=(vg.awning||[]).filter(a=>a.w>=wM-1e-9&&a.ext>=extM-1e-9).sort((a,b)=>(a.w-b.w)||(a.ext-b.ext))[0]||(vg.awning||[])[(vg.awning||[]).length-1];
+     const abase=(pt.vgGrade==='acr'?cand.acr:cand.poly)||0;
+     const acc=pt.accessories||{},sys=pt.systems||{};
+     const amotor=(sys.vangardeMotor||sys.somfy)?12000:0;
+     const aled=acc.led?(cand.led||0):0;
+     const avib=acc.shakeSensor?3000:0;
+     const awb=acc.waterCurtain?(cand.wb||0):0;
+     const ainst=3000;
+     const aq=pt.qty;
+     const aunit='Awning '+cand.w+'×'+cand.ext+' ม.'+(pt.vgGrade==='acr'?' (Acrylic สเปน)':' (Polyester จีน)');
+     const aorder=[{t:aunit+' · เฟรม '+(pt.frameColor||'-'),code:'',q:aq+' ชุด'}];
+     if(amotor)aorder.push({t:'มอเตอร์ Vangarde + รีโมท',code:'',q:aq+' ชุด'});
+     if(aled)aorder.push({t:'ไฟ LED',code:'',q:aq+' ชุด'});
+     if(avib)aorder.push({t:'เซนเซอร์กันสั่น',code:'',q:aq+' ชุด'});
+     if(awb)aorder.push({t:'ฝาครอบกันน้ำ',code:'',q:aq+' ชุด'});
+     return {kind:'vangarde',area:+(wM*extM*aq).toFixed(2),areaEach:+(wM*extM).toFixed(2),
+       sell:(abase+amotor+aled+avib+awb+ainst)*aq,cost:Math.round((abase+amotor)*aq*((vg.tiers&&vg.tiers.dealer)||0.7)),
+       inst:0,vgUnit:aunit,sellOpaque:abase*aq,sellSheer:0,sellTrack:(amotor+aled+avib+awb)*aq,code1:pt.fabricCode||'',code2:'',order:aorder};
    } else if(prod==='Skylight'){               // fixed by กว้าง × ยาว (roof matrix)
      const rp=roofAwnPrice(vg,wM,depthM); base=rp.price; areaEach=wM*depthM; unit='Skylight '+rp.w+'×'+rp.len+' ม.';
    } else {                                    // Outdoor Roller — flat fallback
