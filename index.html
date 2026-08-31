@@ -475,7 +475,7 @@ function vgSuggestSeries(prod,wM,dM,hM){
   return vg.pergola[vg.pergola.length-1].series;
  }
  if(prod==='Zip Shade'){
-  const v15=wM>6||hM>6; const c=vg.zipshade.filter(r=>v15?r.series.indexOf('V15')===0:r.series.indexOf('V6')===0);
+  const big=wM>6||hM>6; const c=vg.zipshade.filter(r=>big?r.series.indexOf('V8')===0:r.series.indexOf('V7')===0);
   return (c[0]||vg.zipshade[0]).series;
  }
  return null;
@@ -706,7 +706,7 @@ function migrateState(){
  if(!state.passwords)state.passwords={}; // per-user password overrides (uid -> pw)
  if(!state.audit)state.audit=[]; // audit log
  if(!state.salesHist)state.salesHist=seedSalesHist(); // 12-month per-sales history
- if(!state.vgPricing||!(state.vgPricing.v>=3))state.vgPricing=defaultVgPricing(); // Vangarde price list (v3 = + roof/skylight matrix, corrected catalog)
+ if(!state.vgPricing||!(state.vgPricing.v>=4))state.vgPricing=defaultVgPricing(); // Vangarde price list (v4 = real ZipShade area-tiered pricing)
  (state.accounts||[]).forEach(a=>{if(a.qr===undefined)a.qr='';}); // QR field for bank transfer
  {const nv=(state.accounts||[]).find(a=>a.id==='acc-novat');if(nv&&!nv.bank){nv.legalName=nv.legalName||'เวทิดา ยิ้มถนอม';nv.bank='ธ.กสิกรไทย เลขที่ 035-320-4475 (เวทิดา ยิ้มถนอม)';}}
 }
@@ -794,7 +794,7 @@ function isSheer(code){return P().fabricsSheer.some(f=>f.code===code);}
 /* ---- VG (Vangarde) real price list — 25 Nov 2025. MSRP = retail sell.
    Tiers: dealer=MSRP×0.7, agent=MSRP×0.85. Sales see MSRP only; mgr/admin/support see all 3. ---- */
 function defaultVgPricing(){return {
- v:3, // bump to force-refresh reference prices on load
+ v:4, // bump to force-refresh reference prices on load (v4 = real ZipShade area-tiered price/m² + components + std discounts)
  tiers:{dealer:0.70, agent:0.85},
  pergola:[
   {series:'V180', max:'4.5×4.5×2.7', msrp:14000, moq:10},
@@ -803,13 +803,18 @@ function defaultVgPricing(){return {
   {series:'V350-220 (+4 ZipShade)', max:'5×8×6', msrp:32000, moq:25},
   {series:'V350-260 (+4 ZipShade)', max:'6×8×6', msrp:34000, moq:25},
  ],
+ // REAL price/m² TIERED BY AREA (from VG Excel "ZipShade Set P"): ladder = [maxSqm, price/m²]; bigger area = cheaper/m². price/m² is editable per line (pt.vgPriceSqm) to match Excel exactly.
  zipshade:[
-  {series:'V6-100 · ท่อ70', msrp:3500, moq:5},{series:'V6-100 · ท่อ85', msrp:3800, moq:5},
-  {series:'V6-110 · ท่อ70', msrp:3500, moq:5},{series:'V6-110 · ท่อ85', msrp:3800, moq:5},{series:'V6-110 · ท่อ95', msrp:4000, moq:5},
-  {series:'V6-120 · ท่อ70', msrp:3800, moq:5},{series:'V6-120 · ท่อ85', msrp:4000, moq:5},{series:'V6-120 · ท่อ95', msrp:4000, moq:5},{series:'V6-120 · ท่อ105', msrp:4400, moq:5},
-  {series:'V6-130 · ท่อ70', msrp:4000, moq:5},{series:'V6-130 · ท่อ85', msrp:4000, moq:5},{series:'V6-130 · ท่อ95', msrp:4400, moq:5},{series:'V6-130 · ท่อ105', msrp:4800, moq:5},
-  {series:'V15-100', msrp:5500, moq:10},{series:'V15-120', msrp:6000, moq:14},{series:'V15-140', msrp:6500, moq:18},
+  {series:'V7-100', ladder:[[3,7400],[4,6300],[5,5200],[6,4700],[7,4400],[8,4000],[9,3800]]},
+  {series:'V7-110', ladder:[[5,5900],[6,5600],[7,5100],[8,4600],[9,4300],[10,4000],[11,3800],[12,3700]]},
+  {series:'V7-120', ladder:[[7,5200],[8,4800],[9,4500],[10,4300],[11,4000],[12,3800]]},
+  {series:'V7-130', ladder:[[7,5600],[8,5200],[9,4900],[10,4700],[11,4400],[12,4300]]},
+  {series:'V8-100', ladder:[[999,5500]]},
+  {series:'V8-120', ladder:[[999,6000]]},
+  {series:'V8-140', ladder:[[999,6500]]},
  ],
+ // Zip Shade component list-prices + standard install fee (real Excel). Standard discounts: free install, motor+remote 50% off, sensor 50% off.
+ zip:{motorSomfy:19800, motorVangarde:9900, motorHybrid:14000, remoteSomfy:2900, remoteVangarde:1200, sensor:6000, install:3000},
  // Retractable Awning — fixed price by กว้าง(W)×ยื่น(Extend), Polyester(จีน) grade. Acrylic Sauleda(สเปน) = higher grade (col T, add later).
  // Retractable Awning V7 — poly=Polyester(จีน), acr=Sauleda Acrylic(สเปน)
  awning:[
@@ -942,9 +947,37 @@ function calcPoint(pt,mode){
    if(prod==='Pergola'){                       // area = กว้าง × ลึก
      const row=vg.pergola.find(x=>x.series===pt.vgSeries)||vg.pergola[0];
      areaEach=Math.max(row.moq||1, wM*depthM); base=areaEach*row.msrp; unit=prod+' '+row.series;
-   } else if(prod==='Zip Shade'){              // area = กว้าง × สูง
-     const row=vg.zipshade.find(x=>x.series===pt.vgSeries)||vg.zipshade[0];
-     areaEach=Math.max(row.moq||1, wM*hM); base=areaEach*row.msrp; unit=prod+' '+row.series;
+   } else if(prod==='Zip Shade'){              // REAL Excel model: ROUNDUP(area × price/m² tiered) + components − standard discounts
+     const areaEachRaw=Math.ceil(wM*hM*10)/10;                    // CEILING area to 0.1 m²
+     const zipRow=(vg.zipshade||[]).find(x=>x.series===pt.vgSeries)||(vg.zipshade||[])[0];
+     const ladder=(zipRow&&zipRow.ladder)?zipRow.ladder:[[999,0]];
+     const autoSqm=(ladder.find(e=>areaEachRaw<=e[0])||ladder[ladder.length-1])[1];
+     const priceSqm=(+pt.vgPriceSqm>0)?+pt.vgPriceSqm:autoSqm;
+     const shadeEach=Math.ceil(areaEachRaw*priceSqm);             // ROUNDUP(area × price/m²)
+     const zc=vg.zip||{motorSomfy:19800,motorVangarde:9900,motorHybrid:14000,remoteSomfy:2900,remoteVangarde:1200,sensor:6000,install:3000};
+     const sys=pt.systems||{},acc=pt.accessories||{};
+     const somfy=!!sys.somfy,vgm=!!sys.vangardeMotor,hybrid=!!acc.handcrankHybrid;
+     const motor=somfy?zc.motorSomfy:hybrid?zc.motorHybrid:vgm?zc.motorVangarde:0;
+     const remote=(sys.remote1ch||sys.remote15ch)?(somfy?zc.remoteSomfy:zc.remoteVangarde):0;
+     const sensor=acc.rainSensor?zc.sensor:0;
+     const installFee=zc.install||0;
+     const dz=pt.vgDisc||{install:true,motor:true,sensor:true};
+     const dInstall=dz.install?installFee:0,dMotor=dz.motor?Math.round(0.5*(motor+remote)):0,dSensor=dz.sensor?Math.round(0.5*sensor):0;
+     const netEach=shadeEach+motor+remote+sensor+installFee-dInstall-dMotor-dSensor;
+     const qty=pt.qty,area=+(areaEachRaw*qty).toFixed(2);
+     const discountLines=[];
+     if(dInstall)discountLines.push(['ฟรีค่าติดตั้ง',dInstall*qty]);
+     if(dMotor)discountLines.push(['ส่วนลดมอเตอร์+รีโมท 50%',dMotor*qty]);
+     if(dSensor)discountLines.push(['ส่วนลดเซนเซอร์ 50%',dSensor*qty]);
+     const zunit='Zip Shade '+(pt.vgSeries||'');
+     const zorder=[{t:zunit+' · เฟรม '+(pt.frameColor||'-')+' · ผ้า '+(pt.fabricCode||'-'),code:'',q:area+' ตร.ม. ('+qty+' จุด)'}];
+     if(motor)zorder.push({t:'มอเตอร์'+(somfy?' Somfy':vgm?' Vangarde':hybrid?' Hybrid':''),code:'',q:qty+' ชุด'});
+     if(remote)zorder.push({t:'รีโมท',code:'',q:qty+' ตัว'});
+     if(sensor)zorder.push({t:'Rain Sensor',code:'',q:qty+' ตัว'});
+     return {kind:'vangarde',area,areaEach:+areaEachRaw.toFixed(2),priceSqm,sell:netEach*qty,
+       cost:Math.round((shadeEach+motor+remote+sensor)*qty*((vg.tiers&&vg.tiers.dealer)||0.7)),
+       inst:0,vgUnit:zunit,listTotal:(shadeEach+motor+remote+sensor+installFee)*qty,discTotal:(dInstall+dMotor+dSensor)*qty,discountLines,
+       sellOpaque:shadeEach*qty,sellSheer:0,sellTrack:(motor+remote+sensor)*qty,code1:pt.fabricCode||'',code2:'',order:zorder};
    } else if(prod==='Awning'){                 // fixed by กว้าง × ยื่น (poly/acrylic)
      const cand=vg.awning.filter(a=>a.w>=wM-1e-9&&a.ext>=extM-1e-9).sort((a,b)=>(a.w-b.w)||(a.ext-b.ext))[0]||vg.awning[vg.awning.length-1];
      base=pt.vgGrade==='acr'?cand.acr:cand.poly; areaEach=wM*extM;
@@ -1045,8 +1078,8 @@ function addQuoteOption(leadId){
  state.payments[nid]=[{n:1,pct:50,st:'pending',d:''},{n:2,pct:30,st:'pending',d:''},{n:3,pct:20,st:'pending',d:''}];
  save();openReviseModal(nid);
 }
-function newPoint(kind){const p=P();return kind==='vangarde'?{kind:'vangarde',room:'',w:0,h:0,d:0,vgExtend:150,vgGrade:'poly',detail:'',vgProduct:'',vgSeries:'',frameColor:'',fabricCode:'',systems:{},accessories:{},install:{},track:'normal',qty:1,note:'',photos:[]}:kind==='blind'?{kind:'blind',room:'',w:0,h:0,blindType:p.blinds[0].type,track:'normal',motorModel:p.motors[0].model,openSide:'',slanted:false,slantNote:'',qty:1,note:'',photos:[]}:{kind:'curtain',room:'',w:0,h:0,curtainType:CURTAIN_TYPES[0],fabrics:[{layer:'ทึบ',code:'',w:140,price:0,cost:0,priceSqm:0,costSqm:0},{layer:'โปร่ง',code:'',w:150,price:0,cost:0,priceSqm:0,costSqm:0},{layer:'ซับใน',code:'',w:150,price:0,cost:0,priceSqm:0,costSqm:0}],track:'normal',hooks:'ตะขอมาตรฐาน',motorModel:p.motors[0].model,motorSide:'ขวา',openSide:'',mountType:'ชิดฝ้า',mountAboveCm:0,sideAllowCm:2,slanted:false,slantNote:'',qty:1,note:'',photos:[]};}
-function migratePoint(pt){if(typeof pt.photos==='number')pt.photos=ph(pt.photos);pt.photos=pt.photos||[];pt.note=pt.note||'';pt.qty=pt.qty||1;pt.track=pt.track||'normal';if(pt.kind==='vangarde'){pt.vgProduct=VANGARDE_PRODUCTS.includes(pt.vgProduct)?pt.vgProduct:'';if(pt.d===undefined)pt.d=0;if(pt.vgExtend===undefined)pt.vgExtend=150;if(pt.vgGrade===undefined)pt.vgGrade='poly';if(pt.frameColor===undefined)pt.frameColor=pt.frameCode?({'FR-BK':'ดำด้าน','FR-WH':'ขาว','FR-GY':'เทา','FR-BR':'น้ำตาลไม้','FR-CH':'แชมเปญ'}[pt.frameCode]||''):'';pt.fabricCode=pt.fabricCode||'';pt.detail=pt.detail||'';pt.systems=pt.systems||{};pt.accessories=pt.accessories||{};pt.install=pt.install||{};pt.track=vgHasMotor(pt)?'motor':(pt.track||'normal');}if(pt.kind==='blind'){pt.openSide=pt.openSide||'';pt.slanted=pt.slanted||false;pt.slantNote=pt.slantNote||'';}if(pt.kind==='curtain'){pt.openSide=pt.openSide||'';pt.slantNote=pt.slantNote||'';if(pt.fabricBlackout===undefined&&!pt.fabrics){const code=pt.fabricCode||'';if(code){if(isSheer(code)){pt.fabricSheer=code;pt.fabricBlackout='';}else{pt.fabricBlackout=code;pt.fabricSheer='';}}else{pt.fabricBlackout='';pt.fabricSheer='';}pt.fabricLining='';}if(!pt.fabrics){const mk=(layer,code)=>{const f=code?findFabric(code):null;return {layer,code:code||'',w:f?f.widthCm:140,price:f?f.price:0,cost:f?f.cost:0,priceSqm:0,costSqm:0};};pt.fabrics=[mk('ทึบ',pt.fabricBlackout),mk('โปร่ง',pt.fabricSheer),mk('ซับใน',pt.fabricLining)];}(pt.fabrics||[]).forEach(fl=>{if(fl.priceSqm===undefined)fl.priceSqm=0;if(fl.costSqm===undefined)fl.costSqm=0;});pt.curtainType=(pt.curtainType&&CURTAIN_TYPES.includes(pt.curtainType))?pt.curtainType:CURTAIN_TYPES[1];pt.motorModel=pt.motorModel||pt.motor||P().motors[0].model;pt.motorSide=pt.motorSide||'ขวา';pt.mountType=pt.mountType||'ชิดฝ้า';if(pt.mountAboveCm===undefined)pt.mountAboveCm=0;if(pt.sideAllowCm===undefined)pt.sideAllowCm=2;pt.slanted=pt.slanted||false;pt.hooks=pt.hooks||'ตะขอมาตรฐาน';}}
+function newPoint(kind){const p=P();return kind==='vangarde'?{kind:'vangarde',room:'',w:0,h:0,d:0,vgExtend:150,vgGrade:'poly',vgPriceSqm:0,vgDisc:{install:true,motor:true,sensor:true},detail:'',vgProduct:'',vgSeries:'',frameColor:'',fabricCode:'',systems:{},accessories:{},install:{},track:'normal',qty:1,note:'',photos:[]}:kind==='blind'?{kind:'blind',room:'',w:0,h:0,blindType:p.blinds[0].type,track:'normal',motorModel:p.motors[0].model,openSide:'',slanted:false,slantNote:'',qty:1,note:'',photos:[]}:{kind:'curtain',room:'',w:0,h:0,curtainType:CURTAIN_TYPES[0],fabrics:[{layer:'ทึบ',code:'',w:140,price:0,cost:0,priceSqm:0,costSqm:0},{layer:'โปร่ง',code:'',w:150,price:0,cost:0,priceSqm:0,costSqm:0},{layer:'ซับใน',code:'',w:150,price:0,cost:0,priceSqm:0,costSqm:0}],track:'normal',hooks:'ตะขอมาตรฐาน',motorModel:p.motors[0].model,motorSide:'ขวา',openSide:'',mountType:'ชิดฝ้า',mountAboveCm:0,sideAllowCm:2,slanted:false,slantNote:'',qty:1,note:'',photos:[]};}
+function migratePoint(pt){if(typeof pt.photos==='number')pt.photos=ph(pt.photos);pt.photos=pt.photos||[];pt.note=pt.note||'';pt.qty=pt.qty||1;pt.track=pt.track||'normal';if(pt.kind==='vangarde'){pt.vgProduct=VANGARDE_PRODUCTS.includes(pt.vgProduct)?pt.vgProduct:'';if(pt.d===undefined)pt.d=0;if(pt.vgExtend===undefined)pt.vgExtend=150;if(pt.vgGrade===undefined)pt.vgGrade='poly';if(pt.vgPriceSqm===undefined)pt.vgPriceSqm=0;if(!pt.vgDisc)pt.vgDisc={install:true,motor:true,sensor:true};if(pt.frameColor===undefined)pt.frameColor=pt.frameCode?({'FR-BK':'ดำด้าน','FR-WH':'ขาว','FR-GY':'เทา','FR-BR':'น้ำตาลไม้','FR-CH':'แชมเปญ'}[pt.frameCode]||''):'';pt.fabricCode=pt.fabricCode||'';pt.detail=pt.detail||'';pt.systems=pt.systems||{};pt.accessories=pt.accessories||{};pt.install=pt.install||{};pt.track=vgHasMotor(pt)?'motor':(pt.track||'normal');}if(pt.kind==='blind'){pt.openSide=pt.openSide||'';pt.slanted=pt.slanted||false;pt.slantNote=pt.slantNote||'';}if(pt.kind==='curtain'){pt.openSide=pt.openSide||'';pt.slantNote=pt.slantNote||'';if(pt.fabricBlackout===undefined&&!pt.fabrics){const code=pt.fabricCode||'';if(code){if(isSheer(code)){pt.fabricSheer=code;pt.fabricBlackout='';}else{pt.fabricBlackout=code;pt.fabricSheer='';}}else{pt.fabricBlackout='';pt.fabricSheer='';}pt.fabricLining='';}if(!pt.fabrics){const mk=(layer,code)=>{const f=code?findFabric(code):null;return {layer,code:code||'',w:f?f.widthCm:140,price:f?f.price:0,cost:f?f.cost:0,priceSqm:0,costSqm:0};};pt.fabrics=[mk('ทึบ',pt.fabricBlackout),mk('โปร่ง',pt.fabricSheer),mk('ซับใน',pt.fabricLining)];}(pt.fabrics||[]).forEach(fl=>{if(fl.priceSqm===undefined)fl.priceSqm=0;if(fl.costSqm===undefined)fl.costSqm=0;});pt.curtainType=(pt.curtainType&&CURTAIN_TYPES.includes(pt.curtainType))?pt.curtainType:CURTAIN_TYPES[1];pt.motorModel=pt.motorModel||pt.motor||P().motors[0].model;pt.motorSide=pt.motorSide||'ขวา';pt.mountType=pt.mountType||'ชิดฝ้า';if(pt.mountAboveCm===undefined)pt.mountAboveCm=0;if(pt.sideAllowCm===undefined)pt.sideAllowCm=2;pt.slanted=pt.slanted||false;pt.hooks=pt.hooks||'ตะขอมาตรฐาน';}}
 
 /* ============ PAYMENTS ============ */
 function payInfo(qid){
@@ -1675,7 +1708,13 @@ function ptCard(pt,i,fabOpt,sel){
    ${prodSelect}
    ${dimFields}
    <div class="field"><label>จำนวน (จุด)</label><input type="number" data-i="${i}" data-f="qty" value="${pt.qty}"></div>
-   ${(pt.vgProduct==='Pergola'||pt.vgProduct==='Zip Shade')?`<div class="field col2"><label>รุ่น <span class="mini-note">(แนะนำอัตโนมัติจากขนาด)</span></label><select data-i="${i}" data-f="vgSeries">${(pt.vgProduct==='Pergola'?vgp.pergola:vgp.zipshade).map(r=>`<option value="${r.series}" ${pt.vgSeries===r.series?'selected':''}>${r.series} — ${THB(r.msrp)}/ตร.ม. (ขั้นต่ำ ${r.moq})</option>`).join('')}</select></div>`:''}
+   ${(pt.vgProduct==='Pergola'||pt.vgProduct==='Zip Shade')?`<div class="field col2"><label>รุ่น <span class="mini-note">(แนะนำอัตโนมัติจากขนาด)</span></label><select data-i="${i}" data-f="vgSeries">${(pt.vgProduct==='Pergola'?vgp.pergola:vgp.zipshade).map(r=>`<option value="${r.series}" ${pt.vgSeries===r.series?'selected':''}>${r.series}${r.msrp?' — '+THB(r.msrp)+'/ตร.ม. (ขั้นต่ำ '+r.moq+')':''}</option>`).join('')}</select></div>`:''}
+   ${pt.vgProduct==='Zip Shade'?`<div class="field"><label>ราคา/ตร.ม. <span class="mini-note">(0 = อัตโนมัติ ฿${est.priceSqm||0})</span></label><input type="number" data-i="${i}" data-f="vgPriceSqm" value="${pt.vgPriceSqm||0}"></div>
+   <div class="field col3"><label>ส่วนลดพื้นฐาน (โชว์ลูกค้า)</label><div style="display:flex;flex-wrap:wrap">
+    <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="install" ${pt.vgDisc&&pt.vgDisc.install?'checked':''}> ฟรีค่าติดตั้ง</label>
+    <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="motor" ${pt.vgDisc&&pt.vgDisc.motor?'checked':''}> มอเตอร์+รีโมท ลด 50%</label>
+    <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="sensor" ${pt.vgDisc&&pt.vgDisc.sensor?'checked':''}> เซนเซอร์ ลด 50%</label>
+   </div></div>`:''}
    ${pt.vgProduct==='Awning'?`<div class="field"><label>เกรดผ้า</label><select data-i="${i}" data-f="vgGrade"><option value="poly" ${pt.vgGrade!=='acr'?'selected':''}>Polyester (จีน)</option><option value="acr" ${pt.vgGrade==='acr'?'selected':''}>Acrylic (สเปน)</option></select></div>`:''}
    <div class="field col2"><label>รายละเอียดเพิ่มเติม</label><input data-i="${i}" data-f="detail" value="${pt.detail||''}" placeholder="เช่น ขวา10 cm / ติดซ้าย10 ขวา10"></div>
    ${frameSel}
@@ -1688,7 +1727,7 @@ function ptCard(pt,i,fabOpt,sel){
    <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('install',VG_INSTALL,pt.install,cfg.install)}</div></div>
    <div class="field col4"><label>หมายเหตุ</label><input data-i="${i}" data-f="note" value="${pt.note||''}"></div>
    ${photoField}
-  </div><div class="mini-note" style="margin-top:8px">📐 ${est.area||0} ตร.ม. · <b>${est.vgUnit||pt.vgProduct}</b> · เฟรม ${pt.frameColor||'-'} · ผ้า ${pt.fabricCode||'-'}${vgHasMotor(pt)?' · มอเตอร์':''} · ราคาประเมิน <b>${THB(est.sell)}</b></div></div>`;
+  </div><div class="mini-note" style="margin-top:8px">📐 ${est.area||0} ตร.ม. · <b>${est.vgUnit||pt.vgProduct}</b> · เฟรม ${pt.frameColor||'-'} · ผ้า ${pt.fabricCode||'-'}${vgHasMotor(pt)?' · มอเตอร์':''}${est.discTotal?' · ราคาเต็ม '+THB(est.listTotal)+' − ส่วนลด '+THB(est.discTotal):''} · ราคาประเมิน <b>${THB(est.sell)}</b></div></div>`;
  }
  if(pt.kind==='blind'){
   return `<div class="pt-card">${head}<div class="pt-grid">
