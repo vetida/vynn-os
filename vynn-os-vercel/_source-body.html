@@ -467,8 +467,8 @@ function vgSuggestSeries(prod,wM,dM,hM){
   return vg.pergola[vg.pergola.length-1].series;
  }
  if(prod==='Zip Shade'){
-  const big=wM>6||hM>6; const c=vg.zipshade.filter(r=>big?r.series.indexOf('V8')===0:r.series.indexOf('V7')===0);
-  return (c[0]||vg.zipshade[0]).series;
+  const fit=vg.zipshade.find(r=>wM<=(r.maxW||99)&&hM<=(r.maxH||99));
+  return (fit||vg.zipshade[vg.zipshade.length-1]).series;
  }
  return null;
 }
@@ -698,7 +698,7 @@ function migrateState(){
  if(!state.passwords)state.passwords={}; // per-user password overrides (uid -> pw)
  if(!state.audit)state.audit=[]; // audit log
  if(!state.salesHist)state.salesHist=seedSalesHist(); // 12-month per-sales history
- if(!state.vgPricing||!(state.vgPricing.v>=4))state.vgPricing=defaultVgPricing(); // Vangarde price list (v4 = real ZipShade area-tiered pricing)
+ if(!state.vgPricing||!(state.vgPricing.v>=5))state.vgPricing=defaultVgPricing(); // Vangarde price list (v5 = full ZipShade variant table)
  (state.accounts||[]).forEach(a=>{if(a.qr===undefined)a.qr='';}); // QR field for bank transfer
  {const nv=(state.accounts||[]).find(a=>a.id==='acc-novat');if(nv&&!nv.bank){nv.legalName=nv.legalName||'เวทิดา ยิ้มถนอม';nv.bank='ธ.กสิกรไทย เลขที่ 035-320-4475 (เวทิดา ยิ้มถนอม)';}}
 }
@@ -786,7 +786,7 @@ function isSheer(code){return P().fabricsSheer.some(f=>f.code===code);}
 /* ---- VG (Vangarde) real price list — 25 Nov 2025. MSRP = retail sell.
    Tiers: dealer=MSRP×0.7, agent=MSRP×0.85. Sales see MSRP only; mgr/admin/support see all 3. ---- */
 function defaultVgPricing(){return {
- v:4, // bump to force-refresh reference prices on load (v4 = real ZipShade area-tiered price/m² + components + std discounts)
+ v:5, // bump to force-refresh reference prices on load (v5 = full 16-variant ZipShade table exact from Excel)
  tiers:{dealer:0.70, agent:0.85},
  pergola:[
   {series:'V180', max:'4.5×4.5×2.7', msrp:14000, moq:10},
@@ -797,13 +797,22 @@ function defaultVgPricing(){return {
  ],
  // REAL price/m² TIERED BY AREA (from VG Excel "ZipShade Set P"): ladder = [maxSqm, price/m²]; bigger area = cheaper/m². price/m² is editable per line (pt.vgPriceSqm) to match Excel exactly.
  zipshade:[
-  {series:'V7-100', ladder:[[3,7400],[4,6300],[5,5200],[6,4700],[7,4400],[8,4000],[9,3800]]},
-  {series:'V7-110', ladder:[[5,5900],[6,5600],[7,5100],[8,4600],[9,4300],[10,4000],[11,3800],[12,3700]]},
-  {series:'V7-120', ladder:[[7,5200],[8,4800],[9,4500],[10,4300],[11,4000],[12,3800]]},
-  {series:'V7-130', ladder:[[7,5600],[8,5200],[9,4900],[10,4700],[11,4400],[12,4300]]},
-  {series:'V8-100', ladder:[[999,5500]]},
-  {series:'V8-120', ladder:[[999,6000]]},
-  {series:'V8-140', ladder:[[999,6500]]},
+  {series:'V7-100 · ท่อ70 (1%)',  maxW:3,   maxH:3,   ladder:[[3,7400],[4,6300],[5,5200],[6,4700],[7,4400],[8,4000],[9,3800]]},
+  {series:'V7-110 · ท่อ85 (1%)',  maxW:3.5, maxH:3.5, ladder:[[5,5900],[6,5600]]},
+  {series:'V7-110 · ท่อ85 (10%)', maxW:4,   maxH:3.5, ladder:[[7,5100],[8,4600]]},
+  {series:'V7-110 · ท่อ95 (1%)',  maxW:4.5, maxH:2.7, ladder:[[9,4300],[10,4000]]},
+  {series:'V7-110 · ท่อ95 (10%)', maxW:5,   maxH:2.7, ladder:[[11,3800],[12,3700]]},
+  {series:'V7-120 · ท่อ85 (1%)',  maxW:3.5, maxH:4.5, ladder:[[7,5200],[8,4800],[9,4500]]},
+  {series:'V7-120 · ท่อ95 (1%)',  maxW:4.5, maxH:3.7, ladder:[[10,4300],[11,4000],[12,3800]]},
+  {series:'V7-120 · ท่อ105 (1%)', maxW:5.5, maxH:2.7, ladder:[[7,5600],[8,5200],[9,4900]]},
+  {series:'V7-120 · ท่อ105 (10%)',maxW:6,   maxH:2.7, ladder:[[10,4700],[11,4400],[12,4300]]},
+  {series:'V7-130 · ท่อ85 (1%)',  maxW:3.5, maxH:6,   ladder:[[7,5600],[8,5200],[9,4900]]},
+  {series:'V7-130 · ท่อ95 (1%)',  maxW:4.5, maxH:6.5, ladder:[[10,4700],[11,4400],[12,4300]]},
+  {series:'V7-130 · ท่อ105 (1%)', maxW:5.5, maxH:3.7, ladder:[[7,6000],[8,5600],[9,5300]]},
+  {series:'V7-130 · ท่อ105 (10%)',maxW:6,   maxH:3.7, ladder:[[10,5100],[11,4800],[12,4600]]},
+  {series:'V8-100 · ท่อ70 (1%)',  maxW:15,  maxH:3,   ladder:[[999,5500]]},
+  {series:'V8-120 · ท่อ85 (1%)',  maxW:15,  maxH:5,   ladder:[[999,6000]]},
+  {series:'V8-140 · ท่อ85 (1%)',  maxW:15,  maxH:7,   ladder:[[999,6500]]},
  ],
  // Zip Shade component list-prices + standard install fee (real Excel). Standard discounts: free install, motor+remote 50% off, sensor 50% off.
  zip:{motorSomfy:19800, motorVangarde:9900, motorHybrid:14000, remoteSomfy:2900, remoteVangarde:1200, sensor:6000, install:3000},
