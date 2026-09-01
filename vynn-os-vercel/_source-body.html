@@ -1493,14 +1493,24 @@ function renderInstall(){
     ${note}
     <div style="margin-top:9px"><button class="btn sm primary" data-sheet="${i.id}">${svg('doc','ico')} ใบสั่งงานช่าง / Work Order${i.signOff?' ✓':''}</button></div>
    </div></div>`;};
+ const canEditSch=role==='admin'||role==='manager'||role==='sales_support';   // sales = view only
+ const inp='padding:5px 7px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:12.5px';
+ const schedRow=i=>{const l=leadById(i.leadId);const pi=payInfo(i.quoteId);const need2=pi&&pi.sched[1].st!=='paid'&&i.status==='scheduled';
+   const st=i.status==='done'?'<span class="pill good">เสร็จ</span>':i.status==='incomplete'?'<span class="pill warn">งานเก็บค้าง</span>':need2?'<span class="pill crit">รอเก็บงวด 2</span>':'<span class="pill accent">พร้อมติดตั้ง</span>';
+   const dcell=canEditSch?`<input type="date" data-schdate="${i.id}" value="${i.scheduled||''}" style="${inp}">`:(i.scheduled?fmtDate(i.scheduled):'<span class="mini-note">ยังไม่กำหนด</span>');
+   const tcell=canEditSch?`<input data-schteam="${i.id}" value="${i.team||''}" placeholder="ทีม/ช่าง" style="${inp};width:108px">`:(i.team||'—');
+   return `<tr class="clickable" data-lead="${l?l.id:''}"><td style="white-space:nowrap">${dcell}</td><td style="font-weight:600">${bn(l)}<div class="mini-note">${svg('pin','')} ${l?l.site:''}</div></td><td>${l?brandChip(l.brand):''}</td><td>${st}</td><td>${tcell}</td><td style="text-align:right;white-space:nowrap"><button class="btn sm primary" data-sheet="${i.id}">${svg('doc','ico')} ใบสั่งงาน${i.signOff?' ✓':''}</button></td></tr>`;};
  c.innerHTML=`
-  <div class="banner-info">${svg('wrench')}ทีมช่าง in-house · จัดคิวจากลูกค้าที่มัดจำแล้วตามวันที่ต้องการ (First-come-first-serve) · รับประกันติดตั้ง 1 ปี</div>
-  <div class="section-title">กำลังจะถึง & งานที่ยังไม่จบ (${upcoming.length})</div>
-  <div class="grid" style="grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">${upcoming.length?upcoming.map(card).join(''):'<div class="empty" style="grid-column:1/-1">ไม่มีนัดติดตั้ง</div>'}</div>
+  <div class="banner-info">${svg('wrench')}ตารางงานติดตั้ง เรียงตามวัน · ${canEditSch?'ปรับวัน/มอบทีมได้ (แก้ในช่องได้เลย)':'👀 ดูอย่างเดียว — เซลล์ไม่มีสิทธิ์แก้ไข'} · กดที่แถวเพื่อดูรายละเอียดลูกค้า</div>
+  <div class="section-title">📅 ตารางงาน (${upcoming.length})</div>
+  <div class="card" style="margin-bottom:24px"><div class="table-wrap"><table><thead><tr><th style="width:132px">วันติดตั้ง</th><th>ลูกค้า / สถานที่</th><th>แบรนด์</th><th>สถานะ</th><th>ทีม/ช่าง</th><th></th></tr></thead><tbody>${upcoming.length?upcoming.map(schedRow).join(''):emptyRow(6,'ยังไม่มีนัดติดตั้ง')}</tbody></table></div></div>
   <div class="section-title">เสร็จสิ้น + อยู่ในประกัน (${done.length})</div>
   <div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">${done.length?done.map(card).join(''):'<div class="empty" style="grid-column:1/-1">—</div>'}</div>`;
  wireRows(c);
  c.querySelectorAll('[data-sheet]').forEach(b=>b.onclick=e=>{e.stopPropagation();openInstallSheet(b.dataset.sheet);});
+ c.querySelectorAll('[data-schdate],[data-schteam]').forEach(el=>el.addEventListener('click',e=>e.stopPropagation()));
+ c.querySelectorAll('[data-schdate]').forEach(el=>el.onchange=()=>{const i=state.installs.find(x=>x.id===el.dataset.schdate);if(i){i.scheduled=el.value;save();render(false);}});
+ c.querySelectorAll('[data-schteam]').forEach(el=>el.onchange=()=>{const i=state.installs.find(x=>x.id===el.dataset.schteam);if(i){i.team=el.value;save();}});
 }
 
 /* ============ INSTALLER WORK ORDER (bilingual, table + photos, customer sign-off) ============ */
