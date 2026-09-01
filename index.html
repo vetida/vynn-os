@@ -747,7 +747,7 @@ function ensureInstall(qid){
  if((state.installs||[]).find(i=>i.quoteId===qid)) return;
  const l=leadById(q.leadId);
  state.installs=state.installs||[];
- state.installs.push({id:'IN-'+(state.seq.IN++),quoteId:qid,leadId:q.leadId,desired:(l&&l.desiredInstall)||'',scheduled:'',team:'',installerId:'',status:'scheduled',warrantyUntil:''});
+ state.installs.push({id:'IN-'+(state.seq.IN++),quoteId:qid,leadId:q.leadId,desired:(l&&l.desiredInstall)||'',scheduled:'',timeSlot:'',schNote:'',team:'',installerId:'',status:'scheduled',warrantyUntil:''});
  if(l&&['won','production'].includes(l.stage))l.stage='installing';
 }
 function personBrand(l){return l.brand;}
@@ -1503,22 +1503,27 @@ function renderInstall(){
    </div></div>`;};
  const canEditSch=role==='admin'||role==='manager'||role==='sales_support';   // sales = view only
  const inp='padding:5px 7px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:12.5px';
+ const hours=['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
  const schedRow=i=>{const l=leadById(i.leadId);const pi=payInfo(i.quoteId);const need2=pi&&pi.sched[1].st!=='paid'&&i.status==='scheduled';
    const st=i.status==='done'?'<span class="pill good">เสร็จ</span>':i.status==='incomplete'?'<span class="pill warn">งานเก็บค้าง</span>':need2?'<span class="pill crit">รอเก็บงวด 2</span>':'<span class="pill accent">พร้อมติดตั้ง</span>';
    const dcell=canEditSch?`<input type="date" data-schdate="${i.id}" value="${i.scheduled||''}" style="${inp}">`:(i.scheduled?fmtDate(i.scheduled):'<span class="mini-note">ยังไม่กำหนด</span>');
-   const tcell=canEditSch?`<input data-schteam="${i.id}" value="${i.team||''}" placeholder="ทีม/ช่าง" style="${inp};width:108px">`:(i.team||'—');
-   return `<tr class="clickable" data-lead="${l?l.id:''}"><td style="white-space:nowrap">${dcell}</td><td style="font-weight:600">${bn(l)}<div class="mini-note">${svg('pin','')} ${l?l.site:''}</div></td><td>${l?brandChip(l.brand):''}</td><td>${st}</td><td>${tcell}</td><td style="text-align:right;white-space:nowrap"><button class="btn sm primary" data-sheet="${i.id}">${svg('doc','ico')} ใบสั่งงาน${i.signOff?' ✓':''}</button></td></tr>`;};
+   const tmcell=canEditSch?`<select data-schtime="${i.id}" style="${inp}"><option value="">— เวลา —</option>${hours.map(h=>`<option value="${h}"${i.timeSlot===h?' selected':''}>${h} น.</option>`).join('')}</select>`:(i.timeSlot?i.timeSlot+' น.':'—');
+   const tcell=canEditSch?`<input data-schteam="${i.id}" value="${(i.team||'').replace(/"/g,'&quot;')}" placeholder="ทีม/ช่าง" style="${inp};width:100px">`:(i.team||'—');
+   const ncell=canEditSch?`<input data-schnote="${i.id}" value="${(i.schNote||'').replace(/"/g,'&quot;')}" placeholder="หมายเหตุ" style="${inp};width:150px">`:(i.schNote||'—');
+   return `<tr class="clickable" data-lead="${l?l.id:''}"><td style="white-space:nowrap">${dcell}</td><td style="white-space:nowrap">${tmcell}</td><td style="font-weight:600">${bn(l)}<div class="mini-note">${svg('pin','')} ${l?l.site:''}</div></td><td>${l?brandChip(l.brand):''}</td><td>${st}</td><td>${tcell}</td><td>${ncell}</td><td style="text-align:right;white-space:nowrap"><button class="btn sm primary" data-sheet="${i.id}">${svg('doc','ico')} ใบสั่งงาน${i.signOff?' ✓':''}</button></td></tr>`;};
  c.innerHTML=`
   <div class="banner-info">${svg('wrench')}ตารางงานติดตั้ง เรียงตามวัน · ${canEditSch?'ปรับวัน/มอบทีมได้ (แก้ในช่องได้เลย)':'👀 ดูอย่างเดียว — เซลล์ไม่มีสิทธิ์แก้ไข'} · กดที่แถวเพื่อดูรายละเอียดลูกค้า</div>
   <div class="section-title">📅 ตารางงาน (${upcoming.length})</div>
-  <div class="card" style="margin-bottom:24px"><div class="table-wrap"><table><thead><tr><th style="width:132px">วันติดตั้ง</th><th>ลูกค้า / สถานที่</th><th>แบรนด์</th><th>สถานะ</th><th>ทีม/ช่าง</th><th></th></tr></thead><tbody>${upcoming.length?upcoming.map(schedRow).join(''):emptyRow(6,'ยังไม่มีนัดติดตั้ง')}</tbody></table></div></div>
+  <div class="card" style="margin-bottom:24px"><div class="table-wrap"><table><thead><tr><th style="width:132px">วันติดตั้ง</th><th style="width:100px">เวลา</th><th>ลูกค้า / สถานที่</th><th>แบรนด์</th><th>สถานะ</th><th>ทีม/ช่าง</th><th>หมายเหตุ</th><th></th></tr></thead><tbody>${upcoming.length?upcoming.map(schedRow).join(''):emptyRow(8,'ยังไม่มีนัดติดตั้ง')}</tbody></table></div></div>
   <div class="section-title">เสร็จสิ้น + อยู่ในประกัน (${done.length})</div>
   <div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">${done.length?done.map(card).join(''):'<div class="empty" style="grid-column:1/-1">—</div>'}</div>`;
  wireRows(c);
  c.querySelectorAll('[data-sheet]').forEach(b=>b.onclick=e=>{e.stopPropagation();openInstallSheet(b.dataset.sheet);});
- c.querySelectorAll('[data-schdate],[data-schteam]').forEach(el=>el.addEventListener('click',e=>e.stopPropagation()));
+ c.querySelectorAll('[data-schdate],[data-schteam],[data-schtime],[data-schnote]').forEach(el=>el.addEventListener('click',e=>e.stopPropagation()));
  c.querySelectorAll('[data-schdate]').forEach(el=>el.onchange=()=>{const i=state.installs.find(x=>x.id===el.dataset.schdate);if(i){i.scheduled=el.value;save();render(false);}});
  c.querySelectorAll('[data-schteam]').forEach(el=>el.onchange=()=>{const i=state.installs.find(x=>x.id===el.dataset.schteam);if(i){i.team=el.value;save();}});
+ c.querySelectorAll('[data-schtime]').forEach(el=>el.onchange=()=>{const i=state.installs.find(x=>x.id===el.dataset.schtime);if(i){i.timeSlot=el.value;save();}});
+ c.querySelectorAll('[data-schnote]').forEach(el=>el.onchange=()=>{const i=state.installs.find(x=>x.id===el.dataset.schnote);if(i){i.schNote=el.value;save();}});
 }
 
 /* ============ INSTALLER WORK ORDER (bilingual, table + photos, customer sign-off) ============ */
