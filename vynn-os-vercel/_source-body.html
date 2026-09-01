@@ -733,6 +733,15 @@ const canSeeCost=()=>role==='admin'||role==='sales_support';
 const ticketsOf=lid=>(state.tickets||[]).filter(t=>t.leadId===lid);
 function openPunchCount(qid){return (state.tickets||[]).filter(t=>t.quoteId===qid&&t.type==='punch'&&t.status!=='resolved').length;}
 function refreshInstall(qid){const ins=state.installs.find(i=>i.quoteId===qid);if(!ins)return;if(openPunchCount(qid)>0){if(ins.status!=='done')ins.status='incomplete';}else if(ins.status==='incomplete'){ins.status='done';if(!ins.warrantyUntil)ins.warrantyUntil='2027-07-11';}}
+// create an install job for the installer when a quote is ready (called when งวด 2 is paid). No-op if one already exists.
+function ensureInstall(qid){
+ const q=quoteById(qid); if(!q) return;
+ if((state.installs||[]).find(i=>i.quoteId===qid)) return;
+ const l=leadById(q.leadId);
+ state.installs=state.installs||[];
+ state.installs.push({id:'IN-'+(state.seq.IN++),quoteId:qid,leadId:q.leadId,desired:(l&&l.desiredInstall)||'',scheduled:'',team:'',installerId:'',status:'scheduled',warrantyUntil:''});
+ if(l&&['won','production'].includes(l.stage))l.stage='installing';
+}
 function personBrand(l){return l.brand;}
 // role/brand scoped leads
 function scopedLeads(){
@@ -2626,7 +2635,7 @@ function openPayModal(qid,n){
  m.querySelector('#pm-file').onchange=e=>{const files=[...e.target.files];if(!files.length)return;Promise.all(files.map(f=>new Promise(res=>{const rd=new FileReader();rd.onload=()=>res({name:f.name,url:rd.result});rd.onerror=()=>res({name:f.name,url:''});rd.readAsDataURL(f);}))).then(imgs=>{paySlips.push(...imgs);const c=m.querySelector('#pm-thumbs');c.innerHTML=thumbs();bindRm();});};
  const close=()=>{m.classList.remove('open');m.style.zIndex='';document.getElementById('scrim').classList.remove('open');};
  m.querySelector('#pm-cancel').onclick=close;m.querySelector('#pm-close').onclick=close;
- m.querySelector('#pm-save').onclick=()=>{seg.st='paid';seg.d=m.querySelector('#pm-date').value||'2026-07-19';seg.method=m.querySelector('#pm-method').value;seg.ref=m.querySelector('#pm-ref').value.trim();seg.slips=paySlips.slice();save();close();openLead(q.leadId);render(false);};
+ m.querySelector('#pm-save').onclick=()=>{seg.st='paid';seg.d=m.querySelector('#pm-date').value||'2026-07-19';seg.method=m.querySelector('#pm-method').value;seg.ref=m.querySelector('#pm-ref').value.trim();seg.slips=paySlips.slice();const pi2=payInfo(qid);if(pi2&&pi2.sched[1]&&pi2.sched[1].st==='paid')ensureInstall(qid);save();close();openLead(q.leadId);render(false);};
  const up=m.querySelector('#pm-unpay');if(up)up.onclick=()=>{seg.st='pending';seg.d='';save();close();openLead(q.leadId);render(false);};
  m.classList.add('open');document.getElementById('scrim').classList.add('open');
 }
