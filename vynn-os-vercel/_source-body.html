@@ -679,7 +679,7 @@ function logAudit(action,detail){
 const ROLE_LABEL={admin:'แอดมิน',manager:'ผู้จัดการ',sales_support:'ซัพพอร์ต',sales:'เซลล์',hr:'ฝ่ายบุคคล',accounting:'ฝ่ายบัญชี',installer:'ช่างติดตั้ง'};
 const ROLE_COLOR={admin:'#7A4FB5',manager:'#B77504',sales_support:'#0E7C86',sales:'#0F6E68',hr:'#2C6BB3',accounting:'#0E7C86',installer:'#C0392B'};
 function showLogin(){document.getElementById('loginScreen').style.display='flex';document.querySelector('.app').style.display='none';const e=document.getElementById('loginErr');e.classList.remove('show');document.getElementById('loginForm').reset();setTimeout(()=>document.getElementById('loginId').focus(),50);}
-function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';if(!canView(view))view=firstAllowedView();renderUserChip();render();}
+function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';if(!canView(view))view=firstAllowedView();renderUserChip();['emptyBtn','resetBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=(currentUser&&currentUser.id==='a1')?'':'none';});render();}
 function renderUserChip(){
  const el=document.getElementById('userChip');if(!el||!currentUser)return;
  const col=currentUser.color||ROLE_COLOR[role]||'#7A4FB5';
@@ -2814,9 +2814,10 @@ function initChrome(){
  function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('vynn_theme',t);document.getElementById('themeLabel').textContent=t==='dark'?'โหมดมืด':'โหมดสว่าง';document.getElementById('themeIcon').innerHTML=svg(t==='dark'?'moon':'sun');const ic=document.querySelector('#themeIcon svg');if(ic)ic.style.width='16px';}
  setTheme(localStorage.getItem('vynn_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
  tt.onclick=()=>setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
- document.getElementById('resetBtn').onclick=()=>{if(confirm('รีเซ็ตข้อมูลกลับเป็นชุดตัวอย่าง? (ข้อมูลจริงที่กรอกไว้จะหาย — แนะนำให้กด "สำรองข้อมูล" ก่อน)'))resetData();};
+ const adminGuard=(name)=>{if(!currentUser||currentUser.id!=='a1'){alert('⛔ เฉพาะ '+(accountByUid('a1')||{name:'แอดมิน 1'}).name+' (แอดมิน 1) เท่านั้นที่ใช้คำสั่งนี้ได้');return false;}const pw=prompt('🔒 ใส่รหัสผ่านเพื่อยืนยันคำสั่ง "'+name+'":');if(pw===null)return false;if(pw!==pwOf('a1')){alert('รหัสผ่านไม่ถูกต้อง');return false;}return true;};
+ document.getElementById('resetBtn').onclick=()=>{if(!adminGuard('รีเซ็ตข้อมูลตัวอย่าง'))return;if(confirm('รีเซ็ตข้อมูลกลับเป็นชุดตัวอย่าง? (ข้อมูลจริงที่กรอกไว้จะหาย — แนะนำให้กด "สำรองข้อมูล" ก่อน)'))resetData();};
  document.getElementById('backupBtn').onclick=()=>{if(backupData())setTimeout(()=>alert('✓ สำรองข้อมูลแล้ว — ไฟล์ถูกดาวน์โหลดไว้ในเครื่อง เก็บไว้ให้ดีนะครับ'),300);};
- document.getElementById('emptyBtn').onclick=()=>{if(confirm('เริ่มจากข้อมูลว่าง?\n\nจะล้างข้อมูลตัวอย่าง (ลูกค้า/ใบเสนอราคา/งานทั้งหมด) แต่ยังเก็บการตั้งค่าราคาและข้อมูลบริษัทไว้\n\nแนะนำให้กด "สำรองข้อมูล" ก่อน ถ้ามีข้อมูลจริงอยู่แล้ว'))startEmpty();};
+ document.getElementById('emptyBtn').onclick=()=>{if(!adminGuard('เริ่มจากข้อมูลว่าง'))return;if(confirm('เริ่มจากข้อมูลว่าง?\n\nจะล้างข้อมูลตัวอย่าง (ลูกค้า/ใบเสนอราคา/งานทั้งหมด) แต่ยังเก็บการตั้งค่าราคาและข้อมูลบริษัทไว้\n\nแนะนำให้กด "สำรองข้อมูล" ก่อน ถ้ามีข้อมูลจริงอยู่แล้ว'))startEmpty();};
  const rf=document.getElementById('restoreFile');
  document.getElementById('restoreBtn').onclick=()=>rf.click();
  rf.onchange=()=>{if(rf.files&&rf.files[0]){restoreData(rf.files[0]);rf.value='';}};
