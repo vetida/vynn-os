@@ -95,6 +95,18 @@
   .brand-filter button.active{background:var(--text);color:var(--bg)}
   .brand-filter button[data-b="VYNN"].active{background:var(--brand-vynn);color:#fff}
   .brand-filter button[data-b="Vangarde"].active{background:var(--brand-vangarde);color:#fff}
+  :root{--brand:var(--brand-vynn)}
+  :root[data-brand="Vangarde"]{--brand:var(--brand-vangarde)}
+  .brand .logo .dot{background:var(--brand)}
+  .brandbar{height:3px;border-radius:3px;background:var(--brand);margin:-4px 0 9px}
+  .brand-choice{display:block;width:100%;text-align:left;border:1.5px solid var(--border);background:var(--surface);border-radius:14px;padding:14px 16px;cursor:pointer;margin-top:11px;transition:border-color .15s,transform .15s,box-shadow .15s}
+  .brand-choice:hover{border-color:var(--bc);box-shadow:0 4px 16px rgba(0,0,0,.09);transform:translateY(-1px)}
+  .brand-choice .bc-logo{font-size:18px;font-weight:750;color:var(--bc);display:flex;align-items:center;gap:9px}
+  .brand-choice .bc-logo::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--bc);display:inline-block;flex:0 0 auto}
+  .brand-choice .bc-sub{font-size:12px;color:var(--text-muted);margin-top:4px;margin-left:19px}
+  .brand-choice.bc-vynn{--bc:var(--brand-vynn)}
+  .brand-choice.bc-vg{--bc:var(--brand-vangarde)}
+  .login-back{background:none;border:none;color:var(--text-muted);font-size:12.5px;cursor:pointer;padding:2px 0;margin-bottom:2px;align-self:flex-start}
   .btn{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:13px;font-weight:550;transition:.12s}
   .btn:hover{border-color:var(--text-muted)}
   .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -302,8 +314,9 @@
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
-      <div class="logo"><span class="dot"></span>VYNN<span style="color:var(--text-faint);font-weight:400">·OS</span></div>
-      <div class="sub">CRM / ERP · v2</div>
+      <div class="brandbar"></div>
+      <div class="logo"><span class="dot"></span><span id="sideBrandName">VYNN</span><span style="color:var(--text-faint);font-weight:400">·OS</span></div>
+      <div class="sub" id="sideBrandSub">Window Collection</div>
     </div>
     <nav class="nav" id="nav"></nav>
     <div class="side-foot">
@@ -328,9 +341,8 @@
         <div class="page-sub" id="pageSub"></div>
       </div>
       <div class="spacer"></div>
-      <div class="brand-filter" id="brandFilter">
-        <button data-b="all" class="active">ทั้งหมด</button>
-        <button data-b="VYNN">VYNN</button>
+      <div class="brand-filter" id="brandFilter" title="สลับแบรนด์">
+        <button data-b="VYNN" class="active">VYNN</button>
         <button data-b="Vangarde">Vangarde</button>
       </div>
       <button class="btn primary" id="topAction"><span class="ico" data-ico="plus"></span><span id="topActionLabel">รับ Lead ใหม่</span></button>
@@ -345,9 +357,22 @@
 
 <!-- ===== Login screen ===== -->
 <div class="login-wrap" id="loginScreen" style="display:none">
-  <form class="login-card" id="loginForm" autocomplete="off">
+  <div class="login-card" id="brandPick">
     <div class="login-brand"><span class="dot"></span>VYNN<span style="color:var(--text-faint);font-weight:400">·OS</span></div>
-    <div class="login-sub">เข้าสู่ระบบด้วยรหัสพนักงาน</div>
+    <div class="login-sub">เลือกแบรนด์ที่จะเข้าใช้งาน</div>
+    <button type="button" class="brand-choice bc-vynn" data-brand="VYNN">
+      <div class="bc-logo">VYNN Collection</div>
+      <div class="bc-sub">ผ้าม่าน · มู่ลี่ · ม่านม้วน (ในอาคาร)</div>
+    </button>
+    <button type="button" class="brand-choice bc-vg" data-brand="Vangarde">
+      <div class="bc-logo">Vangarde</div>
+      <div class="bc-sub">Pergola · ZipShade · กันสาด (กันแดดนอกอาคาร)</div>
+    </button>
+  </div>
+  <form class="login-card" id="loginForm" autocomplete="off" style="display:none">
+    <button type="button" class="login-back" id="loginBack">← เปลี่ยนแบรนด์</button>
+    <div class="login-brand"><span class="dot"></span><span id="loginBrandName">VYNN</span><span style="color:var(--text-faint);font-weight:400">·OS</span></div>
+    <div class="login-sub" id="loginBrandSub">เข้าสู่ระบบด้วยรหัสพนักงาน</div>
     <div class="login-err" id="loginErr"></div>
     <div class="login-field">
       <label for="loginId">รหัสพนักงาน (Employee ID)</label>
@@ -643,11 +668,13 @@ function seed(){return {
 
 /* ============ STATE ============ */
 const LS='vynn_os_v2';
-let state, view='overview', brand='all', search='', role='admin', hrMonth='2026-07';
+let state, view='overview', brand='VYNN', search='', role='admin', hrMonth='2026-07';
 let currentUser=null; // the logged-in account (from ACCOUNTS)
+let pendingBrand=null; // brand chosen on the login screen, applied on successful login
 
 /* ============ AUTH / RBAC ============ */
 const SESS='vynn_os_session';
+const SESSB='vynn_os_brand';
 // which view ids each role may open. 'admin' = full access.
 const ACCESS={
  admin:'*',
@@ -672,8 +699,11 @@ function tryLogin(loginId,pw){
  return{ok:true};
 }
 function setSession(uid){currentUser=accountByUid(uid);role=currentUser.role;try{localStorage.setItem(SESS,uid);}catch(e){}}
-function logout(){logAudit('logout','ออกจากระบบ');currentUser=null;try{localStorage.removeItem(SESS);}catch(e){}brand='all';showLogin();}
-function restoreSession(){let uid=null;try{uid=localStorage.getItem(SESS);}catch(e){}if(uid&&accountByUid(uid)){setSession(uid);return true;}return false;}
+function logout(){logAudit('logout','ออกจากระบบ');currentUser=null;try{localStorage.removeItem(SESS);}catch(e){}pendingBrand=null;showLogin();}
+function restoreSession(){let uid=null,b=null;try{uid=localStorage.getItem(SESS);b=localStorage.getItem(SESSB);}catch(e){}if(uid&&accountByUid(uid)){setSession(uid);if(b==='VYNN'||b==='Vangarde')brand=b;return true;}return false;}
+// apply the active brand: scope + theme + sidebar/topbar labels
+function applyBrand(b){brand=b;try{localStorage.setItem(SESSB,b);}catch(e){}document.documentElement.setAttribute('data-brand',b);const nm=document.getElementById('sideBrandName');if(nm)nm.textContent=(b==='Vangarde'?'Vangarde':'VYNN');const sub=document.getElementById('sideBrandSub');if(sub)sub.textContent=(b==='Vangarde'?'Outdoor Shading':'Window Collection');document.querySelectorAll('#brandFilter button').forEach(x=>x.classList.toggle('active',x.dataset.b===b));}
+function switchBrand(b){if(b===brand)return;applyBrand(b);if(!canView(view))view=firstAllowedView();render();}
 // ---- audit log (kept in state, trimmed to last ~600 / 60 days) ----
 function logAudit(action,detail){
  if(!state)return;
@@ -686,8 +716,8 @@ function logAudit(action,detail){
 }
 const ROLE_LABEL={admin:'แอดมิน',manager:'ผู้จัดการ',sales_support:'ซัพพอร์ต',sales:'เซลล์',hr:'ฝ่ายบุคคล',accounting:'ฝ่ายบัญชี',installer:'ช่างติดตั้ง'};
 const ROLE_COLOR={admin:'#7A4FB5',manager:'#B77504',sales_support:'#0E7C86',sales:'#0F6E68',hr:'#2C6BB3',accounting:'#0E7C86',installer:'#C0392B'};
-function showLogin(){document.getElementById('loginScreen').style.display='flex';document.querySelector('.app').style.display='none';const e=document.getElementById('loginErr');e.classList.remove('show');document.getElementById('loginForm').reset();setTimeout(()=>document.getElementById('loginId').focus(),50);}
-function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';if(!canView(view))view=firstAllowedView();renderUserChip();['emptyBtn','resetBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=(currentUser&&currentUser.id==='a1')?'':'none';});render();}
+function showLogin(){document.getElementById('loginScreen').style.display='flex';document.querySelector('.app').style.display='none';const e=document.getElementById('loginErr');e.classList.remove('show');document.getElementById('loginForm').reset();document.getElementById('brandPick').style.display='';document.getElementById('loginForm').style.display='none';}
+function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';applyBrand(brand);if(!canView(view))view=firstAllowedView();renderUserChip();['emptyBtn','resetBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=(currentUser&&currentUser.id==='a1')?'':'none';});render();}
 function renderUserChip(){
  const el=document.getElementById('userChip');if(!el||!currentUser)return;
  const col=currentUser.color||ROLE_COLOR[role]||'#7A4FB5';
@@ -2671,7 +2701,7 @@ function openAddLead(){
  m.innerHTML=`<div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">${svg('inbox')}<h3 style="font-size:16px">รับลีดใหม่</h3><span style="flex:1"></span><button class="icon-btn" id="mClose">${svg('x')}</button></div>
   <div style="padding:20px 22px">
    <div class="field-row"><div class="field"><label>ชื่อลูกค้า</label><input id="f-name" placeholder="เช่น คุณสมชาย"></div><div class="field"><label>สถานที่/โปรเจกต์</label><input id="f-site" placeholder="เช่น คอนโด XYZ"></div></div>
-   <div class="field-row"><div class="field"><label>เบอร์</label><input id="f-phone" placeholder="08x-xxx-xxxx"></div><div class="field"><label>แบรนด์</label><select id="f-brand"><option>VYNN</option><option>Vangarde</option></select></div></div>
+   <div class="field-row"><div class="field"><label>เบอร์</label><input id="f-phone" placeholder="08x-xxx-xxxx"></div><div class="field"><label>แบรนด์</label><select id="f-brand"><option${brand==='VYNN'?' selected':''}>VYNN</option><option${brand==='Vangarde'?' selected':''}>Vangarde</option></select></div></div>
    <div class="field-row"><div class="field"><label>ช่องทาง</label><select id="f-src">${Object.entries(SOURCE).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('')}</select></div><div class="field"><label>วันติดตั้งที่ต้องการ</label><input id="f-install" type="date"></div></div>
    <div id="referralWrap" style="display:none"><div class="field-row"><div class="field"><label>ผู้แนะนำ (อินทีเรีย)</label><input id="f-ref" placeholder="ชื่อดีไซน์เนอร์/สตูดิโอ"></div><div class="field"><label>ค่าแนะนำ (%)</label><input id="f-refpct" type="number" value="10"></div></div></div>
    <div class="field"><label>มอบหมายเซลล์</label><select id="f-sales"><option value="">— รอมอบหมาย —</option>${SALES.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
@@ -2807,7 +2837,11 @@ function render(rerenderNav=true){
 
 /* ============ WIRING ============ */
 function initChrome(){
- document.getElementById('brandFilter').querySelectorAll('button').forEach(b=>b.onclick=()=>{brand=b.dataset.b;document.querySelectorAll('#brandFilter button').forEach(x=>x.classList.toggle('active',x===b));render();});
+ document.getElementById('brandFilter').querySelectorAll('button').forEach(b=>b.onclick=()=>switchBrand(b.dataset.b));
+ // ---- login: pick brand → credentials ----
+ const goCreds=(b)=>{pendingBrand=b;document.documentElement.setAttribute('data-brand',b);document.getElementById('loginBrandName').textContent=(b==='Vangarde'?'Vangarde':'VYNN');document.getElementById('loginBrandSub').textContent='เข้าสู่ระบบ '+(b==='Vangarde'?'Vangarde (กันแดดนอกอาคาร)':'VYNN Collection (ในอาคาร)');document.getElementById('brandPick').style.display='none';const f=document.getElementById('loginForm');f.style.display='';document.getElementById('loginErr').classList.remove('show');setTimeout(()=>document.getElementById('loginId').focus(),50);};
+ document.querySelectorAll('#brandPick .brand-choice').forEach(b=>b.onclick=()=>goCreds(b.dataset.brand));
+ document.getElementById('loginBack').onclick=()=>{pendingBrand=null;document.getElementById('loginForm').style.display='none';document.getElementById('brandPick').style.display='';};
  // ---- login / logout wiring ----
  document.getElementById('loginForm').onsubmit=e=>{
   e.preventDefault();
@@ -2815,7 +2849,7 @@ function initChrome(){
   const pw=document.getElementById('loginPw').value;
   const err=document.getElementById('loginErr');
   const r=tryLogin(id,pw);
-  if(r.ok){showApp();}else{err.textContent=r.msg;err.classList.add('show');}
+  if(r.ok){brand=pendingBrand||brand;showApp();}else{err.textContent=r.msg;err.classList.add('show');}
  };
  document.getElementById('logoutBtn').onclick=()=>logout();
  const tt=document.getElementById('themeToggle');
