@@ -1277,6 +1277,7 @@ const NAV=[
  {grp:'ผลิต & จัดหา'},
  {id:'sewing',label:'คิวตัดเย็บ',icon:'scissors',b:'VYNN',count:()=>state.sewing.filter(s=>s.status!=='done').length},
  {id:'china',label:'สั่งจีน (นำเข้า)',icon:'truck',b:'Vangarde',count:()=>state.chinaLots.filter(l=>!l.closed).length},
+ {id:'purchase',label:'สั่งสินค้า (สรุป)',icon:'cart',count:()=>state.quotes.filter(q=>{const l=leadById(q.leadId);if(!l)return false;if(brand!=='all'&&l.brand!==brand)return false;const pi=payInfo(q.id);return pi&&pi.sched[0]&&pi.sched[0].st==='paid';}).length},
  {grp:'ส่งมอบ & การเงิน'},
  {id:'service',label:'งานเก็บ & ประกัน',icon:'shield',count:()=>(state.tickets||[]).filter(t=>t.status!=='resolved').length},
  {id:'finance',label:'การเงิน / งวด',icon:'cash'},
@@ -1304,6 +1305,7 @@ const META={
  quote:{t:'Quotation',s:'คำนวณผ้า+อุปกรณ์อัตโนมัติจากหน้างาน → ใบเสนอราคา → ผู้จัดการอนุมัติ',act:false},
  sewing:{t:'คิวตัดเย็บ VYNN',s:'สั่งผ้า (ซัพพลายเออร์ไทย) → เข้าคิวตัดเย็บ 7–30 วัน',act:false},
  china:{t:'สั่งซื้อจีน (Vangarde)',s:'รวมออเดอร์เป็นล็อตเพื่อเฉลี่ยค่าส่ง (~฿8,000/ออเดอร์) · 30–60 วัน',act:false},
+ purchase:{t:'สั่งสินค้า (สรุป)',s:'เฉพาะงานที่ลูกค้ามัดจำงวดแรกแล้ว · แยกหมวดตามซัพพลายเออร์ · คอลัมน์แรก = เลขใบเสนอราคา (แอดมินเท่านั้น)',act:false},
  install:{t:'ติดตั้ง',s:'ทีมช่าง in-house · จัดคิวแบบ First-come-first-serve · รับประกัน 1 ปี',act:false},
  service:{t:'งานเก็บ & เคลมประกัน',s:'ติดตามงานที่ยังไม่จบ (งานเก็บ) และเคลมประกันหลังติดตั้งในระยะ 1 ปี — กันลืม ปิดให้ครบ',act:false},
  finance:{t:'การเงิน / งวดชำระ',s:'เก็บเงิน 3 งวด 50 / 30 / 20 บนยอดรวม VAT',act:false},
@@ -1539,6 +1541,28 @@ function renderChina(){
  c.querySelectorAll('[data-pof]').forEach(el=>el.onchange=()=>{const lot=state.chinaLots.find(x=>x.id===el.dataset.lot);const po=lot&&lot.pos.find(p=>p.id===el.dataset.po);if(po){po[el.dataset.pof]=+el.value;save();}});
  c.querySelectorAll('[data-porecv]').forEach(el=>el.onchange=()=>{const lot=state.chinaLots.find(x=>x.id===el.dataset.lot);const po=lot&&lot.pos.find(p=>p.id===el.dataset.po);if(po){po.received=el.checked;save();render();}});
  const nl=c.querySelector('#newEmptyLot');if(nl)nl.onclick=newLot;
+}
+
+/* ============ PURCHASE / สั่งสินค้า (admin only) — เฉพาะงานที่มัดจำงวดแรกแล้ว, แยกหมวดตามซัพพลายเออร์ ============ */
+function renderPurchase(){
+ const c=document.getElementById('content');
+ if(role!=='admin'){c.innerHTML=`<div class="card"><div class="empty">${svg('lock')}<div>หน้าสั่งสินค้าเปิดให้เฉพาะแอดมินเท่านั้น</div></div></div>`;return;}
+ const deposited=state.quotes.filter(q=>{const l=leadById(q.leadId);if(!l)return false;if(brand!=='all'&&l.brand!==brand)return false;const pi=payInfo(q.id);return pi&&pi.sched[0]&&pi.sched[0].st==='paid';});
+ const groups={};
+ deposited.forEach(q=>{const l=leadById(q.leadId);const sv=surveyById(q.surveyId);const pts=(q.points&&q.points.length)?q.points:(sv?sv.points:[]);pts.forEach(pt=>{const cat=pt.kind==='vangarde'?(pt.vgProduct||'Vangarde อื่นๆ'):pt.kind==='blind'?'มู่ลี่ / ม่านม้วน':'ผ้าม่าน (VYNN)';(groups[cat]=groups[cat]||[]).push({q,l,pt,pc:calcPoint(pt,q.priceMode)});});});
+ const cats=Object.keys(groups).sort();
+ const supMap={'Pergola':'โรงงาน Vangarde (นำเข้า)','Zip Shade':'โรงงาน Vangarde','Awning':'โรงงาน Vangarde','Skylight':'โรงงาน Vangarde','Roof PRO':'โรงงาน Vangarde','Retractable':'โรงงาน Vangarde','Outdoor Roller':'โรงงาน Vangarde','ผ้าม่าน (VYNN)':'ซัพพลายเออร์ผ้า (ไทย)','มู่ลี่ / ม่านม้วน':'ซัพพลายเออร์มู่ลี่/ม่านม้วน'};
+ const totalCost=cats.reduce((a,cat)=>a+groups[cat].reduce((b,r)=>b+(r.pc.cost||0),0),0);
+ const nItems=cats.reduce((a,cat)=>a+groups[cat].length,0);
+ const catCard=cat=>{const rows=groups[cat];const catCost=rows.reduce((a,r)=>a+(r.pc.cost||0),0);
+   const body=rows.map(r=>{const pt=r.pt;const pi=payInfo(r.q.id);const dep=pi&&pi.sched[0]&&pi.sched[0].d;const ins=state.installs.find(i=>i.quoteId===r.q.id);const instDate=(ins&&ins.scheduled)||r.l.desiredInstall||'';
+     const model=pt.kind==='vangarde'?((pt.vgSeries?pt.vgSeries+' · ':'')+'เฟรม '+(pt.frameColor||'-')+' · ผ้า '+(pt.fabricCode||'-')):pt.kind==='blind'?pt.blindType:(pt.curtainType+' · '+(((pt.fabrics||[]).filter(f=>f.code).map(f=>f.code).join(' + '))||'-'));
+     const sz=(pt.w/100).toFixed(2)+'×'+((pt.d||pt.h||pt.vgExtend||0)/100).toFixed(2)+' ม.';
+     return `<tr><td class="mono" style="font-weight:700">${r.q.id}</td><td style="font-weight:600">${bn(r.l)}<div class="mini-note">${r.l.site||''}</div></td><td style="font-size:12px">${model}${pt.note?'<div class="mini-note">'+pt.note+'</div>':''}</td><td class="num">${sz}</td><td class="num">${pt.qty}</td><td class="num" style="color:var(--warn)">${THB(r.pc.cost||0)}</td><td style="white-space:nowrap">${dep?fmtDate(dep):'—'}</td><td style="white-space:nowrap">${instDate?fmtDate(instDate):'<span class="mini-note">ยังไม่ระบุ</span>'}</td><td>${r.l.assignedTo?who(r.l.assignedTo):'—'}</td><td style="white-space:nowrap"><button class="btn sm" data-pq="${r.q.id}">${svg('doc','ico')} ใบเสนอราคา</button> <button class="btn sm" data-psv="${r.l.id}">${svg('ruler','ico')} วัดหน้างาน</button></td></tr>`;}).join('');
+   return `<div class="card" style="margin-bottom:18px"><div class="card-head">${svg('box')}<h3>${cat}</h3><span class="mini-note" style="margin-left:8px">${supMap[cat]||'—'}</span><span class="pill accent" style="margin-left:auto">${rows.length} รายการ</span></div><div class="table-wrap"><table><thead><tr><th>เลขที่ใบเสนอราคา</th><th>ลูกค้า</th><th>รุ่น / รายละเอียด</th><th class="num">ขนาด</th><th class="num">จำนวน</th><th class="num">ต้นทุน</th><th>วันมัดจำ</th><th>ติดตั้ง (ประมาณ)</th><th>เซลล์</th><th>รีเช็ค</th></tr></thead><tbody>${body}<tr style="border-top:2px solid var(--border)"><td colspan="5" style="text-align:right;font-weight:600">รวมต้นทุนหมวดนี้</td><td class="num" style="font-weight:700;color:var(--warn)">${THB(catCost)}</td><td colspan="4"></td></tr></tbody></table></div></div>`;};
+ c.innerHTML=`<div class="banner-info">${svg('cart')}สรุปสินค้าที่ต้องสั่ง — เฉพาะงานที่ <b>ลูกค้ามัดจำงวดแรกแล้ว</b> · แยกตามหมวด (คนละซัพพลายเออร์) · คอลัมน์แรก = เลขที่ใบเสนอราคา (กดดูใบเสนอราคา / วัดหน้างานเพื่อรีเช็คได้) · โชว์ต้นทุน (แอดมินเท่านั้น)</div><div class="grid" style="grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px"><div class="stat"><div class="label">งานที่มัดจำแล้ว</div><div class="value">${deposited.length}</div></div><div class="stat"><div class="label">รายการต้องสั่ง</div><div class="value">${nItems}</div></div><div class="stat"><div class="label">ต้นทุนรวมที่ต้องสั่ง</div><div class="value" style="color:var(--warn)">${THB(totalCost)}</div></div></div>${cats.length?cats.map(catCard).join(''):`<div class="card"><div class="empty">${svg('cart')}<div>ยังไม่มีงานที่ลูกค้ามัดจำงวดแรก</div></div></div>`}`;
+ c.querySelectorAll('[data-pq]').forEach(b=>b.onclick=e=>{e.stopPropagation();openDoc('quotation',b.dataset.pq);});
+ c.querySelectorAll('[data-psv]').forEach(b=>b.onclick=e=>{e.stopPropagation();openSurveyEditor(b.dataset.psv);});
 }
 
 /* ============ INSTALL ============ */
@@ -2865,7 +2889,7 @@ function renderVgPrice(){
   ${perg}${zip}${awn}
   <div class="grid two-col" style="grid-template-columns:1fr 1fr 1fr">${addBlock('Pergola',vg.addons.pergola)}${addBlock('Zip Shade',vg.addons.zipshade)}${addBlock('Awning',vg.addons.awning)}</div>`;
 }
-function renderView(){({overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
+function renderView(){({overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
 function render(rerenderNav=true){
  if(!canOpen(view))view=firstAllowedView(); // block disallowed / wrong-brand views
  const meta=META[view];
