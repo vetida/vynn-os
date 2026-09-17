@@ -1898,7 +1898,7 @@ function ptCard(pt,i,fabOpt,sel){
     <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="install" ${pt.vgDisc&&pt.vgDisc.install?'checked':''}> ฟรีค่าติดตั้ง</label>
     <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="motor" ${pt.vgDisc&&pt.vgDisc.motor?'checked':''}> มอเตอร์+รีโมท ลด 50%</label>
     <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="sensor" ${pt.vgDisc&&pt.vgDisc.sensor?'checked':''}> เซนเซอร์ ลด 50%</label>
-   </div></div>`}
+   </div></div>
    ${pt.vgProduct==='Awning'?`<div class="field"><label>เกรดผ้า</label><select data-i="${i}" data-f="vgGrade"><option value="poly" ${pt.vgGrade!=='acr'?'selected':''}>Polyester (จีน)</option><option value="acr" ${pt.vgGrade==='acr'?'selected':''}>Acrylic (สเปน)</option></select></div>`:''}
    <div class="field col2"><label>รายละเอียดเพิ่มเติม</label><input data-i="${i}" data-f="detail" value="${pt.detail||''}" placeholder="เช่น ขวา10 cm / ติดซ้าย10 ขวา10"></div>
    ${frameSel}
