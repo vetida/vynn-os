@@ -1180,10 +1180,8 @@ function calcQuote(q){
  const netBeforeVat=sub+vynnInst-discount+adjust;
  const vatRate=accVatRate(q);
  const vat=netBeforeVat*vatRate/100;
- let total=netBeforeVat+vat, nbv=netBeforeVat, vatAmt=vat;
- // Vangarde: ปัดยอดรวม (รวม VAT) ลงเป็นหลักร้อย แบบใบเสนอราคา Vangarde Excel แล้วถอดกลับเป็นยอดก่อน VAT + VAT
- if(lines.length&&lines.every(l=>l.pt&&l.pt.kind==='vangarde')){total=Math.floor((netBeforeVat*(1+vatRate/100))/100)*100;nbv=vatRate?total/(1+vatRate/100):total;vatAmt=total-nbv;}
- return {sub,service,discount,adjust,netBeforeVat:nbv,vatRate,vat:vatAmt,total,cost,margin:nbv-cost,lines,order};
+ const total=netBeforeVat+vat;
+ return {sub,service,discount,adjust,netBeforeVat,vatRate,vat,total,cost,margin:netBeforeVat-cost,lines,order};
 }
 function dealTotal(lid){const q=quoteOfLead(lid);return q?calcQuote(q).total:0;}
 function quoteTotalWith(q,discount,adjust){const sd=q.discount,sa=q.adjust;q.discount=discount;q.adjust=adjust;const t=calcQuote(q).total;q.discount=sd;q.adjust=sa;return t;}
