@@ -1074,12 +1074,12 @@ function calcPoint(pt,mode){
      const sensor=acc.rainSensor?zc.sensor:0;
      const installFee=zc.install||0;
      const dz=pt.vgDisc||{install:true,motor:true,sensor:true};
-     const dInstall=dz.install?installFee:0,dMotor=dz.motor?Math.round(0.5*(motor+remote)):0,dSensor=0;   // เซนเซอร์ไม่ลด (ส่วนลด = มอเตอร์+รีโมท 50% + ติดตั้งฟรี)
+     const dInstall=dz.install?installFee:0,dMotor=dz.motor?Math.round((somfy?0.5:1)*(motor+remote)):0,dSensor=0;   // Vangarde motor ฟรี 100% / Somfy motor ลด 50%; เซนเซอร์ไม่ลด; ติดตั้งฟรี
      const netEach=shadeEach+motor+remote+sensor+installFee-dInstall-dMotor-dSensor;
      const qty=pt.qty,area=+(areaEachRaw*qty).toFixed(2);
      const discountLines=[];
      if(dInstall)discountLines.push(['ฟรีค่าติดตั้ง',dInstall*qty]);
-     if(dMotor)discountLines.push(['ส่วนลดมอเตอร์+รีโมท 50%',dMotor*qty]);
+     if(dMotor)discountLines.push(['ส่วนลดมอเตอร์+รีโมท '+(somfy?'50%':'ฟรี 100%'),dMotor*qty]);
      if(dSensor)discountLines.push(['ส่วนลดเซนเซอร์ 50%',dSensor*qty]);
      const zunit='Zip Shade '+(pt.vgSeries||'');
      const zorder=[{t:zunit+' · เฟรม '+(pt.frameColor||'-')+' · ผ้า '+(pt.fabricCode||'-'),code:'',q:area+' ตร.ม. ('+qty+' จุด)'}];
@@ -1109,11 +1109,11 @@ function calcPoint(pt,mode){
      if(avib)aorder.push({t:'เซนเซอร์กันสั่น',code:'',q:aq+' ชุด'});
      if(awb)aorder.push({t:'ฝาครอบกันน้ำ',code:'',q:aq+' ชุด'});
      const adz=pt.vgDisc||{install:true,motor:true,sensor:true};
-     const adInstall=adz.install?ainst:0, adMotor=adz.motor?Math.round(0.5*amotor):0, adSensor=0;   // เซนเซอร์กันสั่นไม่ลด
+     const adInstall=adz.install?ainst:0, adMotor=adz.motor?Math.round((sys.somfy?0.5:1)*amotor):0, adSensor=0;   // Vangarde motor ฟรี 100% / Somfy motor ลด 50%; เซนเซอร์กันสั่นไม่ลด
      const aList=abase+amotor+aled+avib+awb+ainst, aNet=aList-adInstall-adMotor-adSensor;
      const aDiscLines=[];
      if(adInstall)aDiscLines.push(['ฟรีค่าติดตั้ง',adInstall*aq]);
-     if(adMotor)aDiscLines.push(['ส่วนลดมอเตอร์+รีโมท 50%',adMotor*aq]);
+     if(adMotor)aDiscLines.push(['ส่วนลดมอเตอร์+รีโมท '+(sys.somfy?'50%':'ฟรี 100%'),adMotor*aq]);
      if(adSensor)aDiscLines.push(['ส่วนลดเซนเซอร์กันสั่น 50%',adSensor*aq]);
      return {kind:'vangarde',area:+(wM*extM*aq).toFixed(2),areaEach:+(wM*extM).toFixed(2),
        sell:aNet*aq,cost:Math.round((abase+amotor)*aq*((vg.tiers&&vg.tiers.dealer)||0.7)),
@@ -1143,11 +1143,11 @@ function calcPoint(pt,mode){
    const shakeE=acc.shakeSensor?3000:0;
    const installE=(prod==='Pergola'?10000:3000);   // Pergola 10,000/ชุด, สินค้าอื่น 3,000/ชุด (กทม.+ปริมณฑล)
    const dz=pt.vgDisc||{install:true,motor:true,sensor:true};
-   const dInstall=dz.install?installE:0, dMotor=dz.motor?Math.round(0.5*(motorE+remoteE)):0, dSensor=0;   // เซนเซอร์ไม่ลด
+   const dInstall=dz.install?installE:0, dMotor=dz.motor?Math.round((somfy?0.5:1)*(motorE+remoteE)):0, dSensor=0;   // Vangarde motor ฟรี 100% / Somfy motor ลด 50%; เซนเซอร์ไม่ลด
    const listE=base+motorE+remoteE+sensorE+shakeE+installE, netE=listE-dInstall-dMotor-dSensor;
    const discountLines=[];
    if(dInstall)discountLines.push(['ฟรีค่าติดตั้ง',dInstall*q]);
-   if(dMotor)discountLines.push(['ส่วนลดมอเตอร์+รีโมท 50%',dMotor*q]);
+   if(dMotor)discountLines.push(['ส่วนลดมอเตอร์+รีโมท '+(somfy?'50%':'ฟรี 100%'),dMotor*q]);
    if(dSensor)discountLines.push(['ส่วนลดเซนเซอร์ 50%',dSensor*q]);
    const bd=[];
    if(motorE)bd.push(['มอเตอร์'+(somfy?' Somfy (ฝรั่งเศส)':hybrid?' Vangarde Hybrid':' Vangarde'),motorE*q]);
@@ -1939,7 +1939,7 @@ function ptCard(pt,i,fabOpt,sel){
    ${pt.vgProduct==='Zip Shade'?`<div class="field"><label>ราคา/ตร.ม. <span class="mini-note">(อ้างอิงราคารุ่น ฿${((vgp.zipshade||[]).find(x=>x.series===pt.vgSeries)||{}).priceSqm||est.priceSqm||0} · แก้เองได้)</span></label><input type="number" data-i="${i}" data-f="vgPriceSqm" value="${pt.vgPriceSqm||0}"></div>`:''}
    <div class="field col4"><label>ส่วนลดพื้นฐาน (โชว์ในใบเสนอราคา — รวมเป็น "ส่วนลดพิเศษ")</label><div style="display:flex;flex-wrap:wrap">
     <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="install" ${pt.vgDisc&&pt.vgDisc.install?'checked':''}> ฟรีค่าติดตั้ง</label>
-    <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="motor" ${pt.vgDisc&&pt.vgDisc.motor?'checked':''}> มอเตอร์+รีโมท ลด 50%</label>
+    <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="motor" ${pt.vgDisc&&pt.vgDisc.motor?'checked':''}> ส่วนลดมอเตอร์+รีโมท (Vangarde ฟรี 100% / Somfy ลด 50%)</label>
    </div></div>
    ${pt.vgProduct==='Awning'?`<div class="field"><label>เกรดผ้า</label><select data-i="${i}" data-f="vgGrade"><option value="poly" ${pt.vgGrade!=='acr'?'selected':''}>Polyester (จีน)</option><option value="acr" ${pt.vgGrade==='acr'?'selected':''}>Acrylic (สเปน)</option></select></div>`:''}
    <div class="field col2"><label>รายละเอียดเพิ่มเติม</label><input data-i="${i}" data-f="detail" value="${pt.detail||''}" placeholder="เช่น ขวา10 cm / ติดซ้าย10 ขวา10"></div>
