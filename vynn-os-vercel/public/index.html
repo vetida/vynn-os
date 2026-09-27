@@ -747,7 +747,7 @@ function migrateState(){
  if(!state.passwords)state.passwords={}; // per-user password overrides (uid -> pw)
  if(!state.audit)state.audit=[]; // audit log
  if(!state.salesHist)state.salesHist=seedSalesHist(); // 12-month per-sales history
- if(!state.vgPricing||!(state.vgPricing.v>=8))state.vgPricing=defaultVgPricing(); // Vangarde price list (v8 = + Roof PRO & No-Cassette)
+ if(!state.vgPricing||!(state.vgPricing.v>=9))state.vgPricing=defaultVgPricing(); // Vangarde price list (v9 = + Somfy remote models + Tahoma gateway)
  (state.accounts||[]).forEach(a=>{if(a.qr===undefined)a.qr='';}); // QR field for bank transfer
  {const nv=(state.accounts||[]).find(a=>a.id==='acc-novat');if(nv&&!nv.bank){nv.legalName=nv.legalName||'เวทิดา ยิ้มถนอม';nv.bank='ธ.กสิกรไทย เลขที่ 035-320-4475 (เวทิดา ยิ้มถนอม)';}}
 }
@@ -844,7 +844,7 @@ function isSheer(code){return P().fabricsSheer.some(f=>f.code===code);}
 /* ---- VG (Vangarde) real price list — 25 Nov 2025. MSRP = retail sell.
    Tiers: dealer=MSRP×0.7, agent=MSRP×0.85. Sales see MSRP only; mgr/admin/support see all 3. ---- */
 function defaultVgPricing(){return {
- v:8, // bump to force-refresh reference prices on load (v8 = + Roof PRO (NiV) & Retractable No-Cassette matrices)
+ v:9, // bump to force-refresh reference prices on load (v9 = + Somfy remote models (Situo/Smoove/Inis) + Tahoma Beacon gateway)
  tiers:{dealer:0.70, agent:0.85},
  pergola:[
   {series:'V180', max:'4.5×4.5×2.7', msrp:14000, moq:10},
@@ -890,7 +890,19 @@ function defaultVgPricing(){return {
   {series:'V15-140 · ท่อ85 · 5-40%',maxW:15,  maxH:7.0, priceSqm:6500},
  ],
  // Zip Shade component list-prices + standard install fee (real Excel). Standard discounts: free install, motor+remote 50% off, sensor 50% off.
- zip:{motorSomfy:19800, motorVangarde:9900, motorHybrid:14000, remoteSomfy:2900, remoteVangarde:1200, sensor:6000, install:3000},
+ zip:{motorSomfy:19800, motorVangarde:9900, motorHybrid:14000, remoteSomfy:2900, remoteVangarde:1200, sensor:6000, install:3000, tahoma:10700},
+ // รีโมทที่ใช้คู่มอเตอร์ Somfy (RTS) — เลือกรุ่นในหน้าวัดหน้างาน ราคาตั้งตามสเปก Somfy
+ somfyRemotes:[
+  {code:'situo1',label:'Situo 1ch RTS',price:2900},
+  {code:'situo2',label:'Situo 2ch RTS',price:3700},
+  {code:'situo5',label:'Situo 5ch RTS',price:5800},
+  {code:'situo16',label:'Situo 16ch RTS',price:11500},
+  {code:'smoove1',label:'Smoove 1ch RTS (Wall switch)',price:2200},
+  {code:'smoove2',label:'Smoove 2ch RTS (Wall switch)',price:2900},
+  {code:'smoove4',label:'Smoove 4ch RTS (Wall switch)',price:4400},
+  {code:'inisUno',label:'Inis Uno (Wall Switch for WT)',price:880},
+  {code:'inisDuo',label:'Inis Duo (Wall Switch for WT)',price:1300}
+ ],
  // Retractable Awning — fixed price by กว้าง(W)×ยื่น(Extend), Polyester(จีน) grade. Acrylic Sauleda(สเปน) = higher grade (col T, add later).
  // Retractable Awning V7 — poly=Polyester(จีน), acr=Sauleda Acrylic(สเปน)
  // V7 Retractable Awning (official) — fixed by กว้าง(w)×ยื่น(ext); poly=Polyester(จีน), acr=Sauleda Acrylic(สเปน); led=LED, wb=ฝาครอบกันน้ำ(ต่อความกว้าง), arms=จำนวนแขน
@@ -1070,12 +1082,14 @@ function calcPoint(pt,mode){
      const sys=pt.systems||{},acc=pt.accessories||{};
      const somfy=!!sys.somfy,vgm=!!sys.vangardeMotor,hybrid=!!acc.handcrankHybrid;
      const motor=somfy?zc.motorSomfy:hybrid?zc.motorHybrid:vgm?zc.motorVangarde:0;
-     const remote=(sys.remote1ch||sys.remote15ch)?(somfy?zc.remoteSomfy:zc.remoteVangarde):0;
+     const remName=(vg.somfyRemotes||[]).find(x=>x.code===pt.somfyRemote);
+     const remote=somfy?(pt.somfyRemote?((remName||{}).price||0):((sys.remote1ch||sys.remote15ch)?zc.remoteSomfy:0)):((sys.remote1ch||sys.remote15ch)?zc.remoteVangarde:0);
+     const tahoma=acc.tahoma?(zc.tahoma||10700):0;
      const sensor=acc.rainSensor?zc.sensor:0;
      const installFee=zc.install||0;
      const dz=pt.vgDisc||{install:true,motor:true,sensor:true};
      const dInstall=dz.install?installFee:0,dMotor=dz.motor?Math.round((somfy?0.5:1)*(motor+remote)):0,dSensor=0;   // Vangarde motor ฟรี 100% / Somfy motor ลด 50%; เซนเซอร์ไม่ลด; ติดตั้งฟรี
-     const netEach=shadeEach+motor+remote+sensor+installFee-dInstall-dMotor-dSensor;
+     const netEach=shadeEach+motor+remote+sensor+tahoma+installFee-dInstall-dMotor-dSensor;
      const qty=pt.qty,area=+(areaEachRaw*qty).toFixed(2);
      const discountLines=[];
      if(dInstall)discountLines.push(['ฟรีค่าติดตั้ง',dInstall*qty]);
@@ -1087,11 +1101,11 @@ function calcPoint(pt,mode){
      if(remote)zorder.push({t:'รีโมท',code:'',q:qty+' ตัว'});
      if(sensor)zorder.push({t:'Rain Sensor',code:'',q:qty+' ตัว'});
      return {kind:'vangarde',area,areaEach:+areaEachRaw.toFixed(2),priceSqm,sell:netEach*qty,
-       cost:Math.round((shadeEach+motor+remote+sensor)*qty*((vg.tiers&&vg.tiers.dealer)||0.7)),
-       inst:0,vgUnit:zunit,listTotal:(shadeEach+motor+remote+sensor+installFee)*qty,discTotal:(dInstall+dMotor+dSensor)*qty,discountLines,
+       cost:Math.round((shadeEach+motor+remote+sensor+tahoma)*qty*((vg.tiers&&vg.tiers.dealer)||0.7)),
+       inst:0,vgUnit:zunit,listTotal:(shadeEach+motor+remote+sensor+tahoma+installFee)*qty,discTotal:(dInstall+dMotor+dSensor)*qty,discountLines,
        baseLabel:zunit,baseAmount:shadeEach*qty,
-       breakdown:[...(motor?[['มอเตอร์'+(somfy?' Somfy (ฝรั่งเศส)':vgm?' Vangarde':hybrid?' Vangarde Hybrid':''),motor*qty]]:[]),...(remote?[['รีโมท 1Ch/15Ch',remote*qty]]:[]),...(sensor?[['Rain Sensor (กันฝน)',sensor*qty]]:[]),['ค่าติดตั้ง',installFee*qty]],
-       sellOpaque:shadeEach*qty,sellSheer:0,sellTrack:(motor+remote+sensor)*qty,code1:pt.fabricCode||'',code2:'',order:zorder};
+       breakdown:[...(motor?[['มอเตอร์'+(somfy?' Somfy (ฝรั่งเศส)':vgm?' Vangarde':hybrid?' Vangarde Hybrid':''),motor*qty]]:[]),...(remote?[['รีโมท'+(remName?' '+remName.label:''),remote*qty]]:[]),...(sensor?[['Rain Sensor (กันฝน)',sensor*qty]]:[]),...(tahoma?[['Tahoma Beacon (Gateway)',tahoma*qty]]:[]),['ค่าติดตั้ง',installFee*qty]],
+       sellOpaque:shadeEach*qty,sellSheer:0,sellTrack:(motor+remote+sensor+tahoma)*qty,code1:pt.fabricCode||'',code2:'',order:zorder};
    } else if(prod==='Awning'){                 // V7 official: fixed base by กว้าง×ยื่น (poly/acr) + LED/ฝากันน้ำ/เซนเซอร์/มอเตอร์ + ค่าติดตั้ง 3000
      const cand=(vg.awning||[]).filter(a=>a.w>=wM-1e-9&&a.ext>=extM-1e-9).sort((a,b)=>(a.w-b.w)||(a.ext-b.ext))[0]||(vg.awning||[])[(vg.awning||[]).length-1];
      const abase=(pt.vgGrade==='acr'?cand.acr:cand.poly)||0;
@@ -1138,28 +1152,31 @@ function calcPoint(pt,mode){
    const sys=pt.systems||{},acc=pt.accessories||{};
    const somfy=!!sys.somfy,vgm=!!sys.vangardeMotor,hybrid=!!acc.handcrankHybrid;
    const motorE=somfy?zc.motorSomfy:hybrid?zc.motorHybrid:vgm?zc.motorVangarde:0;
-   const remoteE=(sys.remote1ch||sys.remote15ch)?(somfy?zc.remoteSomfy:zc.remoteVangarde):0;
+   const remNameE=(vg.somfyRemotes||[]).find(x=>x.code===pt.somfyRemote);
+   const remoteE=somfy?(pt.somfyRemote?((remNameE||{}).price||0):((sys.remote1ch||sys.remote15ch)?zc.remoteSomfy:0)):((sys.remote1ch||sys.remote15ch)?zc.remoteVangarde:0);
+   const tahomaE=acc.tahoma?(zc.tahoma||10700):0;
    const sensorE=acc.rainSensor?zc.sensor:0;
    const shakeE=acc.shakeSensor?3000:0;
    const installE=(prod==='Pergola'?10000:3000);   // Pergola 10,000/ชุด, สินค้าอื่น 3,000/ชุด (กทม.+ปริมณฑล)
    const dz=pt.vgDisc||{install:true,motor:true,sensor:true};
    const dInstall=dz.install?installE:0, dMotor=dz.motor?Math.round((somfy?0.5:1)*(motorE+remoteE)):0, dSensor=0;   // Vangarde motor ฟรี 100% / Somfy motor ลด 50%; เซนเซอร์ไม่ลด
-   const listE=base+motorE+remoteE+sensorE+shakeE+installE, netE=listE-dInstall-dMotor-dSensor;
+   const listE=base+motorE+remoteE+sensorE+shakeE+tahomaE+installE, netE=listE-dInstall-dMotor-dSensor;
    const discountLines=[];
    if(dInstall)discountLines.push(['ฟรีค่าติดตั้ง',dInstall*q]);
    if(dMotor)discountLines.push(['ส่วนลดมอเตอร์+รีโมท '+(somfy?'50%':'ฟรี 100%'),dMotor*q]);
    if(dSensor)discountLines.push(['ส่วนลดเซนเซอร์ 50%',dSensor*q]);
    const bd=[];
    if(motorE)bd.push(['มอเตอร์'+(somfy?' Somfy (ฝรั่งเศส)':hybrid?' Vangarde Hybrid':' Vangarde'),motorE*q]);
-   if(remoteE)bd.push(['รีโมท',remoteE*q]);
+   if(remoteE)bd.push(['รีโมท'+(remNameE?' '+remNameE.label:''),remoteE*q]);
    if(sensorE)bd.push(['Rain Sensor (กันฝน)',sensorE*q]);
    if(shakeE)bd.push(['Shake Sensor (กันสั่น)',shakeE*q]);
+   if(tahomaE)bd.push(['Tahoma Beacon (Gateway)',tahomaE*q]);
    bd.push(['ค่าติดตั้ง',installE*q]);
    return {kind:'vangarde',area,areaEach:+areaEach.toFixed(2),sell:netE*q,
-     cost:Math.round((base+motorE+remoteE+sensorE+shakeE)*q*((vg.tiers&&vg.tiers.dealer)||0.7)),
+     cost:Math.round((base+motorE+remoteE+sensorE+shakeE+tahomaE)*q*((vg.tiers&&vg.tiers.dealer)||0.7)),
      inst:0,vgUnit:unit,baseLabel:unit,baseAmount:sellBase,
      listTotal:listE*q,discTotal:(dInstall+dMotor+dSensor)*q,discountLines,breakdown:bd,
-     sellOpaque:sellBase,sellSheer:0,sellTrack:(motorE+remoteE+sensorE+shakeE)*q,code1:pt.fabricCode||'',code2:'',
+     sellOpaque:sellBase,sellSheer:0,sellTrack:(motorE+remoteE+sensorE+shakeE+tahomaE)*q,code1:pt.fabricCode||'',code2:'',
      order:[{t:unit+' · เฟรม '+(pt.frameColor||'-')+' · ผ้า '+(pt.fabricCode||'-'),code:'',q:area+' ตร.ม. ('+q+' จุด)'},...(motorE?[{t:'มอเตอร์ + รีโมท',code:'',q:q+' ชุด'}]:[])]};
  } else {
    const bl=p.blinds.find(b=>b.type===pt.blindType)||{price:1600,cost:650};
@@ -1864,7 +1881,7 @@ function renderSurveyEditor(){
    if(pts[i].kind==='vangarde'&&(f==='w'||f==='h'||f==='d'||f==='vgProduct')&&(pts[i].vgProduct==='Pergola'||pts[i].vgProduct==='Zip Shade')){const s=vgSuggestSeries(pts[i].vgProduct,(pts[i].w||0)/100,(pts[i].d||0)/100,(pts[i].h||0)/100);if(s)pts[i].vgSeries=s;}
    // Zip Shade: เปลี่ยนรุ่น (หรือขนาด/สินค้าที่ทำให้รุ่นเปลี่ยน) → เติมราคา/ตร.ม. ตามราคารุ่นที่เลือกอัตโนมัติ
    if(pts[i].kind==='vangarde'&&pts[i].vgProduct==='Zip Shade'&&(f==='vgSeries'||f==='w'||f==='h'||f==='d'||f==='vgProduct')){const zr=((state.vgPricing||defaultVgPricing()).zipshade||[]).find(x=>x.series===pts[i].vgSeries);if(zr)pts[i].vgPriceSqm=zr.priceSqm;}
-   if(f==='track'||f==='mountType'||f==='curtainType'||f==='vgProduct'||f==='vgSeries'||f==='vgExtend'||f==='vgGrade'||f==='w'||f==='h'||f==='d'||f==='qty')renderSurveyEditor();};});
+   if(f==='track'||f==='mountType'||f==='curtainType'||f==='vgProduct'||f==='vgSeries'||f==='vgExtend'||f==='vgGrade'||f==='somfyRemote'||f==='w'||f==='h'||f==='d'||f==='qty')renderSurveyEditor();};});
  ov.querySelectorAll('[data-fg]').forEach(el=>{const i=+el.dataset.i,fg=el.dataset.fg,fk=el.dataset.fk;el.onchange=()=>{pts[i][fg]=pts[i][fg]||{};pts[i][fg][fk]=el.checked;if(fg==='systems')pts[i].track=vgHasMotor(pts[i])?'motor':'normal';renderSurveyEditor();};});
  ov.querySelectorAll('[data-fl]').forEach(el=>{const i=+el.dataset.i,li=+el.dataset.fl,f=el.dataset.flf;el.onchange=()=>{if(pts[i].fabrics&&pts[i].fabrics[li])pts[i].fabrics[li][f]=el.type==='number'?+el.value:el.value;if(f==='code'||f==='w'||f==='price')renderSurveyEditor();};});
  // per-point fabric options (alt): label + curtainType
@@ -1945,6 +1962,8 @@ function ptCard(pt,i,fabOpt,sel){
    ${fabSel}
    <div class="pt-sec">Systems (ระบบ + มอเตอร์)</div>
    <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('systems',VG_SYSTEMS,pt.systems,cfg.systems)}</div></div>
+   ${(pt.systems&&pt.systems.somfy)?`<div class="field col2"><label>รีโมท Somfy (RTS)</label><select data-i="${i}" data-f="somfyRemote"><option value="">— เลือกรุ่นรีโมท —</option>${(vgp.somfyRemotes||[]).map(r=>`<option value="${r.code}" ${pt.somfyRemote===r.code?'selected':''}>${r.label} — ${THB(r.price)}</option>`).join('')}</select></div>
+   <div class="field col2"><label>Gateway (Somfy)</label><label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;margin-top:8px"><input type="checkbox" data-i="${i}" data-fg="accessories" data-fk="tahoma" ${pt.accessories&&pt.accessories.tahoma?'checked':''}> Tahoma Beacon — ${THB((vgp.zip&&vgp.zip.tahoma)||10700)}</label></div>`:''}
    <div class="pt-sec">Accessories</div>
    <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('accessories',VG_ACCESSORIES,pt.accessories,cfg.accessories)}</div></div>
    <div class="pt-sec">การติดตั้ง</div>
