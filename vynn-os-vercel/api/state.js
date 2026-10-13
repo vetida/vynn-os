@@ -1,10 +1,14 @@
 'use strict';
 // Vercel serverless function: GET /api/state  and  PUT /api/state
 const { pool, ensureSchema, composeState, saveState } = require('../lib/db');
+const { sessionUser } = require('../lib/vos');
 
 module.exports = async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   try {
     await ensureSchema();
+    // all company data requires a logged-in VYNN·OS session (cookie set by /api/auth)
+    if (!(await sessionUser(req))) return res.status(401).json({ error: 'login required' });
 
     if (req.method === 'GET') {
       const client = await pool.connect();

@@ -446,6 +446,34 @@
   .ag-cell.today{background:#1C1D21;color:#fff}
   .ag-cell span{font-size:11px;font-weight:700;background:#F7DA7B;color:#1C1D21;border-radius:999px;padding:0 7px}
   .ag-cell span.ok{background:#D6EAD9;color:#2F6B3E}
+  /* employee directory (CEO) */
+  .dir{display:flex;flex-direction:column;gap:14px;max-width:1200px}
+  .dir-top{display:flex;gap:10px;align-items:center}
+  .dir-top .crm-search{flex:1}
+  .dir-note{display:flex;align-items:center;gap:8px;margin:0;font-size:12.5px;color:var(--text-muted)}
+  .dir-note .ico{width:15px;height:15px}
+  .dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+  .dir-card{display:flex;align-items:center;gap:12px;text-align:left;border:0;background:var(--surface);border-radius:18px;padding:14px;box-shadow:var(--shadow);cursor:pointer;font:inherit;color:inherit}
+  .dir-card:hover{box-shadow:0 10px 26px rgba(16,24,40,.09)}
+  .dir-card.off{opacity:.55}
+  .dir-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .dir-main b{font-size:14.5px}
+  .dir-main span{font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dir-docs{display:flex;flex-direction:column;gap:3px}
+  .dir-docs i{font-style:normal;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--text-faint);text-align:center}
+  .dir-docs i.ok{background:#D6EAD9;color:#2F6B3E}
+  .dir-form{display:flex;flex-direction:column;gap:10px}
+  .dir-form h3{font-size:13px;letter-spacing:.04em;color:var(--text-muted);margin-top:8px;text-transform:uppercase}
+  .dir-doc{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--border)}
+  .dir-doc b{font-size:13px}
+  .doc-chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:999px;padding:3px 4px 3px 10px;margin:2px 4px 2px 0;font-size:12px;max-width:100%}
+  .doc-chip a{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
+  .doc-chip button{border:0;background:none;cursor:pointer;color:var(--text-faint);font-size:11px}
+  .doc-none{font-size:12px;color:var(--text-faint)}
+  .dir-upl .pill-btn{display:inline-flex;align-items:center;gap:6px}.dir-upl svg{width:15px;height:15px}
+  label.pill-btn{display:inline-block;cursor:pointer}
+  .dir-err{color:var(--crit);font-size:13px;margin:0}
+  @media (max-width:560px){.dir-doc{grid-template-columns:1fr}}
   /* login: show / hide password */
   .pw-wrap{position:relative}
   .pw-wrap input{padding-right:46px!important}
@@ -589,24 +617,24 @@ function svg(n,cls){return `<svg class="${cls||''}" viewBox="0 0 24 24" fill="no
 
 /* ============ TEAM ============ */
 const USERS=[
- {id:'a1',name:'Vetida',short:'Ve',color:'#7A4FB5',role:'admin',login:'CEO',pw:'880880880',phone:'0889659244'},
- {id:'a2',name:'Thanasarn',short:'Th',color:'#7A4FB5',role:'admin',login:'A002',pw:'admin2026'},
- {id:'sp1',name:'Hanan',short:'Ha',color:'#0E7C86',role:'sales_support',login:'SP01',pw:'sup2026'},
- {id:'sp2',name:'Oraya',short:'Or',color:'#0E7C86',role:'sales_support',login:'SP02',pw:'sup2026'},
- {id:'ac1',name:'Kunyanuch',short:'Ku',color:'#2C6BB3',role:'accounting',login:'AC01',pw:'acc2026'},
+ {id:'a1',name:'Vetida',short:'Ve',color:'#7A4FB5',role:'admin',login:'CEO',phone:'0889659244'},
+ {id:'a2',name:'Thanasarn',short:'Th',color:'#7A4FB5',role:'admin',login:'A002'},
+ {id:'sp1',name:'Hanan',short:'Ha',color:'#0E7C86',role:'sales_support',login:'SP01'},
+ {id:'sp2',name:'Oraya',short:'Or',color:'#0E7C86',role:'sales_support',login:'SP02'},
+ {id:'ac1',name:'Kunyanuch',short:'Ku',color:'#2C6BB3',role:'accounting',login:'AC01'},
 ];
 const SALES=[
- {id:'s1',name:'Atikarn',short:'At',color:'#0F6E68',role:'sales',login:'E101',pw:'sale2026'},
- {id:'s2',name:'Chuchart',short:'Ch',color:'#B65C36',role:'sales',inactive:true /* ลาออก 2026-10 · login ปิด, ประวัติยังอยู่ */,login:'E102',pw:'sale2026'},
- {id:'mg',name:'Preechaya',short:'Pr',color:'#B77504',role:'manager',login:'M001',pw:'mgr2026'},
- {id:'mg2',name:'Nichkarn',short:'Ni',color:'#B77504',role:'manager',login:'M002',pw:'mgr2026'},
+ {id:'s1',name:'Atikarn',short:'At',color:'#0F6E68',role:'sales',login:'E101'},
+ {id:'s2',name:'Chuchart',short:'Ch',color:'#B65C36',role:'sales',inactive:true /* ลาออก 2026-10 · login ปิด, ประวัติยังอยู่ */,login:'E102'},
+ {id:'mg',name:'Preechaya',short:'Pr',color:'#B77504',role:'manager',login:'M001'},
+ {id:'mg2',name:'Nichkarn',short:'Ni',color:'#B77504',role:'manager',login:'M002'},
 ];
 const INSTALLERS=[
- {id:'in1',name:'Suradit',short:'Su',color:'#C0392B',role:'installer',login:'IN01',pw:'tech2026'},
- {id:'in2',name:'Roytawan',short:'Ro',color:'#C0392B',role:'installer',login:'IN02',pw:'tech2026'},
- {id:'in3',name:'Bounma',short:'Bo',color:'#C0392B',role:'installer',login:'IN03',pw:'tech2026'},
- {id:'in4',name:'Pantamit',short:'Pa',color:'#C0392B',role:'installer',login:'IN04',pw:'tech2026'},
- {id:'in5',name:'Yea',short:'Ye',color:'#C0392B',role:'installer',login:'IN05',pw:'tech2026'},
+ {id:'in1',name:'Suradit',short:'Su',color:'#C0392B',role:'installer',login:'IN01'},
+ {id:'in2',name:'Roytawan',short:'Ro',color:'#C0392B',role:'installer',login:'IN02'},
+ {id:'in3',name:'Bounma',short:'Bo',color:'#C0392B',role:'installer',login:'IN03'},
+ {id:'in4',name:'Pantamit',short:'Pa',color:'#C0392B',role:'installer',login:'IN04'},
+ {id:'in5',name:'Yea',short:'Ye',color:'#C0392B',role:'installer',login:'IN05'},
 ];
 // every account that can log in (admins + managers + support + sales + installers)
 const ACCOUNTS=[...USERS,...SALES,...INSTALLERS];
@@ -847,9 +875,9 @@ const SESSB='vynn_os_brand';
 // VANGARDE launcher (2026-10): the existing login roles map onto the owner's six departments,
 // and each department gets View (V) or View+Edit (E) per module, from the owner's two access tables.
 const PERM_ROLE={admin:'ceo',sales_support:'admin',manager:'pm',sales:'sales',installer:'staff',hr:'staff',accounting:'accounts'};
-const MODULES=['overview','leads','expenses','install','survey','crm','vgprice','quote','kpi'];
+const MODULES=['overview','leads','expenses','install','survey','crm','vgprice','quote','kpi','staffdir'];
 const PERMS={
- ceo:     {overview:'E',leads:'E',expenses:'E',install:'E',survey:'E',crm:'E',vgprice:'E',quote:'E',kpi:'E'},
+ ceo:     {overview:'E',leads:'E',expenses:'E',install:'E',survey:'E',crm:'E',vgprice:'E',quote:'E',kpi:'E',staffdir:'E'},
  admin:   {leads:'E',expenses:'E',install:'E',survey:'V',crm:'E',vgprice:'E',quote:'E'},
  pm:      {leads:'E',expenses:'E',install:'E',survey:'E',crm:'V',vgprice:'V',kpi:'E'},
  sales:   {leads:'V',expenses:'E',install:'V',survey:'E',vgprice:'V',quote:'V',kpi:'E'},
@@ -866,18 +894,30 @@ function canOpen(v){return canView(v)&&brandOK(v);}
 function firstAllowedView(){return 'home';}
 // current employee id for sales-scoping (sales sees only own); '' means see all
 function myScopeId(){return currentUser&&currentUser.role==='sales'?currentUser.id:'';}
-function pwOf(uid){return (state&&state.passwords&&state.passwords[uid])||accountByUid(uid).pw;}
-function tryLogin(loginId,pw){
- const u=accountByLogin(loginId);
- if(!u||u.inactive)return{ok:false,msg:'ไม่พบรหัสพนักงานนี้'};
- if(pwOf(u.id)!==pw)return{ok:false,msg:'รหัสผ่านไม่ถูกต้อง'};
- setSession(u.id);
- logAudit('login','เข้าสู่ระบบ');
- return{ok:true};
+/* ---- server login (2026-10): passwords are checked and stored only on the server (/api/auth) ---- */
+async function vosApi(a,body){
+ let r;try{r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(Object.assign({a},body||{}))});}
+ catch(e){throw{code:'offline',message:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่'};}
+ const j=await r.json().catch(()=>({}));
+ if(!r.ok)throw{code:r.status,message:j.error||('HTTP '+r.status)};
+ return j;
 }
+// the account list now comes from the server; refill the shared arrays in place so every existing reference sees it
+function applyUsers(list){
+ const map=u=>({id:u.id,name:u.name,short:u.short||String(u.name||'?').slice(0,2),color:u.color||ROLE_COLOR[u.role]||'#73767D',role:u.role,login:u.login,inactive:u.active===false});
+ const all=list.map(map);
+ USERS.length=0;SALES.length=0;INSTALLERS.length=0;ACCOUNTS.length=0;
+ all.forEach(u=>{(u.role==='sales'||u.role==='manager'?SALES:u.role==='installer'?INSTALLERS:USERS).push(u);});
+ ACCOUNTS.push(...USERS,...SALES,...INSTALLERS);
+}
+async function tryLogin(loginId,pw){
+ try{const r=await vosApi('login',{login:loginId,password:pw});applyUsers(r.users);setSession(r.me.id);return{ok:true};}
+ catch(e){return{ok:false,msg:e.message||'เข้าสู่ระบบไม่สำเร็จ'};}
+}
+async function vosVerify(pw){try{return (await vosApi('verify',{password:pw})).ok===true;}catch(e){return false;}}
 function setSession(uid){currentUser=accountByUid(uid);role=currentUser.role;try{localStorage.setItem(SESS,uid);}catch(e){}}
-function logout(){logAudit('logout','ออกจากระบบ');currentUser=null;try{localStorage.removeItem(SESS);}catch(e){}pendingBrand=null;showLogin();}
-function restoreSession(){let uid=null,b=null;try{uid=localStorage.getItem(SESS);b=localStorage.getItem(SESSB);}catch(e){}if(uid&&accountByUid(uid)){setSession(uid);if(b==='VYNN'||b==='Vangarde')brand=b;return true;}return false;}
+function logout(){if(state&&window.__vosStateReady)logAudit('logout','ออกจากระบบ');vosApi('logout').catch(()=>{});currentUser=null;window.__vosStateReady=false;try{localStorage.removeItem(SESS);}catch(e){}pendingBrand=null;showLogin();}
+async function restoreSession(){try{const r=await vosApi('me');applyUsers(r.users);setSession(r.me.id);return true;}catch(e){return false;}}
 // apply the active brand: scope + theme + sidebar/topbar labels
 function applyBrand(b){brand=b;try{localStorage.setItem(SESSB,b);}catch(e){}document.documentElement.setAttribute('data-brand',b);const nm=document.getElementById('sideBrandName');if(nm)nm.textContent=(b==='Vangarde'?'Vangarde':'VYNN');const sub=document.getElementById('sideBrandSub');if(sub)sub.textContent=(b==='Vangarde'?'Outdoor Shading':'Window Collection');document.querySelectorAll('#brandFilter button').forEach(x=>x.classList.toggle('active',x.dataset.b===b));}
 function switchBrand(b){if(b===brand)return;applyBrand(b);if(!canOpen(view))view=firstAllowedView();render();}
@@ -1476,10 +1516,13 @@ const NAV=[
  {id:'vgprice',label:'Pricelists',icon:'box',b:'Vangarde'},
  {id:'quote',label:'Quotation',icon:'doc',count:()=>brandLeads().map(l=>quoteOfLead(l.id)).filter(q=>q&&q.status==='pending').length},
  {id:'kpi',label:'KPI',icon:'trend'},
+ {grp:'เฉพาะ CEO'},
+ {id:'staffdir',label:'รายชื่อพนักงาน',icon:'user'},
 ];
 const META={
  home:{t:'หน้าแรก',s:'VANGARDE',act:false},
  agenda:{t:'แผนงาน & KPI ของฉัน',s:'อัปเดตงานรายวัน รายสัปดาห์ รายเดือน และดูความคืบหน้าเป็น %',act:false},
+ staffdir:{t:'รายชื่อพนักงาน',s:'ข้อมูลพนักงาน เอกสาร เงินเดือน สวัสดิการ และ username / password · เปิดได้เฉพาะ CEO',act:false},
  crm:{t:'CRM ลูกค้า',s:'ข้อมูลลูกค้า VANGARDE · ใบเสนอราคา · ยอดชำระ · งานเก็บ/ประกัน ในที่เดียว',act:false},
  overview:{t:'ภาพรวมบริษัท',s:'สรุปทุกโมดูลแบบเรียลไทม์',act:true},
  expenses:{t:'ค่าใช้จ่ายรายวัน',s:'พนักงานพิมพ์ยอด+หมวด (เช่น "ค่าน้ำมัน 500") แนบรูปบิล → บันทึกทันที เข้าฐานข้อมูลเดียวกับทั้งระบบ',act:false},
@@ -3077,7 +3120,7 @@ function renderVgPrice(){
   ${perg}${zip}${awn}
   <div class="grid two-col" style="grid-template-columns:1fr 1fr 1fr">${addBlock('Pergola',vg.addons.pergola)}${addBlock('Zip Shade',vg.addons.zipshade)}${addBlock('Awning',vg.addons.awning)}</div>`;
 }
-function renderView(){({home:renderHome,agenda:renderAgenda,crm:renderCRM,overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
+function renderView(){({home:renderHome,staffdir:renderStaffDir,agenda:renderAgenda,crm:renderCRM,overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
 function render(rerenderNav=true){
  if(!canOpen(view))view=firstAllowedView(); // block disallowed / wrong-brand views
  if(currentUser&&!histPopping&&histView!==view){try{history.pushState({vos:'view',v:view},'');}catch(e){}}
@@ -3132,6 +3175,7 @@ const MOD_INFO={
  vgprice:{t:'Pricelists',s:'Pergola · Zip Shade · Awning',ic:'box'},
  quote:{t:'Quotation',s:'ใบเสนอราคา และการอนุมัติ',ic:'doc'},
  kpi:{t:'KPI',s:'ผลงานเซลล์ และทีม',ic:'trend'},
+ staffdir:{t:'รายชื่อพนักงาน',s:'ข้อมูล เอกสาร เงินเดือน และ username (เฉพาะ CEO)',ic:'user'},
 };
 const PASTEL=['#F7DA7B','#CCDCE7','#E5D9EE','#D6EAD9'];
 const TH_DOW=['จ','อ','พ','พฤ','ศ','ส','อา'];
@@ -3333,6 +3377,87 @@ function renderAgenda(){
  bindTasks(el);
 }
 
+/* ============ EMPLOYEE DIRECTORY (CEO only · data lives on the server, never in /api/state) ============ */
+let dirData=null,dirQ='';
+const DOC_LABEL={idcard:'บัตรประชาชน',house:'ทะเบียนบ้าน',other:'เอกสารอื่น'};
+const ROLE_OPTS=[['admin','CEO'],['sales_support','Admin'],['manager','PM'],['sales','Sales'],['installer','Staff (ช่าง)'],['hr','Staff (สำนักงาน)'],['accounting','Accounts']];
+const blobB64=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=no;r.readAsDataURL(f);});
+async function shrinkDoc(f){
+ if(!/^image\/(jpeg|png|webp)$/.test(f.type)||f.size<900*1024)return f;
+ try{const b=await createImageBitmap(f),s=Math.min(1,2000/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*s);c.height=Math.round(b.height*s);c.getContext('2d').drawImage(b,0,0,c.width,c.height);return await new Promise(r=>c.toBlob(x=>r(x||f),'image/jpeg',.85));}catch(e){return f;}
+}
+async function loadDir(){try{dirData=(await vosApi('dir')).users;}catch(e){dirData={error:e.message||'โหลดไม่สำเร็จ'};}}
+function renderStaffDir(){
+ const el=document.getElementById('content');
+ if(permRole()!=='ceo'){el.innerHTML='<div class="card" style="padding:24px">เฉพาะ CEO</div>';return;}
+ if(!dirData){el.innerHTML='<div class="card" style="padding:24px;color:var(--text-muted)">กำลังโหลดรายชื่อพนักงาน…</div>';loadDir().then(()=>{if(view==='staffdir')renderStaffDir();});return;}
+ if(dirData.error){el.innerHTML=`<div class="card" style="padding:24px">${escH(dirData.error)} <button class="pill-btn" id="dirRetry">ลองใหม่</button></div>`;el.querySelector('#dirRetry').onclick=()=>{dirData=null;renderStaffDir();};return;}
+ const q=dirQ.trim().toLowerCase();
+ const list=dirData.filter(u=>!q||[u.name,u.login,(u.profile||{}).phone,(u.profile||{}).email].join(' ').toLowerCase().includes(q));
+ el.innerHTML=`<div class="dir">
+  <div class="dir-top"><input id="dirSearch" class="crm-search" type="search" placeholder="ค้นหาชื่อ username เบอร์ หรืออีเมล" value="${escH(dirQ)}"><button class="btn primary" id="dirAdd">＋ เพิ่มพนักงาน</button></div>
+  <p class="dir-note">${svg('shield','ico')} ข้อมูลหน้านี้ (เอกสาร เงินเดือน รหัสผ่าน) เก็บบนเซิร์ฟเวอร์ และเปิดได้เฉพาะ CEO</p>
+  <div class="dir-grid">${list.map(u=>{const p=u.profile||{};return `<button class="dir-card${u.active?'':' off'}" data-uid="${escH(u.id)}">${avatarHTML(u.id,52)}<span class="dir-main"><b>${escH(u.name)}</b><span>${escH(ROLE_LABEL[u.role]||u.role)} · <code>${escH(u.login)}</code></span><span>${escH(p.phone||'ยังไม่มีเบอร์')}${u.active?'':' · ปิดใช้งาน'}</span></span><span class="dir-docs">${['idcard','house'].map(k=>`<i class="${(u.docs||[]).some(d=>d.kind===k)?'ok':''}" title="${DOC_LABEL[k]}">${k==='idcard'?'บัตร':'ทบ.'}</i>`).join('')}</span></button>`;}).join('')||'<p style="color:var(--text-muted)">ไม่พบพนักงาน</p>'}</div></div>`;
+ el.querySelector('#dirSearch').oninput=e=>{dirQ=e.target.value;const pos=e.target.selectionStart;renderStaffDir();const s=document.getElementById('dirSearch');s.focus();s.setSelectionRange(pos,pos);};
+ el.querySelector('#dirAdd').onclick=()=>openDirEditor(null);
+ el.querySelectorAll('[data-uid]').forEach(b=>b.onclick=()=>openDirEditor(dirData.find(u=>u.id===b.dataset.uid)));
+}
+function openDirEditor(u){
+ const isNew=!u;u=u||{id:'',login:'',name:'',short:'',role:'installer',active:true,profile:{},docs:[]};
+ const p=u.profile||{},head=document.getElementById('drawerHead'),body=document.getElementById('drawerBody');
+ const f=(id,label,val,type,ph)=>`<div class="field"><label for="${id}">${label}</label><input id="${id}" type="${type||'text'}" value="${escH(val||'')}" placeholder="${escH(ph||'')}"></div>`;
+ head.innerHTML=`<div style="flex:1;display:flex;align-items:center;gap:12px">${isNew?'':avatarHTML(u.id,44)}<div><h2 style="font-size:17px">${isNew?'เพิ่มพนักงาน':escH(u.name)}</h2><span style="font-size:12px;color:var(--text-muted)">${isNew?'กรอกข้อมูลแล้วกดบันทึก':escH(ROLE_LABEL[u.role]||u.role)}</span></div></div><button class="icon-btn" id="dirClose" aria-label="ปิด">✕</button>`;
+ body.innerHTML=`<div class="dir-form">
+  <h3>เข้าสู่ระบบ</h3>
+  <div class="field-row">${f('d-login','Username',u.login,'text','เช่น E103')}<div class="field"><label for="d-pw">${isNew?'รหัสผ่าน':'ตั้งรหัสผ่านใหม่'}</label><div class="pw-wrap"><input id="d-pw" type="password" autocomplete="new-password" placeholder="${isNew?'อย่างน้อย 8 ตัว':'เว้นว่าง = ใช้รหัสเดิม'}"><button type="button" class="pw-eye" id="d-pw-eye" aria-label="แสดงรหัสผ่าน" aria-pressed="false">👁</button></div></div></div>
+  <div class="field-row"><div class="field"><label for="d-role">บทบาท</label><select id="d-role">${ROLE_OPTS.map(([k,l])=>`<option value="${k}"${u.role===k?' selected':''}>${l}</option>`).join('')}</select></div>
+   <div class="field"><label for="d-active">สถานะบัญชี</label><select id="d-active"><option value="1"${u.active?' selected':''}>ใช้งาน</option><option value="0"${u.active?'':' selected'}>ปิดใช้งาน (ลาออก)</option></select></div></div>
+  <h3>ข้อมูลส่วนตัว</h3>
+  <div class="field-row">${f('d-name','ชื่อ-นามสกุล',u.name)}${f('d-short','ชื่อย่อ (2 ตัว)',u.short,'text','เช่น Ve')}</div>
+  <div class="field-row">${f('d-birth','วันเกิด',p.birth,'date')}${f('d-phone','เบอร์โทรศัพท์',p.phone,'tel')}</div>
+  ${f('d-email','อีเมล',p.email,'email')}
+  <div class="field"><label for="d-address">ที่อยู่</label><textarea id="d-address" rows="2">${escH(p.address||'')}</textarea></div>
+  <div class="field-row">${f('d-fb','Facebook',p.facebook,'text','ชื่อหรือลิงก์')}${f('d-ig','Instagram',p.instagram,'text','@username')}</div>
+  <h3>การจ้างงาน</h3>
+  <div class="field-row">${f('d-start','วันเริ่มทำงาน',p.startDate,'date')}${f('d-salary','ฐานเงินเดือน (บาท)',p.salary,'number')}</div>
+  <div class="field"><label for="d-benefits">สวัสดิการ</label><textarea id="d-benefits" rows="3" placeholder="เช่น ประกันสังคม · ค่าโทรศัพท์ 500 · ค่าน้ำมันตามจริง">${escH(p.benefits||'')}</textarea></div>
+  ${isNew?'<p class="dir-note">บันทึกพนักงานก่อน แล้วค่อยอัปโหลดรูปและเอกสาร</p>':`<h3>รูปภาพประจำตัว และเอกสาร</h3>
+  <div class="dir-upl"><button class="pill-btn" id="d-photo">${svg('camera')} เปลี่ยนรูปประจำตัว</button></div>
+  ${['idcard','house','other'].map(k=>`<div class="dir-doc"><b>${DOC_LABEL[k]}</b><div>${(u.docs||[]).filter(d=>d.kind===k).map(d=>`<span class="doc-chip"><a href="/api/auth?a=doc&id=${encodeURIComponent(d.id)}" target="_blank" rel="noopener">${escH(d.name||DOC_LABEL[k])}</a><button data-deldoc="${escH(d.id)}" aria-label="ลบเอกสาร">✕</button></span>`).join('')||'<span class="doc-none">ยังไม่มี</span>'}</div><label class="pill-btn">＋ อัปโหลด<input type="file" accept="image/*,application/pdf" data-updoc="${k}" hidden></label></div>`).join('')}`}
+  <p class="dir-err" id="d-err" hidden></p>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px"><button class="btn" id="d-cancel">ปิด</button><button class="btn primary" id="d-save">บันทึก</button></div></div>`;
+ const dr=document.getElementById('drawer'),sc=document.getElementById('scrim');
+ const close=()=>{dr.classList.remove('open');sc.classList.remove('open');};
+ dr.classList.add('open');sc.classList.add('open');
+ const v=id=>body.querySelector('#'+id).value.trim(),err=body.querySelector('#d-err');
+ const fail=m=>{err.textContent=m;err.hidden=false;};
+ head.querySelector('#dirClose').onclick=close;body.querySelector('#d-cancel').onclick=close;
+ body.querySelector('#d-pw-eye').onclick=e=>{const i=body.querySelector('#d-pw'),s=i.type==='password';i.type=s?'text':'password';e.currentTarget.setAttribute('aria-pressed',String(s));};
+ body.querySelector('#d-save').onclick=async e=>{
+  err.hidden=true;e.currentTarget.disabled=true;
+  try{
+   const r=await vosApi('saveUser',{id:u.id||undefined,login:v('d-login'),password:body.querySelector('#d-pw').value,name:v('d-name'),short:v('d-short'),role:v('d-role'),active:v('d-active')==='1',
+    profile:{birth:v('d-birth'),phone:v('d-phone'),email:v('d-email'),address:v('d-address'),facebook:v('d-fb'),instagram:v('d-ig'),startDate:v('d-start'),salary:v('d-salary'),benefits:v('d-benefits')}});
+   await loadDir();applyUsers(dirData.map(x=>x));
+   if(isNew){openDirEditor(dirData.find(x=>x.id===r.id));}else close();
+   renderStaffDir();
+  }catch(x){fail(x.message||'บันทึกไม่สำเร็จ');}
+  finally{const b=body.querySelector('#d-save');if(b)b.disabled=false;}
+ };
+ if(!isNew){
+  body.querySelector('#d-photo').onclick=()=>pickPhoto(u.id);
+  body.querySelectorAll('[data-updoc]').forEach(inp=>inp.onchange=async()=>{
+   const file=inp.files&&inp.files[0];inp.value='';if(!file)return;
+   try{const fl=await shrinkDoc(file);await vosApi('uploadDoc',{userId:u.id,kind:inp.dataset.updoc,name:file.name,mime:fl.type||file.type,data:await blobB64(fl)});await loadDir();openDirEditor(dirData.find(x=>x.id===u.id));renderStaffDir();}
+   catch(x){fail(x.message||'อัปโหลดไม่สำเร็จ');}
+  });
+  body.querySelectorAll('[data-deldoc]').forEach(b=>b.onclick=async()=>{
+   if(!confirm('ลบเอกสารนี้?'))return;
+   try{await vosApi('deleteDoc',{id:b.dataset.deldoc});await loadDir();openDirEditor(dirData.find(x=>x.id===u.id));renderStaffDir();}catch(x){fail(x.message||'ลบไม่สำเร็จ');}
+  });
+ }
+}
+
 /* ============ CRM ============ */
 function escH(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 let crmQ='';
@@ -3374,13 +3499,18 @@ function initChrome(){
  document.querySelectorAll('#brandPick .brand-choice').forEach(b=>b.onclick=()=>goCreds(b.dataset.brand));
  document.getElementById('loginBack').onclick=()=>{pendingBrand=null;document.getElementById('loginForm').style.display='none';document.getElementById('brandPick').style.display='';};
  // ---- login / logout wiring ----
- document.getElementById('loginForm').onsubmit=e=>{
+ document.getElementById('loginForm').onsubmit=async e=>{
   e.preventDefault();
   const id=document.getElementById('loginId').value;
   const pw=document.getElementById('loginPw').value;
-  const err=document.getElementById('loginErr');
-  const r=tryLogin(id,pw);
-  if(r.ok){brand=pendingBrand||brand;showApp();}else{err.textContent=r.msg;err.classList.add('show');}
+  const err=document.getElementById('loginErr'),btn=e.target.querySelector('button[type=submit]');
+  err.classList.remove('show');btn.disabled=true;
+  const r=await tryLogin(id,pw);
+  if(r.ok){
+   try{await window.__vosLoadState();}catch(x){}
+   logAudit('login','เข้าสู่ระบบ');brand=pendingBrand||brand;showApp();
+  }else{err.textContent=r.msg;err.classList.add('show');}
+  btn.disabled=false;
  };
  document.getElementById('logoutBtn').onclick=()=>logout();
  // show / hide the password while typing it
@@ -3397,10 +3527,10 @@ function initChrome(){
  function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('vynn_theme',t);document.getElementById('themeLabel').textContent=t==='dark'?'โหมดมืด':'โหมดสว่าง';document.getElementById('themeIcon').innerHTML=svg(t==='dark'?'moon':'sun');const ic=document.querySelector('#themeIcon svg');if(ic)ic.style.width='16px';}
  setTheme(localStorage.getItem('vynn_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
  tt.onclick=()=>setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
- const adminGuard=(name)=>{if(!currentUser||currentUser.id!=='a1'){alert('⛔ เฉพาะ '+(accountByUid('a1')||{name:'แอดมิน 1'}).name+' (แอดมิน 1) เท่านั้นที่ใช้คำสั่งนี้ได้');return false;}const pw=prompt('🔒 ใส่รหัสผ่านเพื่อยืนยันคำสั่ง "'+name+'":');if(pw===null)return false;if(pw!==pwOf('a1')){alert('รหัสผ่านไม่ถูกต้อง');return false;}return true;};
- document.getElementById('resetBtn').onclick=()=>{if(!adminGuard('รีเซ็ตข้อมูลตัวอย่าง'))return;if(confirm('รีเซ็ตข้อมูลกลับเป็นชุดตัวอย่าง? (ข้อมูลจริงที่กรอกไว้จะหาย — แนะนำให้กด "สำรองข้อมูล" ก่อน)'))resetData();};
+ const adminGuard=async(name)=>{if(!currentUser||currentUser.id!=='a1'){alert('⛔ เฉพาะ '+(accountByUid('a1')||{name:'แอดมิน 1'}).name+' (แอดมิน 1) เท่านั้นที่ใช้คำสั่งนี้ได้');return false;}const pw=prompt('🔒 ใส่รหัสผ่านเพื่อยืนยันคำสั่ง "'+name+'":');if(pw===null)return false;if(!(await vosVerify(pw))){alert('รหัสผ่านไม่ถูกต้อง');return false;}return true;};
+ document.getElementById('resetBtn').onclick=async()=>{if(!(await adminGuard('รีเซ็ตข้อมูลตัวอย่าง')))return;if(confirm('รีเซ็ตข้อมูลกลับเป็นชุดตัวอย่าง? (ข้อมูลจริงที่กรอกไว้จะหาย — แนะนำให้กด "สำรองข้อมูล" ก่อน)'))resetData();};
  document.getElementById('backupBtn').onclick=()=>{if(backupData())setTimeout(()=>alert('✓ สำรองข้อมูลแล้ว — ไฟล์ถูกดาวน์โหลดไว้ในเครื่อง เก็บไว้ให้ดีนะครับ'),300);};
- document.getElementById('emptyBtn').onclick=()=>{if(!adminGuard('เริ่มจากข้อมูลว่าง'))return;if(confirm('เริ่มจากข้อมูลว่าง?\n\nจะล้างข้อมูลตัวอย่าง (ลูกค้า/ใบเสนอราคา/งานทั้งหมด) แต่ยังเก็บการตั้งค่าราคาและข้อมูลบริษัทไว้\n\nแนะนำให้กด "สำรองข้อมูล" ก่อน ถ้ามีข้อมูลจริงอยู่แล้ว'))startEmpty();};
+ document.getElementById('emptyBtn').onclick=async()=>{if(!(await adminGuard('เริ่มจากข้อมูลว่าง')))return;if(confirm('เริ่มจากข้อมูลว่าง?\n\nจะล้างข้อมูลตัวอย่าง (ลูกค้า/ใบเสนอราคา/งานทั้งหมด) แต่ยังเก็บการตั้งค่าราคาและข้อมูลบริษัทไว้\n\nแนะนำให้กด "สำรองข้อมูล" ก่อน ถ้ามีข้อมูลจริงอยู่แล้ว'))startEmpty();};
  const rf=document.getElementById('restoreFile');
  document.getElementById('restoreBtn').onclick=()=>rf.click();
  rf.onchange=()=>{if(rf.files&&rf.files[0]){restoreData(rf.files[0]);rf.value='';}};
@@ -3452,6 +3582,8 @@ function initChrome(){
   }
 
   function serverSaveNow() {
+    // nothing goes up until a logged-in user has a freshly loaded copy (never push sample / stale data)
+    if (!window.__vosStateReady) { badge('unsynced'); return; }
     if (saving) { pending = true; return; }
     saving = true; pending = false;
     badge('saving');
@@ -3506,14 +3638,14 @@ function initChrome(){
     // truth — load it and push up, so a stale server copy can never overwrite it.
     if (hasLocal() && isDirty()) {
       load();                                   // localStorage cache -> state + migrate
-      setTimeout(serverSaveNow, 400);           // attempt to push local up
       return Promise.resolve('local-dirty');
     }
     // Clean local (already synced) or first run -> take server; offline -> local.
+    var hadLocal = hasLocal();
     return loadFromServer().catch(function (e) {
       console.warn('server load failed, using local cache', e);
       load();
-      return 'offline';
+      return hadLocal ? 'offline' : 'offline-empty';
     });
   }
 
@@ -3527,18 +3659,28 @@ function initChrome(){
     badge(mode);
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    boot().then(function (mode) {
-      initChrome();
-      // login gate (same as local boot)
-      if (typeof restoreSession === 'function' && restoreSession()) { showApp(); }
-      else if (typeof showLogin === 'function') { showLogin(); }
-      else { render(); }
-      mountBadge((mode === 'offline' || mode === 'local-dirty') ? (isDirty() ? 'unsynced' : 'saved') : 'saved');
-      // auto-retry the sync when the connection returns, and periodically
-      window.addEventListener('online', function () { tryFlush(); });
-      setInterval(tryFlush, 20000);
+  // Company data is only readable after login (/api/state needs the session cookie),
+  // so: check the session first, then load the data, then open the app.
+  window.__vosStateReady = false;
+  window.__vosLoadState = function () {
+    return boot().then(function (mode) {
+      // a device that has never synced and is offline only holds sample data: keep it out of the server
+      window.__vosStateReady = mode !== 'offline-empty';
+      mountBadge((mode === 'offline' || mode === 'local-dirty' || mode === 'offline-empty') ? (isDirty() ? 'unsynced' : 'saved') : 'saved');
+      if (mode === 'local-dirty') setTimeout(serverSaveNow, 400);   // push this device's unsynced edits
+      return mode;
     });
+  };
+  document.addEventListener('DOMContentLoaded', function () {
+    load();                                     // local cache (or sample) so the UI can draw; never saved before login
+    initChrome();
+    restoreSession().then(function (ok) {
+      if (!ok) { showLogin(); return; }
+      return window.__vosLoadState().then(function () { showApp(); });
+    });
+    // auto-retry the sync when the connection returns, and periodically
+    window.addEventListener('online', function () { tryFlush(); });
+    setInterval(tryFlush, 20000);
   });
 })();
 </script>
