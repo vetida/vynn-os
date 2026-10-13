@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
 <title>VYNN·OS — CRM / ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
 </head>
 <body>
 <style>
@@ -311,38 +313,139 @@
   .role-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:700}
   /* mobile: >=16px inputs prevent iOS zoom-on-focus */
   @media (max-width:760px){input,select,textarea,.field input,.field select,.field textarea,.login-field input,.pt-card input,.pt-card select,.pt-card textarea{font-size:16px !important}}
-  /* ===== VANGARDE launcher (home) · VANGARDE only for now ===== */
+  /* ===== VANGARDE · Mindease-style theme (2026-10) — soft greys, white cards, pastel stat cards, black pills ===== */
   #brandFilter,#loginBack,#brandPick{display:none!important}
-  .hub{max-width:980px;margin:6px auto 24px;display:flex;flex-direction:column;align-items:stretch}
-  .hub-row{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:18px}
-  .hub-tile{position:relative;border:0;border-radius:20px;padding:20px 16px 16px;background:var(--tc);color:#fff;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;cursor:pointer;box-shadow:0 10px 24px -12px rgba(20,30,45,.55);transition:transform .15s,box-shadow .15s;min-height:168px;font:inherit}
-  .hub-tile:hover{transform:translateY(-3px);box-shadow:0 16px 30px -12px rgba(20,30,45,.6)}
-  .hub-tile:focus-visible{outline:3px solid var(--text);outline-offset:3px}
-  .hub-ic svg{width:38px;height:38px;stroke-width:1.7}
-  .hub-t{font-weight:750;font-size:15px;letter-spacing:.04em;margin-top:4px}
-  .hub-line{width:72%;height:1px;background:rgba(255,255,255,.55)}
-  .hub-s{font-size:12px;line-height:1.45;opacity:.9}
-  .hub-perm{margin-top:auto;font-size:10.5px;letter-spacing:.06em;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.18)}
-  .hub-badge{position:absolute;top:10px;right:10px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:#fff;color:var(--tc);font-size:12px;font-weight:800;display:grid;place-items:center}
-  .hub-link{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:18px;height:46px}
-  .hub-link i{position:relative}
-  .hub-link i::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);background:var(--border)}
-  .hub-link i::after{content:"";position:absolute;left:50%;width:11px;height:11px;border-radius:50%;background:var(--tc);transform:translateX(-50%)}
-  .hub-link.top i::after{top:-4px}
-  .hub-link.bot i::after{bottom:-4px}
-  .hub-core{position:relative;display:flex;justify-content:center;padding:6px 0}
-  .hub-core::before{content:"";position:absolute;left:8%;right:8%;top:0;bottom:0;border:2px solid var(--border);border-radius:999px}
-  .hub-pill{position:relative;background:linear-gradient(135deg,#17A39E,#1B7F86);color:#fff;border-radius:999px;padding:18px 54px;text-align:center;box-shadow:0 12px 26px -12px rgba(23,163,158,.7);display:flex;flex-direction:column;gap:2px;margin:14px 0}
-  .hub-pill b{font-size:30px;letter-spacing:.12em;font-weight:800}
-  .hub-pill span{font-size:13px;opacity:.92}
-  @media (max-width:760px){
-   .hub-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-   .hub-link{display:none}
-   .hub-core{order:-1;margin-bottom:14px}.hub-core::before{display:none}
-   .hub-pill{padding:14px 28px;margin:0;width:100%}.hub-pill b{font-size:24px}
-   .hub-row+.hub-row,.hub-row~.hub-row{margin-top:12px}
-   .hub-tile{min-height:150px;padding:16px 10px 12px}
+  :root[data-theme="light"]{
+    --bg:#EEEFF1; --surface:#FFFFFF; --surface-2:#F6F6F7; --border:#EAEBED; --border-strong:#D9DADD;
+    --text:#1C1D21; --text-muted:#71747B; --text-faint:#A3A6AC;
+    --accent:#1C1D21; --accent-hover:#000; --accent-soft:#ECEDEF;
+    --shadow:0 1px 2px rgba(16,24,40,.03),0 6px 20px rgba(16,24,40,.05); --shadow-lg:0 18px 50px rgba(16,24,40,.16);
   }
+  :root{--radius:18px;--radius-sm:12px;--font:"Inter","IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI","Leelawadee UI",sans-serif}
+  :root[data-theme="dark"]{--accent:#ECE7DF;--accent-hover:#fff;--accent-soft:#2A2F34}
+  body{letter-spacing:-.005em}
+  .sidebar{background:var(--surface-2);border-right:1px solid var(--border)}
+  .brand .logo{font-weight:800;letter-spacing:.08em}
+  .brand .logo .dot{background:#F7DA7B;box-shadow:0 0 0 3px #1C1D21}
+  .nav{gap:3px;padding:6px 12px}
+  .nav button{padding:10px 12px;border-radius:12px;font-size:13.5px;color:var(--text-muted);position:relative}
+  .nav button:hover{background:var(--surface);color:var(--text)}
+  .nav button.active{background:var(--surface);color:var(--text);font-weight:650;box-shadow:var(--shadow)}
+  .nav button.active::before{content:"";position:absolute;left:-12px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--text)}
+  .nav button .badge{background:var(--text);color:var(--surface);font-weight:700}
+  .nav button.active .badge{background:var(--text);color:var(--surface)}
+  .topbar{background:color-mix(in srgb,var(--bg) 86%,transparent);border-bottom:0}
+  .card{border-radius:var(--radius);border-color:var(--border);box-shadow:var(--shadow)}
+  .btn{border-radius:999px!important}
+  .btn.primary{background:var(--text)!important;border-color:var(--text)!important;color:var(--surface)!important}
+  .pill{border-radius:999px}
+  /* avatars */
+  .av{border-radius:50%;background:var(--avc,#73767D);color:#fff;display:inline-grid;place-items:center;font-weight:700;overflow:hidden;flex-shrink:0}
+  .av img{width:100%;height:100%;object-fit:cover;display:block}
+  .user-chip .av{margin-right:2px}
+  /* home */
+  .home{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:22px;align-items:start;max-width:1240px}
+  .home-main{display:flex;flex-direction:column;gap:20px;min-width:0}
+  .hello h1{font-size:26px;font-weight:750;letter-spacing:-.02em}
+  .hello p{margin:4px 0 0;color:var(--text-muted);font-size:13.5px}
+  .pastels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .pastel{position:relative;border:0;border-radius:20px;background:var(--pc);color:#1C1D21;padding:18px 18px 16px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;font:inherit;cursor:pointer;transition:transform .15s}
+  button.pastel:hover{transform:translateY(-2px)}
+  div.pastel{cursor:default}
+  .pastel span{font-size:13.5px;font-weight:550}
+  .pastel b{font-size:30px;font-weight:750;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .pastel small{font-size:12px;opacity:.75}
+  .pastel i{position:absolute;right:14px;bottom:14px;width:32px;height:32px;border-radius:50%;background:#1C1D21;color:#fff;display:grid;place-items:center}
+  .pastel i svg{width:16px;height:16px}
+  .sec-h,.ag-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .sec-h h2,.ag-h h2{font-size:17px;font-weight:700}
+  .sec-h>span{font-size:12.5px;color:var(--text-muted)}
+  .pill-btn{border:1px solid var(--border-strong);background:var(--surface);color:var(--text);border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer}
+  .pill-btn:hover{border-color:var(--text)}
+  .pill-btn.wide{width:100%;padding:12px;font-size:13.5px;background:transparent}
+  .mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+  .mod{border:0;background:var(--surface);border-radius:18px;padding:16px;display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;font:inherit;color:inherit;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s}
+  .mod:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(16,24,40,.09)}
+  .mod-ic{width:40px;height:40px;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;margin-bottom:4px}
+  .mod-ic svg{width:20px;height:20px}
+  .mod-t{font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:6px}
+  .mod-t em{font-style:normal;font-size:11px;background:var(--text);color:var(--surface);border-radius:999px;padding:0 7px;min-width:20px;text-align:center}
+  .mod-s{font-size:12px;color:var(--text-muted);line-height:1.4}
+  .mod-perm{margin-top:6px;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:#D6EAD9;color:#2F6B3E}
+  .mod-perm.v{background:#F3E3C8;color:#8A5A12}
+  .tbl-soft{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+  .ts-head,.ts-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 16px}
+  .ts-head{font-size:12px;color:var(--text-muted);border-bottom:1px solid var(--border)}
+  .ts-row{width:100%;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;font-size:13px}
+  .ts-row+.ts-row{border-top:1px solid var(--border)}
+  .ts-row:hover{background:var(--surface-2)}
+  .ts-cust{display:flex;align-items:center;gap:10px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .home-side{background:#E4E5E8;border-radius:24px;padding:20px 16px;display:flex;flex-direction:column;gap:14px;position:sticky;top:76px}
+  :root[data-theme="dark"] .home-side{background:var(--surface-2)}
+  .prof{display:flex;flex-direction:column;align-items:center;gap:3px;padding-bottom:16px;border-bottom:1px solid var(--border-strong)}
+  .prof-av{position:relative;border:0;background:none;padding:0;cursor:pointer;border-radius:50%;margin-bottom:6px}
+  .prof-av>i{position:absolute;right:6px;bottom:6px;width:14px;height:14px;border-radius:50%;border:2.5px solid #E4E5E8}
+  .prof-cam{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;display:grid;place-items:center;opacity:0;transition:opacity .15s}
+  .prof-cam svg{width:22px;height:22px}
+  .prof-av:hover .prof-cam,.prof-av:focus-visible .prof-cam{opacity:1}
+  .prof b{font-size:16px}
+  .prof>span{font-size:12.5px;color:var(--text-muted)}
+  .status-chip{margin-top:8px;display:inline-flex;align-items:center;gap:7px;background:var(--surface);border-radius:999px;padding:5px 10px 5px 8px;box-shadow:var(--shadow)}
+  .status-chip i{width:16px;height:16px;border-radius:50%}
+  .status-chip select{border:0;background:transparent;font:inherit;font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;outline:none}
+  .week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .wd{border:0;background:none;border-radius:12px;padding:7px 0;display:flex;flex-direction:column;align-items:center;gap:1px;font:inherit;color:var(--text);cursor:pointer;position:relative}
+  .wd span{font-size:11.5px;font-weight:600}
+  .wd b{font-size:13px;font-weight:500;color:var(--text-muted)}
+  .wd i{width:4px;height:4px;border-radius:50%;background:currentColor;position:absolute;bottom:3px}
+  .wd.today b{color:var(--text);font-weight:800}
+  .wd.on{background:#1C1D21;color:#fff}.wd.on b{color:#fff}
+  .ag-nav{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--text-muted)}
+  .ag-nav button{border:0;background:var(--surface);width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;color:var(--text)}
+  .ag-nav.big{gap:8px;justify-content:flex-start;font-size:14px;font-weight:650;color:var(--text)}
+  .ag-nav.big .pill-btn{width:auto;height:auto}
+  .tk-list,.ag-col{display:flex;flex-direction:column;gap:10px}
+  .tk{background:var(--surface);border-radius:16px;padding:12px;display:flex;gap:10px;align-items:flex-start;box-shadow:var(--shadow)}
+  .tk-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border-strong);background:var(--surface);flex-shrink:0;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:800;cursor:pointer;padding:0;margin-top:1px}
+  .tk.done .tk-check{background:#4CAF6A;border-color:#4CAF6A}
+  .tk-check:disabled{cursor:default}
+  .tk-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .tk-main b{font-size:13.5px;font-weight:650}
+  .tk.done .tk-main b{text-decoration:line-through;color:var(--text-muted)}
+  .tk-main span{font-size:12px;color:var(--text-muted)}
+  .tk-main em{font-size:12px;font-style:normal;color:var(--text-muted)}
+  .tk-more{border:0;background:none;color:var(--text-faint);cursor:pointer;font-size:13px;padding:2px 4px}
+  .tk-more:hover{color:var(--text)}
+  .tk-empty{margin:4px 0;font-size:12.5px;color:var(--text-muted);text-align:center}
+  @media (max-width:1100px){.home{grid-template-columns:1fr}.home-side{position:static}}
+  @media (max-width:640px){.pastels{grid-template-columns:1fr 1fr}.pastels>:first-child{grid-column:1/-1}.ts-head{display:none}.ts-row{grid-template-columns:minmax(0,1fr) auto}.ts-row>span:nth-child(2),.ts-row>span:nth-child(3){display:none}.hello h1{font-size:21px}.mod-grid{grid-template-columns:1fr 1fr}}
+  /* agenda page */
+  .ag-page{display:flex;flex-direction:column;gap:18px;max-width:1200px}
+  .ag-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .ag-who{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:999px;padding:4px 14px 4px 4px;box-shadow:var(--shadow)}
+  .ag-who select{border:0;background:transparent;font:inherit;font-weight:650;color:var(--text);outline:none;cursor:pointer}
+  .seg-soft{display:inline-flex;background:var(--surface);border-radius:999px;padding:4px;gap:2px;box-shadow:var(--shadow)}
+  .seg-soft button{border:0;background:none;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer}
+  .seg-soft button.on{background:#1C1D21;color:#fff}
+  .ag-top #agAdd2{margin-left:auto}
+  .ag-sub{font-size:14px;font-weight:700;margin:0}
+  .ag-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
+  .ag-day{background:#E4E5E8;border-radius:18px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:160px}
+  :root[data-theme="dark"] .ag-day{background:var(--surface-2)}
+  .ag-day.today{outline:2px solid #1C1D21}
+  .ag-dh{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)}
+  .ag-dh b{font-size:16px;color:var(--text)}
+  .ag-dh button{margin-left:auto;border:0;background:var(--surface);border-radius:50%;width:24px;height:24px;cursor:pointer;color:var(--text)}
+  .ag-day .tk{padding:9px;gap:7px}.ag-day .tk-main b{font-size:12.5px}
+  @media (max-width:1100px){.ag-week{grid-template-columns:1fr}.ag-day{min-height:0}}
+  .ag-cal{background:var(--surface);border-radius:18px;padding:12px;box-shadow:var(--shadow)}
+  .ag-cal-h,.ag-cal-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+  .ag-cal-h span{font-size:12px;color:var(--text-muted);text-align:center;padding:4px 0}
+  .ag-cell{border:0;background:var(--surface-2);border-radius:12px;min-height:64px;padding:6px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;font:inherit;color:var(--text);cursor:pointer}
+  .ag-cell.out{opacity:.4}
+  .ag-cell.today{background:#1C1D21;color:#fff}
+  .ag-cell span{font-size:11px;font-weight:700;background:#F7DA7B;color:#1C1D21;border-radius:999px;padding:0 7px}
+  .ag-cell span.ok{background:#D6EAD9;color:#2F6B3E}
   /* view-only modules */
   .ro-banner{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-left:4px solid #E0A23A;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:13px}
   .ro-banner .ico{width:18px;height:18px;flex-shrink:0;color:#E0A23A}
@@ -742,7 +845,7 @@ const PERMS={
  accounts:{overview:'V',expenses:'E',quote:'V'},
 };
 const permRole=()=>PERM_ROLE[role]||'staff';
-function permOf(v){return v==='home'?'V':((PERMS[permRole()]||{})[v]||'');}
+function permOf(v){if(v==='agenda')return 'E';return v==='home'?'V':((PERMS[permRole()]||{})[v]||'');}
 function canView(v){return !!permOf(v);}
 function canEditView(v){return permOf(v)==='E';}
 // a view belongs to the active brand unless it is brand-gated to the other brand (NAV item's b)
@@ -783,7 +886,7 @@ function showApp(){document.getElementById('loginScreen').style.display='none';d
 function renderUserChip(){
  const el=document.getElementById('userChip');if(!el||!currentUser)return;
  const col=currentUser.color||ROLE_COLOR[role]||'#7A4FB5';
- el.innerHTML=`<div class="user-chip"><div class="uc-av" style="background:${col}">${(currentUser.short||currentUser.name||'?').slice(0,2)}</div><div style="flex:1;min-width:0"><div class="uc-name">${currentUser.name}</div><div class="uc-role"><span class="role-badge" style="background:${col}22;color:${col}">${ROLE_LABEL[role]||role}</span> · ${currentUser.login}</div></div></div>`;
+ el.innerHTML=`<div class="user-chip">${avatarHTML(currentUser.id,32)}<div style="flex:1;min-width:0"><div class="uc-name">${currentUser.name}</div><div class="uc-role"><span class="role-badge" style="background:${col}22;color:${col}">${ROLE_LABEL[role]||role}</span> · ${currentUser.login}</div></div></div>`;
 }
 function migrateState(){
  if(!state.accounts)state.accounts=defaultAccounts();
@@ -797,6 +900,7 @@ function migrateState(){
  if(state.surveys)state.surveys.forEach(s=>s.points.forEach(migratePoint));
  if(state.quotes)state.quotes.forEach(migrateQuote);
  if(!state.travelClaims)state.travelClaims=[];
+ if(!state.agenda)state.agenda=[]; if(!state.profiles)state.profiles={}; // แผนงาน/KPI ส่วนตัว + รูปโปรไฟล์ (sync ผ่าน app_meta)
  if(!state.expenses)state.expenses=[]; // ค่าใช้จ่ายรายวัน (พนักงานกรอกเอง)
  if(state.seq&&!state.seq.T)state.seq.T=903;
  if(state.seq&&!state.seq.TR)state.seq.TR=1;
@@ -1348,6 +1452,7 @@ function spark(data,color){const w=92,h=38,max=Math.max(...data),min=Math.min(..
 /* ============ NAV ============ */
 const NAV=[
  {id:'home',label:'หน้าแรก',icon:'grid'},
+ {id:'agenda',label:'แผนงาน & KPI ของฉัน',icon:'trend',count:()=>currentUser?agDay(currentUser.id,todayISO()).filter(a=>!a.done).length:0},
  {grp:'VANGARDE'},
  {id:'overview',label:'Dashboard',icon:'chart'},
  {id:'leads',label:'Lead Intake',icon:'inbox',count:()=>scopedLeads().filter(l=>l.stage==='new').length},
@@ -1360,7 +1465,8 @@ const NAV=[
  {id:'kpi',label:'KPI',icon:'trend'},
 ];
 const META={
- home:{t:'VANGARDE',s:'เลือกหัวข้อที่ต้องการ',act:false},
+ home:{t:'หน้าแรก',s:'VANGARDE',act:false},
+ agenda:{t:'แผนงาน & KPI ของฉัน',s:'อัปเดตงานรายวัน รายสัปดาห์ รายเดือน และดูความคืบหน้าเป็น %',act:false},
  crm:{t:'CRM ลูกค้า',s:'ข้อมูลลูกค้า VANGARDE · ใบเสนอราคา · ยอดชำระ · งานเก็บ/ประกัน ในที่เดียว',act:false},
  overview:{t:'ภาพรวมบริษัท',s:'สรุปทุกโมดูลแบบเรียลไทม์',act:true},
  expenses:{t:'ค่าใช้จ่ายรายวัน',s:'พนักงานพิมพ์ยอด+หมวด (เช่น "ค่าน้ำมัน 500") แนบรูปบิล → บันทึกทันที เข้าฐานข้อมูลเดียวกับทั้งระบบ',act:false},
@@ -2958,7 +3064,7 @@ function renderVgPrice(){
   ${perg}${zip}${awn}
   <div class="grid two-col" style="grid-template-columns:1fr 1fr 1fr">${addBlock('Pergola',vg.addons.pergola)}${addBlock('Zip Shade',vg.addons.zipshade)}${addBlock('Awning',vg.addons.awning)}</div>`;
 }
-function renderView(){({home:renderHome,crm:renderCRM,overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
+function renderView(){({home:renderHome,agenda:renderAgenda,crm:renderCRM,overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
 function render(rerenderNav=true){
  if(!canOpen(view))view=firstAllowedView(); // block disallowed / wrong-brand views
  const meta=META[view];
@@ -2989,7 +3095,7 @@ function roBlocked(){
  return true;
 }
 
-/* ============ HOME (launcher) ============ */
+/* ============ HOME (Mindease-style dashboard) ============ */
 const MOD_INFO={
  overview:{t:'Dashboard',s:'ภาพรวมยอดขาย งานค้าง และเงินเข้า',ic:'chart'},
  leads:{t:'Lead Intake',s:'รับลูกค้าใหม่ และมอบหมายเซลล์',ic:'inbox'},
@@ -3001,17 +3107,204 @@ const MOD_INFO={
  quote:{t:'Quotation',s:'ใบเสนอราคา และการอนุมัติ',ic:'doc'},
  kpi:{t:'KPI',s:'ผลงานเซลล์ และทีม',ic:'trend'},
 };
-const TILE_COL={overview:'#17A39E',leads:'#1C88A6',expenses:'#22607F',install:'#5E7EB5',survey:'#45567A',crm:'#2B3341',vgprice:'#1A7D84',quote:'#356E9C',kpi:'#33415A'};
+const PASTEL=['#F7DA7B','#CCDCE7','#E5D9EE','#D6EAD9'];
+const TH_DOW=['จ','อ','พ','พฤ','ศ','ส','อา'];
+const TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const STATUS_OPT={available:{t:'พร้อมทำงาน',c:'#4CAF6A'},busy:{t:'ติดงาน',c:'#E8A33D'},off:{t:'ลา / ไม่อยู่',c:'#9AA0A6'}};
+const pad2=n=>String(n).padStart(2,'0');
+const ymdOf=d=>d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+const dOf=s=>{const[y,m,d]=String(s).slice(0,10).split('-').map(Number);return new Date(y,m-1,d);};
+const mondayOf=s=>{const d=dOf(s);d.setDate(d.getDate()-((d.getDay()+6)%7));return ymdOf(d);};
+const addDays=(s,n)=>{const d=dOf(s);d.setDate(d.getDate()+n);return ymdOf(d);};
+const thDate=s=>{const d=dOf(s);return d.getDate()+' '+TH_MON[d.getMonth()]+' '+String(d.getFullYear()+543).slice(2);};
+const thMonth=ym=>{const[y,m]=ym.split('-').map(Number);return TH_MON[m-1]+' '+(y+543);};
+
+/* ---- profile photos & status (state.profiles, synced to the server) ---- */
+function profileOf(uid){if(!state.profiles)state.profiles={};return state.profiles[uid]||{};}
+function avatarHTML(uid,size,cls){
+ const u=accountByUid(uid)||{},p=profileOf(uid),s=size||40;
+ const inner=p.photo?`<img src="${p.photo}" alt="">`:`<span>${escH(String(u.short||u.name||'?').slice(0,2))}</span>`;
+ return `<span class="av ${cls||''}" style="width:${s}px;height:${s}px;--avc:${u.color||ROLE_COLOR[u.role]||'#73767D'};font-size:${Math.round(s*.38)}px">${inner}</span>`;
+}
+function pickPhoto(uid){
+ const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+ inp.onchange=async()=>{
+  const f=inp.files&&inp.files[0];if(!f)return;
+  try{
+   const bmp=await createImageBitmap(f),side=Math.min(bmp.width,bmp.height),S=256;
+   const cv=document.createElement('canvas');cv.width=cv.height=S;
+   cv.getContext('2d').drawImage(bmp,(bmp.width-side)/2,(bmp.height-side)/2,side,side,0,0,S,S);
+   if(!state.profiles)state.profiles={};
+   state.profiles[uid]=Object.assign({},state.profiles[uid],{photo:cv.toDataURL('image/jpeg',.82)});
+   logAudit('profile','เปลี่ยนรูปโปรไฟล์');save();render();
+  }catch(e){alert('อ่านรูปนี้ไม่ได้ ลองเลือกรูป JPG หรือ PNG');}
+ };
+ inp.click();
+}
+function setStatus(uid,s){if(!state.profiles)state.profiles={};state.profiles[uid]=Object.assign({},state.profiles[uid],{status:s});save();render();}
+
+/* ---- agenda / personal KPI (state.agenda, synced to the server) ---- */
+let agSel=null,agTab='day',agUser=null;
+const agAll=()=>state.agenda||(state.agenda=[]);
+const agOf=uid=>agAll().filter(a=>a.uid===uid);
+const agDay=(uid,d)=>agOf(uid).filter(a=>a.scope==='day'&&a.date===d).sort((a,b)=>String(a.start||'99').localeCompare(String(b.start||'99')));
+const agWeekGoals=(uid,mon)=>agOf(uid).filter(a=>a.scope==='week'&&a.date===mon);
+const agMonthGoals=(uid,ym)=>agOf(uid).filter(a=>a.scope==='month'&&a.date.slice(0,7)===ym);
+function agPeriod(uid,kind,d){
+ if(kind==='day')return agDay(uid,d);
+ if(kind==='week'){const mon=mondayOf(d),end=addDays(mon,6);return agOf(uid).filter(a=>(a.scope==='day'&&a.date>=mon&&a.date<=end)||(a.scope==='week'&&a.date===mon));}
+ const ym=d.slice(0,7);return agOf(uid).filter(a=>a.date.slice(0,7)===ym);
+}
+function kpiPct(list){return list.length?Math.round(list.filter(a=>a.done).length/list.length*100):null;}
+const canSeeTeamAgenda=()=>['ceo','pm','admin'].includes(permRole());
+const canEditAgendaOf=uid=>!!currentUser&&(uid===currentUser.id||permRole()==='ceo');
+function toggleTask(id){
+ const a=agAll().find(x=>x.id===id);if(!a||!canEditAgendaOf(a.uid))return;
+ a.done=!a.done;a.doneAt=a.done?new Date().toISOString():null;save();render();
+}
+function deleteTask(id){
+ const a=agAll().find(x=>x.id===id);if(!a||!canEditAgendaOf(a.uid))return;
+ if(!confirm('ลบงาน "'+a.title+'" ?'))return;
+ state.agenda=agAll().filter(x=>x.id!==id);save();render();
+}
+function openTaskModal(uid,date,editId){
+ const ed=editId?agAll().find(x=>x.id===editId):null;
+ const m=document.getElementById('modal'),sc=document.getElementById('scrim');
+ const sc0=ed?ed.scope:'day',d0=ed?ed.date:(date||todayISO());
+ m.innerHTML=`<h3 style="margin-bottom:14px">${ed?'แก้ไขงาน':'เพิ่มงาน'}</h3>
+  <div class="field"><label>งาน / เป้าหมาย</label><input id="tk-title" maxlength="120" value="${ed?escH(ed.title):''}" placeholder="เช่น วัดหน้างาน Pergola บ้านคุณวิชัย"></div>
+  <div class="field-row"><div class="field"><label>ประเภท</label><select id="tk-scope"><option value="day">รายวัน</option><option value="week">เป้ารายสัปดาห์</option><option value="month">เป้ารายเดือน</option></select></div>
+   <div class="field"><label id="tk-dlabel">วันที่</label><input id="tk-date" type="date" value="${d0}"></div></div>
+  <div class="field-row" id="tk-times"><div class="field"><label>เริ่ม</label><input id="tk-start" type="time" value="${ed&&ed.start||''}"></div><div class="field"><label>ถึง</label><input id="tk-end" type="time" value="${ed&&ed.end||''}"></div></div>
+  <div class="field"><label>หมายเหตุ</label><textarea id="tk-note" rows="2">${ed?escH(ed.note||''):''}</textarea></div>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px"><button class="btn" id="tk-cancel">ยกเลิก</button><button class="btn primary" id="tk-save">บันทึก</button></div>`;
+ const scopeSel=m.querySelector('#tk-scope');scopeSel.value=sc0;
+ const sync=()=>{const s=scopeSel.value;m.querySelector('#tk-times').style.display=s==='day'?'':'none';m.querySelector('#tk-dlabel').textContent=s==='day'?'วันที่':s==='week'?'สัปดาห์ของวันที่':'เดือนของวันที่';};
+ scopeSel.onchange=sync;sync();
+ const close=()=>{m.classList.remove('open');sc.classList.remove('open');};
+ m.querySelector('#tk-cancel').onclick=close;
+ m.querySelector('#tk-save').onclick=()=>{
+  const title=m.querySelector('#tk-title').value.trim();if(!title){m.querySelector('#tk-title').focus();return;}
+  const scope=scopeSel.value;let date=m.querySelector('#tk-date').value||todayISO();
+  if(scope==='week')date=mondayOf(date);if(scope==='month')date=date.slice(0,7)+'-01';
+  const rec={title,scope,date,start:scope==='day'?m.querySelector('#tk-start').value:'',end:scope==='day'?m.querySelector('#tk-end').value:'',note:m.querySelector('#tk-note').value.trim()};
+  if(ed)Object.assign(ed,rec);else agAll().push(Object.assign({id:'ag'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),uid,done:false,createdAt:new Date().toISOString()},rec));
+  close();save();render();
+ };
+ m.classList.add('open');sc.classList.add('open');setTimeout(()=>m.querySelector('#tk-title').focus(),30);
+}
+function taskCard(a,showDate){
+ const ed=canEditAgendaOf(a.uid);
+ const when=a.scope==='day'?((a.start?a.start+(a.end?'–'+a.end:''):'ทั้งวัน')+(showDate?' · '+thDate(a.date):'')):(a.scope==='week'?'เป้าสัปดาห์ '+thDate(a.date):'เป้าเดือน '+thMonth(a.date.slice(0,7)));
+ return `<div class="tk${a.done?' done':''}"><button class="tk-check" ${ed?`data-tk-toggle="${a.id}"`:'disabled'} aria-label="${a.done?'ยกเลิกเสร็จ':'ทำเสร็จแล้ว'}">${a.done?'✓':''}</button>
+  <div class="tk-main"><b>${escH(a.title)}</b><span>${when}</span>${a.note?`<em>${escH(a.note)}</em>`:''}</div>
+  ${ed?`<button class="tk-more" data-tk-edit="${a.id}" aria-label="แก้ไข">✎</button><button class="tk-more" data-tk-del="${a.id}" aria-label="ลบ">✕</button>`:''}</div>`;
+}
+function bindTasks(root){
+ root.querySelectorAll('[data-tk-toggle]').forEach(b=>b.onclick=()=>toggleTask(b.dataset.tkToggle));
+ root.querySelectorAll('[data-tk-del]').forEach(b=>b.onclick=()=>deleteTask(b.dataset.tkDel));
+ root.querySelectorAll('[data-tk-edit]').forEach(b=>b.onclick=()=>{const a=agAll().find(x=>x.id===b.dataset.tkEdit);openTaskModal(a.uid,a.date,a.id);});
+}
+
+function homeStats(){
+ const L=brandLeads();
+ let outstanding=0;state.quotes.forEach(q=>{const l=leadById(q.leadId);if(!l||l.brand!==brand)return;const pi=payInfo(q.id);if(pi)outstanding+=pi.total-pi.paid;});
+ const cand=[
+  {mod:'leads',t:'ลีดใหม่รอติดต่อ',v:L.filter(l=>l.stage==='new').length},
+  {mod:'quote',t:'ใบเสนอรออนุมัติ',v:L.map(l=>quoteOfLead(l.id)).filter(q=>q&&q.status==='pending').length},
+  {mod:'overview',t:'ยอดค้างชำระ',v:'฿'+money(outstanding)},
+  {mod:'install',t:'งานติดตั้งที่นัดแล้ว',v:state.installs.filter(i=>i.status==='scheduled').length},
+  {mod:'expenses',t:'ค่าใช้จ่ายวันนี้',v:'฿'+money(expensesVisible().filter(e=>(e.date||'')===todayISO()).reduce((a,e)=>a+(+e.amount||0),0))},
+ ].filter(c=>canOpen(c.mod)).slice(0,2);
+ const wk=kpiPct(agPeriod(currentUser.id,'week',todayISO()));
+ cand.push({mod:'agenda',t:'KPI สัปดาห์นี้ของฉัน',v:wk===null?'—':wk+'%'});
+ if(cand.length<3){const td=agDay(currentUser.id,todayISO());cand.unshift({mod:'agenda',t:'งานวันนี้',v:td.filter(a=>a.done).length+'/'+td.length});}
+ return cand.slice(0,3);
+}
 function renderHome(){
- const el=document.getElementById('content');
+ const el=document.getElementById('content'),me=currentUser,uid=me.id,p=profileOf(uid),st=STATUS_OPT[p.status||'available'];
+ if(!agSel)agSel=todayISO();
+ const mon=mondayOf(agSel);
  const mods=MODULES.filter(canOpen);
- const half=Math.ceil(mods.length/2),top=mods.slice(0,half),bot=mods.slice(half);
- const tile=v=>{const n=NAV.find(x=>x.id===v),c=n&&n.count?n.count():0,m=MOD_INFO[v];
-  return `<button class="hub-tile" data-go="${v}" style="--tc:${TILE_COL[v]}">${c?`<span class="hub-badge">${c}</span>`:''}<span class="hub-ic">${svg(m.ic)}</span><span class="hub-t">${m.t}</span><span class="hub-line"></span><span class="hub-s">${m.s}</span><span class="hub-perm">${permOf(v)==='E'?'ดู + แก้ไข':'ดูอย่างเดียว'}</span></button>`;};
- const row=(list,pos)=>list.length?`<div class="hub-row" style="--n:${list.length}">${list.map(tile).join('')}</div><div class="hub-link ${pos}" style="--n:${list.length}">${list.map(v=>`<i style="--tc:${TILE_COL[v]}"></i>`).join('')}</div>`:'';
- const botHtml=bot.length?`<div class="hub-link bot" style="--n:${bot.length}">${bot.map(v=>`<i style="--tc:${TILE_COL[v]}"></i>`).join('')}</div><div class="hub-row" style="--n:${bot.length}">${bot.map(tile).join('')}</div>`:'';
- el.innerHTML=`<div class="hub">${row(top,'top')}<div class="hub-core"><div class="hub-pill"><b>VANGARDE</b><span>สวัสดี ${currentUser?currentUser.name:''} · ${ROLE_LABEL[role]||role}</span></div></div>${botHtml}</div>`;
+ const recent=canOpen('leads')?brandLeads().slice().sort((a,b)=>String(b.created||'').localeCompare(String(a.created||''))).slice(0,5):[];
+ el.innerHTML=`<div class="home">
+ <div class="home-main">
+  <div class="hello"><h1>ยินดีต้อนรับกลับมา, ${escH(me.name)}!</h1><p>จัดการงาน VANGARDE และติดตามแผนงานของคุณได้ในที่เดียว</p></div>
+  <div class="pastels">${homeStats().map((c,i)=>`<button class="pastel" data-go="${c.mod}" style="--pc:${PASTEL[i]}"><span>${c.t}</span><b>${c.v}</b><i>${svg(c.mod==='agenda'?'trend':(MOD_INFO[c.mod]||{}).ic||'grid')}</i></button>`).join('')}</div>
+  <div class="sec-h"><h2>หัวข้อของคุณ</h2><span>${mods.length} หัวข้อ</span></div>
+  <div class="mod-grid">${mods.map(v=>{const n=NAV.find(x=>x.id===v),c=n&&n.count?n.count():0,m=MOD_INFO[v];
+   return `<button class="mod" data-go="${v}"><span class="mod-ic">${svg(m.ic)}</span><span class="mod-t">${m.t}${c?`<em>${c}</em>`:''}</span><span class="mod-s">${m.s}</span><span class="mod-perm ${permOf(v)==='E'?'e':'v'}">${permOf(v)==='E'?'ดู + แก้ไข':'ดูอย่างเดียว'}</span></button>`;}).join('')}</div>
+  ${recent.length?`<div class="sec-h"><h2>ลีดล่าสุด</h2><button class="pill-btn" data-go="leads">ดูทั้งหมด</button></div>
+  <div class="tbl-soft"><div class="ts-head"><span>ลูกค้า</span><span>วันที่</span><span>ช่องทาง</span><span>สถานะ</span></div>
+   ${recent.map(l=>`<button class="ts-row" data-lead="${escH(l.id)}"><span class="ts-cust"><span class="av" style="width:30px;height:30px;--avc:var(--brand);font-size:12px"><span>${escH(String(l.name||'?').trim().slice(0,1))}</span></span>${escH(l.name||'-')}</span><span>${l.created?thDate(String(l.created).slice(0,10)):'-'}</span><span>${escH((SOURCE[l.source]||{}).l||'')}</span><span>${stagePill(l.stage)}</span></button>`).join('')}</div>`:''}
+ </div>
+ <aside class="home-side">
+  <div class="prof">
+   <button class="prof-av" id="profPhoto" title="เปลี่ยนรูปโปรไฟล์">${avatarHTML(uid,96)}<i style="background:${st.c}"></i><span class="prof-cam">${svg('camera')}</span></button>
+   <b>${escH(me.name)}</b><span>${ROLE_LABEL[role]||role}</span>
+   <label class="status-chip"><i style="background:${st.c}"></i><select id="profStatus">${Object.entries(STATUS_OPT).map(([k,o])=>`<option value="${k}"${(p.status||'available')===k?' selected':''}>${o.t}</option>`).join('')}</select></label>
+  </div>
+  <div class="ag-h"><h2>แผนงานของฉัน</h2><button class="pill-btn" data-go="agenda">ดูทั้งหมด</button></div>
+  <div class="week">${[0,1,2,3,4,5,6].map(i=>{const d=addDays(mon,i),n=agDay(uid,d).length;return `<button class="wd${d===agSel?' on':''}${d===todayISO()?' today':''}" data-ag-day="${d}"><span>${TH_DOW[i]}</span><b>${dOf(d).getDate()}</b>${n?'<i></i>':''}</button>`;}).join('')}</div>
+  <div class="ag-nav"><button data-ag-shift="-7" aria-label="สัปดาห์ก่อน">‹</button><span>${thDate(agSel)}</span><button data-ag-shift="7" aria-label="สัปดาห์ถัดไป">›</button></div>
+  <div class="tk-list">${agDay(uid,agSel).map(a=>taskCard(a)).join('')||'<p class="tk-empty">ยังไม่มีงานในวันนี้</p>'}
+   ${agWeekGoals(uid,mon).map(a=>taskCard(a)).join('')}</div>
+  <button class="pill-btn wide" id="agAdd">＋ เพิ่มงาน</button>
+ </aside></div>`;
  el.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{view=b.dataset.go;search='';render();window.scrollTo(0,0);});
+ el.querySelectorAll('[data-lead]').forEach(b=>b.onclick=()=>openLead(b.dataset.lead));
+ el.querySelectorAll('[data-ag-day]').forEach(b=>b.onclick=()=>{agSel=b.dataset.agDay;render(false);});
+ el.querySelectorAll('[data-ag-shift]').forEach(b=>b.onclick=()=>{agSel=addDays(agSel,+b.dataset.agShift);render(false);});
+ el.querySelector('#profPhoto').onclick=()=>pickPhoto(uid);
+ el.querySelector('#profStatus').onchange=e=>setStatus(uid,e.target.value);
+ el.querySelector('#agAdd').onclick=()=>openTaskModal(uid,agSel);
+ bindTasks(el);
+}
+
+/* ============ AGENDA / KPI PAGE (every employee, own plan; CEO·PM·Admin can view the team) ============ */
+function renderAgenda(){
+ const el=document.getElementById('content');
+ if(!agUser||!canSeeTeamAgenda())agUser=currentUser.id;
+ if(!agSel)agSel=todayISO();
+ const uid=agUser,ed=canEditAgendaOf(uid),mon=mondayOf(agSel),ym=agSel.slice(0,7);
+ const pct=k=>{const v=kpiPct(agPeriod(uid,k,agSel));return v===null?'—':v+'%';};
+ const cnt=k=>{const l=agPeriod(uid,k,agSel);return l.filter(a=>a.done).length+' / '+l.length+' งาน';};
+ const people=ACCOUNTS.filter(a=>!a.inactive);
+ let body='';
+ if(agTab==='day'){
+  body=`<div class="ag-col">${agDay(uid,agSel).map(a=>taskCard(a)).join('')||'<p class="tk-empty">ยังไม่มีงานในวันนี้</p>'}</div>
+  ${agWeekGoals(uid,mon).length||agMonthGoals(uid,ym).length?`<h3 class="ag-sub">เป้าที่ต้องไปให้ถึง</h3><div class="ag-col">${[...agWeekGoals(uid,mon),...agMonthGoals(uid,ym)].map(a=>taskCard(a)).join('')}</div>`:''}`;
+ }else if(agTab==='week'){
+  body=`${agWeekGoals(uid,mon).length?`<h3 class="ag-sub">เป้าสัปดาห์นี้</h3><div class="ag-col">${agWeekGoals(uid,mon).map(a=>taskCard(a)).join('')}</div>`:''}
+  <div class="ag-week">${[0,1,2,3,4,5,6].map(i=>{const d=addDays(mon,i);return `<div class="ag-day${d===todayISO()?' today':''}"><div class="ag-dh"><span>${TH_DOW[i]}</span><b>${dOf(d).getDate()}</b>${ed?`<button data-ag-addon="${d}" aria-label="เพิ่มงานวันนี้">＋</button>`:''}</div>${agDay(uid,d).map(a=>taskCard(a)).join('')||'<p class="tk-empty">—</p>'}</div>`;}).join('')}</div>`;
+ }else{
+  const first=dOf(ym+'-01'),start=mondayOf(ym+'-01'),days=[];for(let i=0;i<42;i++)days.push(addDays(start,i));
+  body=`<h3 class="ag-sub">เป้าเดือน ${thMonth(ym)}</h3><div class="ag-col">${agMonthGoals(uid,ym).map(a=>taskCard(a)).join('')||'<p class="tk-empty">ยังไม่มีเป้ารายเดือน</p>'}</div>
+  <div class="ag-cal"><div class="ag-cal-h">${TH_DOW.map(d=>`<span>${d}</span>`).join('')}</div><div class="ag-cal-g">${days.map(d=>{const l=agDay(uid,d),dn=l.filter(a=>a.done).length;return `<button class="ag-cell${d.slice(0,7)!==ym?' out':''}${d===todayISO()?' today':''}" data-ag-open="${d}"><b>${dOf(d).getDate()}</b>${l.length?`<span class="${dn===l.length?'ok':''}">${dn}/${l.length}</span>`:''}</button>`;}).join('')}</div></div>`;
+ }
+ el.innerHTML=`<div class="ag-page">
+  <div class="ag-top">
+   ${canSeeTeamAgenda()?`<label class="ag-who">${avatarHTML(uid,34)}<select id="agWho">${people.map(a=>`<option value="${a.id}"${a.id===uid?' selected':''}>${escH(a.name)} · ${ROLE_LABEL[a.role]||a.role}</option>`).join('')}</select></label>`:`<div class="ag-who">${avatarHTML(uid,34)}<b>${escH(currentUser.name)}</b></div>`}
+   <div class="seg-soft">${[['day','รายวัน'],['week','รายสัปดาห์'],['month','รายเดือน']].map(([k,l])=>`<button data-ag-tab="${k}" class="${agTab===k?'on':''}">${l}</button>`).join('')}</div>
+   <div class="ag-nav big"><button data-ag-step="-1" aria-label="ก่อนหน้า">‹</button><span>${agTab==='day'?thDate(agSel):agTab==='week'?thDate(mon)+' – '+thDate(addDays(mon,6)):thMonth(ym)}</span><button data-ag-step="1" aria-label="ถัดไป">›</button><button class="pill-btn" data-ag-today>วันนี้</button></div>
+   ${ed?`<button class="btn primary" id="agAdd2">＋ เพิ่มงาน</button>`:''}
+  </div>
+  <div class="pastels">
+   <div class="pastel" style="--pc:${PASTEL[0]}"><span>KPI วันนี้ · ${thDate(agSel)}</span><b>${pct('day')}</b><small>${cnt('day')}</small></div>
+   <div class="pastel" style="--pc:${PASTEL[1]}"><span>KPI สัปดาห์นี้</span><b>${pct('week')}</b><small>${cnt('week')}</small></div>
+   <div class="pastel" style="--pc:${PASTEL[2]}"><span>KPI เดือน ${thMonth(ym)}</span><b>${pct('month')}</b><small>${cnt('month')}</small></div>
+  </div>
+  ${!ed?`<div class="ro-banner">${svg('shield','ico')}<span>กำลังดูแผนงานของ <b>${escH((accountByUid(uid)||{}).name||'')}</b> · ดูได้อย่างเดียว</span></div>`:''}
+  ${body}</div>`;
+ const step={day:1,week:7}[agTab];
+ el.querySelectorAll('[data-ag-tab]').forEach(b=>b.onclick=()=>{agTab=b.dataset.agTab;render(false);});
+ el.querySelectorAll('[data-ag-step]').forEach(b=>b.onclick=()=>{const s=+b.dataset.agStep;if(step)agSel=addDays(agSel,s*step);else{const d=dOf(agSel);d.setDate(1);d.setMonth(d.getMonth()+s);agSel=ymdOf(d);}render(false);});
+ el.querySelector('[data-ag-today]').onclick=()=>{agSel=todayISO();render(false);};
+ el.querySelectorAll('[data-ag-open]').forEach(b=>b.onclick=()=>{agSel=b.dataset.agOpen;agTab='day';render(false);});
+ el.querySelectorAll('[data-ag-addon]').forEach(b=>b.onclick=()=>openTaskModal(uid,b.dataset.agAddon));
+ const who=el.querySelector('#agWho');if(who)who.onchange=e=>{agUser=e.target.value;render(false);};
+ const add=el.querySelector('#agAdd2');if(add)add.onclick=()=>openTaskModal(uid,agSel);
+ bindTasks(el);
 }
 
 /* ============ CRM ============ */

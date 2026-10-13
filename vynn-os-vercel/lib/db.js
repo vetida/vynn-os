@@ -69,7 +69,7 @@ const LIST_TABLES = [
   { key: 'advances',   table: 'advances' },
   { key: 'monthly',    table: 'monthly' },
 ];
-const META_KEYS = ['prices', 'seq', 'company'];
+const META_KEYS = ['prices', 'seq', 'company', 'agenda', 'profiles'];
 
 function norm(v) {
   if (v === undefined) return null;
