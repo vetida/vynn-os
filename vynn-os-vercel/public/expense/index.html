@@ -1,0 +1,1401 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F6F3EF">
+<meta name="robots" content="noindex">
+<title>VYNN เบิกจ่าย</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Lao:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: phone-first app shell — sticky header with brand switch, single content column (max 920), fixed bottom nav with a raised + button; claims open as bottom sheets */
+:root{
+  --bg:#F6F3EF; --card:#FFFFFF; --soft:#F1ECE6; --ink:#2A2521; --muted:#8A8078; --line:#E8E1D9;
+  --accent:#A38B78; --accent-d:#8A7261; --accent-bg:#F2EBE4; --on-accent:#FFFFFF;
+  --green:#3F5B4B; --green-bg:#E3ECE5; --warn:#BF7A3F; --warn-bg:#FBEDDF; --bad:#B4544B; --bad-bg:#F8E4E1;
+  --vynn:#A38B78; --vangarde:#3F5B4B;
+  --scrim:rgba(42,37,33,.42); --shadow:0 1px 2px rgba(60,45,30,.04),0 6px 18px rgba(60,45,30,.06);
+  --f-logo:"Cormorant Garamond",Georgia,serif;
+  --f-body:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --r:16px; color-scheme:light;
+}
+/* single warm-light theme by request */
+:root:lang(lo){--f-body:"Noto Sans Lao","IBM Plex Sans Thai",system-ui,sans-serif}
+:root:lang(my){--f-body:"Noto Sans Myanmar",system-ui,sans-serif}
+:root:lang(my) body{line-height:1.85;font-size:14px}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;padding-inline:16px;padding-block:0 120px}
+body.lock{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ic{width:20px;height:20px;flex-shrink:0}
+
+/* header */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);margin-inline:-16px;padding:12px 16px 10px}
+.hd{max-width:920px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.mark{width:42px;height:42px;border-radius:12px;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:var(--f-logo);font-size:28px;font-weight:500;font-style:italic;flex-shrink:0;line-height:1}
+.wordmark{display:flex;flex-direction:column;gap:0;padding-right:14px;margin-right:2px;border-right:1px solid var(--line)}
+.wordmark b{font-family:var(--f-logo);font-weight:500;font-size:22px;letter-spacing:.14em;line-height:1.1;white-space:nowrap}
+.wordmark b .v{color:var(--accent)} .wordmark b .g{color:var(--green)} .wordmark b i{font-style:normal;color:var(--line);margin:0 .3em}
+.wordmark span{font-size:10px;letter-spacing:.32em;color:var(--muted);text-transform:uppercase}
+@media (max-width:760px){.wordmark{display:none}}
+.hello.link{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0;margin-right:auto;line-height:1.3;color:var(--ink)}
+.hello span{font-size:13px;color:var(--muted)}
+.hello b{font-weight:600;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hright{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.live.on i{background:var(--green);box-shadow:0 0 0 3px var(--green-bg)}
+.live.saving i{background:var(--warn)} .live.err i{background:var(--bad)}
+@media (max-width:480px){.live span{display:none}}
+.lang{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:2px;gap:2px}
+.lang button{border:0;background:none;border-radius:999px;padding:3px 9px;font-size:12px;color:var(--muted);white-space:nowrap}
+@media (max-width:420px){.lang button{padding:3px 7px;font-size:11.5px}.hd{gap:8px}.mark{width:38px;height:38px;font-size:25px}}
+.lang button:lang(th){font-family:"IBM Plex Sans Thai",system-ui,sans-serif}
+.lang button:lang(lo){font-family:"Noto Sans Lao",system-ui,sans-serif}
+.lang button:lang(my){font-family:"Noto Sans Myanmar",system-ui,sans-serif}
+.lang button.on{background:var(--accent);color:#fff}
+.lang.big button{padding:6px 16px;font-size:15px}
+.bsw{max-width:920px;margin:12px auto 0;display:grid;grid-template-columns:1fr 1fr auto;background:var(--soft);border-radius:12px;padding:4px;gap:4px}
+.bsw button{border:0;background:none;border-radius:9px;padding:9px 12px;font-family:var(--f-logo);font-size:17px;font-weight:600;letter-spacing:.1em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bsw button small{font-family:var(--f-logo);font-size:13px;letter-spacing:.06em;font-weight:500;margin-left:4px}
+.bsw button.all{font-family:var(--f-body);font-size:13px;letter-spacing:0;font-weight:500;color:var(--muted)}
+.bsw button.on{background:var(--accent);color:#fff;box-shadow:var(--shadow)}
+.bsw button.on.vangarde{background:var(--green)}
+@media (max-width:420px){.bsw button{font-size:15px;padding:8px 6px}.bsw button small{display:none}}
+
+/* bottom nav */
+nav.bnav{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--card);border-top:1px solid var(--line);padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px))}
+.bnav-in{max-width:560px;margin:0 auto;display:flex;justify-content:space-around;align-items:flex-end}
+.bnav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;color:var(--muted);padding:4px 2px;position:relative;min-width:0}
+.bnav button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bnav button.on{color:var(--ink);font-weight:600}
+.bnav button.on .ic{color:var(--accent-d)}
+.bnav .badge{position:absolute;top:0;left:calc(50% + 6px)}
+.bnav .fabw{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;color:var(--muted)}
+.bnav .fab{width:54px;height:54px;border-radius:50%;background:var(--accent);color:#fff;border:4px solid var(--bg);margin-top:-26px;display:grid;place-items:center;box-shadow:0 6px 16px rgba(138,114,97,.35);padding:0;flex:none}
+.bnav .fab .ic{width:24px;height:24px;color:#fff}
+.badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;display:inline-grid;place-items:center;font-weight:600}
+
+main{max-width:920px;margin:14px auto 0;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{margin:0;line-height:1.3;text-wrap:balance}
+h2{font-size:18px;font-weight:600}
+h3{font-size:15px;font-weight:600}
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.muted{color:var(--muted)} .small{font-size:13px}
+.link{border:0;background:none;color:var(--muted);font-size:13px;display:inline-flex;align-items:center;gap:2px;padding:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+
+/* overview */
+.ov-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ov-total{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.ov-total .big{font-size:38px;font-weight:700;letter-spacing:-.01em;line-height:1;font-variant-numeric:tabular-nums}
+.delta{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:2px}
+.delta b{display:inline-flex;align-items:center;gap:3px;background:var(--green-bg);color:var(--green);border-radius:6px;padding:1px 7px;font-weight:600;font-size:12.5px;width:max-content}
+.delta b.up{background:var(--warn-bg);color:var(--warn)}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0;text-align:left;position:relative}
+button.kpi:hover{border-color:var(--accent)}
+.kpi .kic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;margin-bottom:4px}
+.kpi.warn .kic{background:var(--warn-bg);color:var(--warn)} .kpi.ok .kic{background:var(--green);color:#fff} .kpi.acc .kic{background:var(--soft);color:var(--accent-d)}
+.kpi .k{font-size:13px;color:var(--ink);font-weight:500}
+.kpi .v{font-size:19px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--muted)}
+@media (max-width:420px){.kpi .v{font-size:15.5px}.kpi{padding:10px}.kpis{gap:8px}}
+.bnav .fabw span{white-space:nowrap}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-size:11px;font-family:var(--f-body)}
+.donut-wrap{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;align-items:center}
+@media (max-width:420px){.donut-wrap{grid-template-columns:120px minmax(0,1fr);gap:12px}}
+.donut{aspect-ratio:1;border-radius:50%;position:relative;max-width:100%}
+.donut::after{content:"";position:absolute;inset:24%;border-radius:50%;background:var(--card)}
+.donut-c{position:absolute;inset:0;display:grid;place-content:center;text-align:center;z-index:1;font-size:11px;color:var(--muted);line-height:1.3}
+.donut-c b{font-size:20px;color:var(--ink);font-weight:700}
+.dleg{display:flex;flex-direction:column;gap:7px;font-size:13px}
+.dleg div{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:8px;align-items:center}
+.dleg i{width:9px;height:9px;border-radius:50%}
+.dleg span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* rows */
+.list{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.row{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:0;background:none;padding:12px 14px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row:hover{background:#FBF9F6}
+.rico{width:40px;height:40px;border-radius:11px;background:var(--soft);color:var(--accent-d);display:grid;place-items:center;flex-shrink:0}
+.r-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.r-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.r-meta{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.r-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
+.r-side{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.amt{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.docno{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.pill{font-size:12px;padding:2px 10px;border-radius:999px;white-space:nowrap;font-weight:500;display:inline-block}
+.pill.warn{color:var(--warn);background:var(--warn-bg)} .pill.ok{color:var(--green);background:var(--green-bg)}
+.pill.acc{color:var(--accent-d);background:var(--accent-bg)} .pill.paid{color:#fff;background:var(--green)}
+.pill.bad{color:var(--bad);background:var(--bad-bg)} .pill.flag{color:#fff;background:var(--bad)}
+.tag{font-size:11px;padding:0 7px;border-radius:5px;background:var(--accent-bg);color:var(--accent-d);font-weight:500}
+.job{font-size:11px;padding:0 7px;border-radius:5px;background:var(--soft);color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:1px}
+
+.empty{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px 20px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+.empty .ic{width:30px;height:30px;color:var(--accent)}
+.notice{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.splash{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+.splash .wm{font-family:var(--f-logo);font-size:34px;letter-spacing:.14em;font-weight:500}
+.splash .wm .v{color:var(--accent)} .splash .wm .g{color:var(--green)} .splash .wm i{font-style:normal;color:var(--line);margin:0 .35em}
+.splash .tl{letter-spacing:.3em;font-size:12px;color:var(--muted);text-transform:uppercase}
+
+/* buttons */
+.btn{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 16px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+.btn.acc{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.ok{background:var(--green);border-color:var(--green);color:#fff}
+.btn.ink{color:var(--accent-d);border-color:var(--accent);background:var(--accent-bg)}
+.btn.bad{color:var(--bad);border-color:var(--line);background:var(--card)}
+.btn.bad.solid{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.ai{border-style:dashed;color:var(--accent-d);border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.sm{padding:6px 13px;font-size:13px;border-radius:10px}
+.btn.wide{width:100%}
+
+/* list / report controls */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,input[type=text],input[type=number],input[type=date],input[type=tel],input[type=search],textarea{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:9px 11px;min-width:0;width:100%}
+.filters select{width:auto;max-width:100%}
+.search{position:relative}
+.search .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);width:18px;height:18px}
+.search input{padding-left:38px}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+textarea{resize:vertical;min-height:70px}
+.two{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px}
+@media (max-width:700px){.two{grid-template-columns:1fr}}
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:minmax(0,10em) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px}
+.bar .lb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .lb small{color:var(--muted);margin-left:4px}
+.bar .tr{height:9px;background:var(--soft);border-radius:5px;overflow:hidden}
+.bar .tr i{display:block;height:100%;background:var(--accent);border-radius:5px}
+.tbl-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+.wide{min-width:880px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:500;color:var(--muted);font-size:12px;background:#FBF9F6}
+td.r,th.r{text-align:right}
+tbody tr[data-open],tbody tr[data-period]{cursor:pointer}
+tbody tr[data-open]:hover,tbody tr[data-period]:hover{background:#FBF9F6}
+tr.sel td{background:var(--accent-bg)}
+tfoot td{font-weight:600}
+
+/* settings */
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label,.lbl{font-size:13px;color:var(--ink);font-weight:500}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.people{display:flex;flex-direction:column}
+.person{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.person:first-child{border-top:0}
+.who{display:flex;gap:10px;align-items:center;min-width:0}
+.who img{width:34px;height:34px;border-radius:50%;flex-shrink:0}
+.who div{min-width:0}
+.who b{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.roles{display:flex;gap:10px;flex-wrap:wrap;font-size:13px}
+.roles label{display:flex;gap:4px;align-items:center;cursor:pointer}
+@media (max-width:600px){.person{grid-template-columns:1fr}}
+.hint{font-size:13px;color:var(--muted)}
+.hint.ok{color:var(--green)} .hint.bad{color:var(--bad)}
+
+/* payment */
+.batch{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.batch .who{flex:1}
+.paybox{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:14px}
+.payee{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:start}
+@media (max-width:480px){.payee{grid-template-columns:1fr}}
+.cp{display:grid;grid-template-columns:7.5em minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 0;border-top:1px dashed var(--line)}
+.cp:first-child{border-top:0}
+.cp .k{font-size:13px;color:var(--muted)}
+.cp .v{font-weight:600;overflow-wrap:anywhere}
+.cp .v.num{font-size:17px}
+.qr{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:4px;width:200px;max-width:100%;justify-self:center}
+.qr svg{width:180px;height:180px;max-width:100%}
+.qr span{font-size:12px;color:#2A2521;font-weight:500}
+.inc{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.inc div{display:flex;justify-content:space-between;gap:10px}
+.inc div span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* sheet */
+#sheet{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center}
+#sheet .scrim{position:absolute;inset:0;background:var(--scrim)}
+#panel{position:relative;background:var(--bg);width:min(640px,100%);max-height:calc(100% - 24px - env(safe-area-inset-top,0px));overflow:auto;border-radius:22px 22px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px;animation:up .22s ease-out;box-shadow:0 -6px 30px rgba(42,37,33,.15)}
+@media (min-width:701px){#sheet{align-items:center}#panel{border-radius:22px;max-height:calc(100% - 48px)}}
+@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#panel{animation:none}}
+.sh-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.x{border:1px solid var(--line);background:var(--card);width:36px;height:36px;border-radius:50%;font-size:15px;flex-shrink:0}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:none;border-radius:9px;padding:9px 6px;font-weight:500;color:var(--ink)}
+.seg button.on{background:var(--accent);color:#fff}
+.seg.brand button{font-family:var(--f-logo);font-size:16px;font-weight:600;letter-spacing:.1em}
+.seg.brand button.on.vangarde{background:var(--green)}
+.drop{background:var(--card);border:1.5px dashed var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.drop.over{border-color:var(--accent);background:var(--accent-bg)}
+.drops{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+@media (max-width:560px){.drops{grid-template-columns:1fr}}
+.drop .lbl b{font-weight:600}
+.drop .lbl{color:var(--muted)}
+.thumbs{display:flex;gap:10px;flex-wrap:wrap}
+.th{position:relative;width:84px;height:104px;border-radius:8px;overflow:hidden;background:var(--soft);border:1px solid var(--line);flex-shrink:0}
+.th img{width:100%;height:100%;object-fit:cover;display:block}
+.th .pdf{width:100%;height:100%;display:grid;place-items:center;font-weight:700;color:var(--bad)}
+.th .up{position:absolute;inset:0;background:var(--scrim);color:#fff;font-size:11px;display:grid;place-items:center;text-align:center;padding:4px}
+.th .rm{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:1}
+.th a{display:block;width:100%;height:100%}
+.drop-act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.form .full{grid-column:1/-1}
+@media (max-width:480px){.form{grid-template-columns:1fr}}
+.sh-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.sh-foot .btn{min-width:120px}
+.alert{border-radius:10px;padding:10px 12px;font-size:13px;background:var(--warn-bg);color:var(--warn)}
+.alert.bad{background:var(--bad-bg);color:var(--bad);font-weight:600}
+
+.slip{background:var(--card);border:1px solid var(--line);border-bottom:0;padding:18px 18px 26px;position:relative;display:flex;flex-direction:column;gap:12px;border-radius:var(--r) var(--r) 0 0;
+  -webkit-mask:radial-gradient(circle 7px at 50% 100%,transparent 6.5px,#000 7px) 0 0/16px 100% repeat-x;
+          mask:radial-gradient(circle 7px at 50% 100%,transparent 6.5px,#000 7px) 0 0/16px 100% repeat-x}
+.slip-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.eyebrow{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.slip-amt{font-size:32px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.stamp{font-weight:700;font-size:13px;padding:4px 10px;border-radius:8px;white-space:nowrap;transform:rotate(-3deg)}
+.stamp.warn{color:var(--warn);background:var(--warn-bg)} .stamp.ok{color:var(--green);background:var(--green-bg)} .stamp.acc{color:var(--accent-d);background:var(--accent-bg)}
+.stamp.paid{color:#fff;background:var(--green)} .stamp.bad{color:var(--bad);background:var(--bad-bg)}
+.kv{display:grid;grid-template-columns:8.5em minmax(0,1fr);gap:6px 12px;font-size:14px;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;overflow-wrap:anywhere}
+.dash{border:0;border-top:1.5px dashed var(--line);margin:0}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.tl li{display:grid;grid-template-columns:12px minmax(0,1fr);gap:10px;font-size:14px}
+.tl li i{width:10px;height:10px;border-radius:50%;background:var(--accent);margin-top:6px}
+.tl li i.bad{background:var(--bad)} .tl li i.ok{background:var(--green)}
+.tl .t{color:var(--muted);font-size:12px}
+.act{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.act .btns{display:flex;gap:8px;flex-wrap:wrap}
+.act .btns .btn{flex:1}
+.diff{font-weight:600}
+
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;max-width:min(92vw,520px);box-shadow:var(--shadow)}
+#toast.bad{background:var(--bad)} #toast.warn{background:var(--warn)}
+.skel{height:64px;border-radius:var(--r);background:var(--card);border:1px solid var(--line);opacity:.7}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd">
+    <div class="wordmark"><b><span class="v">VYNN</span><i>|</i><span class="g">VANGARDE</span></b><span>Shared Expense App</span></div>
+    <div class="mark" aria-hidden="true">V</div>
+    <button class="hello link" id="mechip"><span id="hello"></span><b id="hname"></b></button>
+    <div class="hright"><span class="live" id="live"><i></i><span></span></span>
+    <div class="lang" id="langsw" role="group" aria-label="Language"><button data-lang="th" lang="th">ไทย</button><button data-lang="lo" lang="lo">ລາວ</button><button data-lang="my" lang="my">မြန်မာ</button></div></div>
+  </div>
+  <div class="bsw" id="bsw" role="group" aria-label="Company"></div>
+</header>
+<main id="main"></main>
+<nav class="bnav" id="tabs"></nav>
+<div id="sheet" hidden><div class="scrim" data-close></div><div id="panel" role="dialog" aria-modal="true"></div></div>
+<div id="toast" hidden role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+/* ---------- i18n: [ไทย, ລາວ, မြန်မာ] ---------- */
+const D={
+brand_sub:["เบิกจ่าย","ເບີກຈ່າຍ","စရိတ်တောင်းခံ"],
+live_live:["เรียลไทม์","ອັບເດດທັນທີ","တိုက်ရိုက်"],live_saving:["กำลังบันทึก…","ກຳລັງບັນທຶກ…","သိမ်းနေသည်…"],live_error:["ขาดการเชื่อมต่อ","ຂາດການເຊື່ອມຕໍ່","ချိတ်ဆက်မှု ပြတ်နေသည်"],live_none:["ออฟไลน์","ອອບລາຍ","အော့ဖ်လိုင်း"],live_conn:["กำลังเชื่อมต่อ","ກຳລັງເຊື່ອມຕໍ່","ချိတ်ဆက်နေသည်"],
+owner:["เจ้าของ","ເຈົ້າຂອງ","ပိုင်ရှင်"],staff:["พนักงาน","ພະນັກງານ","ဝန်ထမ်း"],menu:["เมนู","ເມນູ","မီနူး"],
+tab_mine:["ของฉัน","ຂອງຂ້ອຍ","ကျွန်ုပ်၏"],tab_approve:["ศูนย์อนุมัติ","ສູນອະນຸມັດ","အတည်ပြုစင်တာ"],tab_report:["รายงาน","ລາຍງານ","အစီရင်ခံစာ"],tab_settings:["ตั้งค่า","ຕັ້ງຄ່າ","ဆက်တင်"],
+fab:["+ ขอเบิกเงิน","+ ຂໍເບີກເງິນ","+ ငွေတောင်းခံရန်"],
+n_signin_h:["เปิดหน้านี้ใน Claude แล้วลงชื่อเข้าใช้","ເປີດໜ້ານີ້ໃນ Claude ແລ້ວເຂົ້າສູ່ລະບົບ","ဤစာမျက်နှာကို Claude တွင်ဖွင့်ပြီး အကောင့်ဝင်ပါ"],
+n_signin_p:["ระบบเบิกจ่ายเก็บข้อมูลไว้กับบัญชี Claude ต้องลงชื่อเข้าใช้และได้รับเชิญจากเจ้าของก่อนจึงจะส่งบิลได้","ລະບົບເບີກຈ່າຍເກັບຂໍ້ມູນໄວ້ກັບບັນຊີ Claude ຕ້ອງເຂົ້າສູ່ລະບົບ ແລະ ໄດ້ຮັບເຊີນຈາກເຈົ້າຂອງກ່ອນ ຈຶ່ງສົ່ງບິນໄດ້","ဤစနစ်သည် Claude အကောင့်တွင် ဒေတာသိမ်းသည်။ ဘောင်ချာတင်ရန် အကောင့်ဝင်ပြီး ပိုင်ရှင်၏ ဖိတ်ကြားချက် ရရှိရပါမည်"],
+n_ro_h:["คุณดูได้อย่างเดียว","ທ່ານເບິ່ງໄດ້ຢ່າງດຽວ","သင် ကြည့်ရှုခွင့်သာ ရှိသည်"],
+n_ro_p:["ขอให้เจ้าของแชร์หน้านี้ให้คุณแบบ Editor เพื่อส่งคำขอเบิกและแนบบิล","ຂໍໃຫ້ເຈົ້າຂອງແບ່ງປັນໜ້ານີ້ໃຫ້ທ່ານແບບ Editor ເພື່ອສົ່ງຄຳຂໍເບີກ ແລະ ແນບບິນ","ငွေတောင်းခံရန်နှင့် ဘောင်ချာတင်ရန် ပိုင်ရှင်ထံမှ Editor အဖြစ် မျှဝေခိုင်းပါ"],
+n_bank_h:["ยังไม่ได้ใส่บัญชีรับเงิน","ຍັງບໍ່ໄດ້ໃສ່ບັນຊີຮັບເງິນ","ငွေလက်ခံမည့် ဘဏ်အကောင့် မထည့်ရသေးပါ"],
+n_bank_p:["ไปที่ “ตั้งค่า” แล้วกรอกเลขบัญชีหรือพร้อมเพย์ เพื่อให้บริษัทโอนเงินเบิกให้คุณได้","ໄປທີ່ “ຕັ້ງຄ່າ” ແລ້ວປ້ອນເລກບັນຊີ ຫຼື ພ້ອມເພ ເພື່ອໃຫ້ບໍລິສັດໂອນເງິນໃຫ້ທ່ານໄດ້","ကုမ္ပဏီမှ ငွေလွှဲပေးနိုင်ရန် “ဆက်တင်” တွင် ဘဏ်အကောင့် သို့မဟုတ် PromptPay ဖြည့်ပါ"],
+meta:["{cat} · บิล {bill} · ทำเบิก {claim} · บิล {n} / สลิป {s}","{cat} · ບິນ {bill} · ເບີກ {claim} · ບິນ {n} / ສະລິບ {s}","{cat} · ဘောင်ချာ {bill} · တောင်းခံ {claim} · ဘောင်ချာ {n} / စလစ် {s}"],
+tag_adv:["เบิกล่วงหน้า","ເບີກລ່ວງໜ້າ","ကြိုတင်ငွေ"],tag_norec:["ไม่มีใบเสร็จ","ບໍ່ມີໃບຮັບເງິນ","ဘောင်ချာမရှိ"],tag_dup:["สลิปซ้ำ","ສະລິບຊ້ຳ","စလစ်ထပ်နေ"],type_reimb:["เบิกคืน","ເບີກຄືນ","ပြန်အမ်းငွေ"],
+st_pending_head:["รอหัวหน้าอนุมัติ","ລໍຫົວໜ້າອະນຸມັດ","ဌာနမှူး အတည်ပြုရန်"],st_pending_owner:["รออนุมัติ","ລໍອະນຸມັດ","အတည်ပြုရန် စောင့်ဆိုင်း"],st_approved:["อนุมัติ · รอทำจ่าย","ອະນຸມັດ · ລໍຈ່າຍ","အတည်ပြုပြီး · ပေးချေရန်"],
+st_credit:["เครดิต · จ่าย {d}","ເຄຣດິດ · ຈ່າຍ {d}","အကြွေး · {d} ပေးမည်"],st_paid:["จ่ายแล้ว","ຈ່າຍແລ້ວ","ပေးချေပြီး"],st_rejected:["ไม่อนุมัติ","ບໍ່ອະນຸມັດ","ငြင်းပယ်"],st_cleared:["เคลียร์บิลแล้ว","ເຄລຍບິນແລ້ວ","ရှင်းလင်းပြီး"],st_advpaid:["จ่ายแล้ว · รอเคลียร์บิล","ຈ່າຍແລ້ວ · ລໍເຄລຍບິນ","ပေးပြီး · ဘောင်ချာရှင်းရန်"],
+a_submit:["ส่งคำขอเบิก","ສົ່ງຄຳຂໍເບີກ","တောင်းခံလွှာ တင်သွင်း"],a_approve_head:["หัวหน้าแผนกอนุมัติ ส่งต่อ","ຫົວໜ້າພະແນກອະນຸມັດ ສົ່ງຕໍ່","ဌာနမှူး အတည်ပြုပြီး ဆက်ပို့"],a_approve_final:["อนุมัติ · ทำจ่ายทันที","ອະນຸມັດ · ຈ່າຍທັນທີ","အတည်ပြု · ချက်ချင်းပေး"],a_credit:["อนุมัติแบบเครดิต","ອະນຸມັດແບບເຄຣດິດ","အကြွေးဖြင့် အတည်ပြု"],
+a_auto:["อนุมัติอัตโนมัติ (เจ้าของเบิกเอง)","ອະນຸມັດອັດຕະໂນມັດ (ເຈົ້າຂອງເບີກເອງ)","အလိုအလျောက် အတည်ပြု (ပိုင်ရှင်ကိုယ်တိုင်)"],a_reject:["ไม่อนุมัติ · จบรายการ","ບໍ່ອະນຸມັດ · ຈົບລາຍການ","ငြင်းပယ် · ပိတ်သိမ်း"],a_paid:["โอนเงินแล้ว","ໂອນເງິນແລ້ວ","ငွေလွှဲပြီး"],a_clear:["เคลียร์บิลเงินทดรอง","ເຄລຍບິນເງິນລ່ວງໜ້າ","ကြိုတင်ငွေ ဘောင်ချာရှင်း"],
+mine_h:["คำขอเบิกของฉัน","ຄຳຂໍເບີກຂອງຂ້ອຍ","ကျွန်ုပ်၏ တောင်းခံလွှာများ"],no_dept:["ยังไม่ได้เลือกแผนก","ຍັງບໍ່ໄດ້ເລືອກພະແນກ","ဌာန မရွေးရသေး"],
+k_pending:["รออนุมัติ","ລໍອະນຸມັດ","အတည်ပြုရန်"],k_waitpay:["อนุมัติแล้ว รอรับเงิน","ອະນຸມັດແລ້ວ ລໍຮັບເງິນ","အတည်ပြုပြီး ငွေစောင့်"],k_got:["ได้รับเงินเดือนนี้","ໄດ້ຮັບເງິນເດືອນນີ້","ဤလ ရရှိငွေ"],
+n_items:["{n} รายการ","{n} ລາຍການ","{n} ခု"],credit_round:["เครดิต {n} รายการ · รอบ {d}","ເຄຣດິດ {n} ລາຍການ · ຮອບ {d}","အကြွေး {n} ခု · {d}"],
+clr_h:["มีเงินทดรองที่ต้องเคลียร์บิล {n} รายการ","ມີເງິນລ່ວງໜ້າທີ່ຕ້ອງເຄລຍບິນ {n} ລາຍການ","ဘောင်ချာရှင်းရန် ကြိုတင်ငွေ {n} ခု ရှိသည်"],clr_p:["เปิดรายการแล้วแนบบิลจริงพร้อมยอดที่ใช้ไป","ເປີດລາຍການແລ້ວແນບບິນແທ້ພ້ອມຍອດທີ່ໃຊ້ໄປ","စာရင်းကိုဖွင့်ပြီး အမှန်ဘောင်ချာနှင့် သုံးငွေကို ထည့်ပါ"],
+all_n:["ทั้งหมด {n} รายการ","ທັງໝົດ {n} ລາຍການ","စုစုပေါင်း {n} ခု"],
+empty_mine_h:["ยังไม่มีคำขอเบิก","ຍັງບໍ່ມີຄຳຂໍເບີກ","တောင်းခံလွှာ မရှိသေးပါ"],empty_mine_p:["กด “+ ขอเบิกเงิน” แล้วถ่ายรูปบิล คำขอจะไปถึงผู้อนุมัติทันที","ກົດ “+ ຂໍເບີກເງິນ” ແລ້ວຖ່າຍຮູບບິນ ຄຳຂໍຈະໄປຮອດຜູ້ອະນຸມັດທັນທີ","“+ ငွေတောင်းခံရန်” ကိုနှိပ်ပြီး ဘောင်ချာဓာတ်ပုံရိုက်ပါ။ အတည်ပြုသူထံ ချက်ချင်းရောက်မည်"],
+ap_h:["รอคุณอนุมัติ","ລໍທ່ານອະນຸມັດ","သင်အတည်ပြုရန်"],ap_empty_h:["ไม่มีรายการค้าง","ບໍ່ມີລາຍການຄ້າງ","ကျန်ရှိသည့်စာရင်း မရှိ"],ap_empty_p:["คำขอใหม่จะขึ้นที่นี่ทันทีที่พนักงานกดส่ง","ຄຳຂໍໃໝ່ຈະຂຶ້ນທີ່ນີ້ທັນທີທີ່ພະນັກງານກົດສົ່ງ","ဝန်ထမ်းတင်သွင်းသည်နှင့် ဤနေရာတွင် ချက်ချင်းပေါ်မည်"],
+pay_now_h:["ทำจ่ายทันที","ຈ່າຍທັນທີ","ချက်ချင်းပေးချေရန်"],pay_none:["ไม่มีรายการรอทำจ่าย","ບໍ່ມີລາຍການລໍຈ່າຍ","ပေးချေရန် မရှိ"],
+credit_h:["เครดิต · รอจ่ายวันดีล ทุกวันที่ {d}","ເຄຣດິດ · ລໍຈ່າຍວັນທີ {d} ຂອງທຸກເດືອນ","အကြွေး · လစဉ် {d} ရက်နေ့ ပေးချေ"],round:["รอบ {d}","ຮອບ {d}","ပေးချေရက် {d}"],due:["ถึงกำหนดแล้ว","ຮອດກຳນົດແລ້ວ","ပေးရမည့်ရက် ရောက်ပြီ"],
+btn_pay:["ทำจ่าย","ຈ່າຍ","ပေးချေ"],btn_payearly:["จ่ายก่อนกำหนด","ຈ່າຍກ່ອນກຳນົດ","စောပေးချေ"],
+credit_none_h:["ไม่มีรายการเครดิต","ບໍ່ມີລາຍການເຄຣດິດ","အကြွေးစာရင်း မရှိ"],credit_none_p:["รายการที่กด “Credit” จะรวมไว้ที่นี่ แยกตามรอบวันที่ {d} และรวมยอดต่อคนให้โอนครั้งเดียว","ລາຍການທີ່ກົດ “Credit” ຈະລວມໄວ້ທີ່ນີ້ ແຍກຕາມຮອບວັນທີ {d} ແລະ ລວມຍອດຕໍ່ຄົນໃຫ້ໂອນເທື່ອດຽວ","“Credit” နှိပ်ထားသည့်စာရင်းများကို {d} ရက်နေ့အလိုက် ဤနေရာတွင်စုပြီး တစ်ဦးချင်း တစ်ကြိမ်တည်းလွှဲနိုင်အောင် ပေါင်းပေးမည်"],
+no_bank_short:["ยังไม่มีบัญชีรับเงิน","ຍັງບໍ່ມີບັນຊີຮັບເງິນ","ဘဏ်အကောင့် မရှိသေး"],has_bank:["มีบัญชีรับเงินแล้ว","ມີບັນຊີຮັບເງິນແລ້ວ","ဘဏ်အကောင့် ရှိပြီ"],
+rp_h:["สรุปค่าใช้จ่าย","ສະຫຼຸບຄ່າໃຊ້ຈ່າຍ","အသုံးစရိတ် အနှစ်ချုပ်"],csv:["ดาวน์โหลด CSV","ດາວໂຫຼດ CSV","CSV ဒေါင်းလုဒ်"],
+p_day:["รายวัน","ລາຍວັນ","နေ့စဉ်"],p_week:["รายสัปดาห์","ລາຍອາທິດ","အပတ်စဉ်"],p_month:["รายเดือน","ລາຍເດືອນ","လစဉ်"],p_quarter:["รายไตรมาส","ລາຍໄຕມາດ","သုံးလပတ်"],p_year:["รายปี","ລາຍປີ","နှစ်စဉ်"],
+all_time:["ทุกช่วงเวลา","ທຸກຊ່ວງເວລາ","အချိန်အားလုံး"],group_by:["แยกตาม","ແຍກຕາມ","အလိုက်"],
+g_person:["บุคคล","ບຸກຄົນ","ပုဂ္ဂိုလ်"],g_category:["หมวดหมู่","ໝວດໝູ່","အမျိုးအစား"],g_job:["ชื่องาน","ຊື່ວຽກ","လုပ်ငန်းအမည်"],g_dept:["แผนก","ພະແນກ","ဌာန"],
+f_valid:["ทุกสถานะ (ไม่รวมที่ไม่อนุมัติ)","ທຸກສະຖານະ (ບໍ່ລວມທີ່ບໍ່ອະນຸມັດ)","အခြေအနေအားလုံး (ငြင်းပယ်မှုမပါ)"],f_unpaid:["อนุมัติแล้ว รอจ่าย","ອະນຸມັດແລ້ວ ລໍຈ່າຍ","အတည်ပြုပြီး ပေးရန်ကျန်"],all_depts:["ทุกแผนก","ທຸກພະແນກ","ဌာနအားလုံး"],
+basis_bill:["นับตามวันที่ในบิล","ນັບຕາມວັນທີໃນບິນ","ဘောင်ချာရက်စွဲအလိုက်"],basis_claim:["นับตามวันที่ทำเบิก","ນັບຕາມວັນທີເບີກ","တောင်းခံရက်စွဲအလိုက်"],
+doc_all:["มี/ไม่มีใบเสร็จ","ມີ/ບໍ່ມີໃບຮັບເງິນ","ဘောင်ချာ ရှိ/မရှိ"],doc_rec:["มีใบเสร็จ","ມີໃບຮັບເງິນ","ဘောင်ချာရှိ"],doc_norec:["ไม่มีใบเสร็จ (มีแค่สลิป)","ບໍ່ມີໃບຮັບເງິນ (ມີແຕ່ສະລິບ)","ဘောင်ချာမရှိ (စလစ်သာ)"],
+k_total:["ยอดรวม {p}","ຍອດລວມ {p}","စုစုပေါင်း {p}"],k_allp:["ทุกช่วง","ທຸກຊ່ວງ","အားလုံး"],k_pendpay:["รออนุมัติ / รอจ่าย","ລໍອະນຸມັດ / ລໍຈ່າຍ","အတည်ပြုရန် / ပေးရန်"],k_waitpay_s:["รอจ่าย ฿{v}","ລໍຈ່າຍ ฿{v}","ပေးရန် ฿{v}"],
+k_norec_s:["ไม่มีใบเสร็จ {n} รายการ ฿{v}","ບໍ່ມີໃບຮັບເງິນ {n} ລາຍການ ฿{v}","ဘောင်ချာမရှိ {n} ခု ฿{v}"],by_x:["แยกตาม{g}","ແຍກຕາມ{g}","{g} အလိုက်"],
+no_data:["ไม่มีข้อมูลในช่วงนี้","ບໍ່ມີຂໍ້ມູນໃນຊ່ວງນີ້","ဤကာလတွင် ဒေတာမရှိ"],trend_h:["{p} (ย้อนหลัง {n})","{p} (ຍ້ອນຫຼັງ {n})","{p} (နောက်ကြောင်း {n})"],no_data2:["ยังไม่มีข้อมูล","ຍັງບໍ່ມີຂໍ້ມູນ","ဒေတာ မရှိသေး"],
+th_period:["ช่วงเวลา","ຊ່ວງເວລາ","ကာလ"],th_count:["รายการ","ລາຍການ","အရေအတွက်"],th_amount:["ยอดเงิน","ຈຳນວນເງິນ","ငွေပမာဏ"],th_no:["เลขที่","ເລກທີ","နံပါတ်"],
+th_claimdate:["วันที่ทำเบิก","ວັນທີເບີກ","တောင်းခံရက်"],th_billdate:["วันที่ในบิล","ວັນທີໃນບິນ","ဘောင်ချာရက်"],th_who:["ผู้เบิก","ຜູ້ເບີກ","တောင်းခံသူ"],th_item:["รายการ","ລາຍການ","အကြောင်းအရာ"],th_status:["สถานะ","ສະຖານະ","အခြေအနေ"],
+sum_n:["รวม {n} รายการ","ລວມ {n} ລາຍການ","စုစုပေါင်း {n} ခု"],rp_empty_h:["ไม่มีรายการในช่วงนี้","ບໍ່ມີລາຍການໃນຊ່ວງນີ້","ဤကာလတွင် စာရင်းမရှိ"],rp_empty_p:["ลองเปลี่ยนช่วงเวลาหรือสถานะด้านบน","ລອງປ່ຽນຊ່ວງເວລາ ຫຼື ສະຖານະດ້ານເທິງ","အပေါ်ရှိ ကာလ သို့မဟုတ် အခြေအနေကို ပြောင်းကြည့်ပါ"],
+no_job:["(ไม่ระบุงาน)","(ບໍ່ລະບຸວຽກ)","(လုပ်ငန်းမဖော်ပြ)"],
+q_label:["ไตรมาส {q}/{y}","ໄຕມາດ {q}/{y}","သုံးလပတ် {q}/{y}"],y_label:["ปี {y}","ປີ {y}","{y} ခုနှစ်"],
+me_h:["ข้อมูลของฉัน","ຂໍ້ມູນຂອງຂ້ອຍ","ကျွန်ုပ်၏ အချက်အလက်"],l_nick:["ชื่อที่แสดงในระบบ","ຊື່ທີ່ສະແດງໃນລະບົບ","စနစ်တွင်ပြမည့်အမည်"],ph_nick:["เช่น ช่างเอก, พี่นุ่น","ເຊັ່ນ ຊ່າງເອກ, ເອື້ອຍນຸ່ນ","ဥပမာ ကိုအောင်၊ မမြ"],
+pick_dept:["— เลือกแผนก —","— ເລືອກພະແນກ —","— ဌာနရွေးပါ —"],no_dept_opt:["— ไม่ระบุแผนก —","— ບໍ່ລະບຸພະແນກ —","— ဌာနမဖော်ပြ —"],
+bank_h:["บัญชีรับเงินเบิก","ບັນຊີຮັບເງິນເບີກ","ငွေလက်ခံမည့် ဘဏ်အကောင့်"],l_bank:["ธนาคาร","ທະນາຄານ","ဘဏ်"],pick_bank:["— เลือกธนาคาร —","— ເລືອກທະນາຄານ —","— ဘဏ်ရွေးပါ —"],
+l_acct:["เลขบัญชี","ເລກບັນຊີ","အကောင့်နံပါတ်"],l_aname:["ชื่อบัญชี","ຊື່ບັນຊີ","အကောင့်အမည်"],ph_aname:["ตามหน้าสมุดบัญชี","ຕາມປຶ້ມບັນຊີ","ဘဏ်စာအုပ်ပါအတိုင်း"],
+l_pp:["พร้อมเพย์ (เบอร์มือถือหรือเลขบัตรประชาชน)","ພ້ອມເພ (ເບີມືຖື ຫຼື ເລກບັດປະຈຳຕົວໄທ)","PromptPay (ဖုန်းနံပါတ် သို့မဟုတ် ထိုင်းမှတ်ပုံတင်နံပါတ်)"],
+bank_hint:["ผู้ทำจ่ายจะเห็นข้อมูลนี้พร้อมปุ่มคัดลอกและ QR พร้อมเพย์ ข้อมูลนี้คนที่เข้าระบบเห็นได้ ใส่เฉพาะบัญชีรับเงินเท่านั้น","ຜູ້ຈ່າຍເງິນຈະເຫັນຂໍ້ມູນນີ້ພ້ອມປຸ່ມສຳເນົາ ແລະ QR ພ້ອມເພ ຄົນທີ່ເຂົ້າລະບົບເຫັນໄດ້ ໃສ່ສະເພາະບັນຊີຮັບເງິນເທົ່ານັ້ນ","ငွေပေးသူသည် ဤအချက်အလက်ကို ကော်ပီခလုတ်နှင့် PromptPay QR ဖြင့် မြင်ရမည်။ စနစ်အသုံးပြုသူအားလုံး မြင်နိုင်သဖြင့် ငွေလက်ခံအကောင့်ကိုသာ ထည့်ပါ"],
+save:["บันทึก","ບັນທຶກ","သိမ်းမည်"],chain:["สายอนุมัติของคุณ: {x}เจ้าของ → ทำจ่าย","ສາຍອະນຸມັດຂອງທ່ານ: {x}ເຈົ້າຂອງ → ຈ່າຍເງິນ","သင်၏ အတည်ပြုအဆင့်: {x}ပိုင်ရှင် → ပေးချေ"],chain_head:["หัวหน้าแผนก ({n}) → ","ຫົວໜ້າພະແນກ ({n}) → ","ဌာနမှူး ({n}) → "],
+team_h:["ทีมและสิทธิ์","ທີມ ແລະ ສິດ","အဖွဲ့နှင့် လုပ်ပိုင်ခွင့်"],people_n:["{n} คน","{n} ຄົນ","{n} ဦး"],
+team_p:["พนักงานจะขึ้นที่นี่เมื่อเปิดลิงก์ครั้งแรก · หัวหน้าแผนก อนุมัติขั้นแรกของแผนกตัวเอง (ไม่ติ๊กก็ได้ คำขอจะมาถึงเจ้าของเลย) · อนุมัติแทนเจ้าของ กด Approve/Credit/Reject ได้ · ฝ่ายบัญชี ทำจ่ายได้","ພະນັກງານຈະຂຶ້ນທີ່ນີ້ເມື່ອເປີດລິ້ງເທື່ອທຳອິດ · ຫົວໜ້າພະແນກ ອະນຸມັດຂັ້ນທຳອິດຂອງພະແນກຕົນເອງ (ບໍ່ຕິກກໍໄດ້ ຄຳຂໍຈະມາຮອດເຈົ້າຂອງເລີຍ) · ອະນຸມັດແທນເຈົ້າຂອງ ກົດ Approve/Credit/Reject ໄດ້ · ຝ່າຍບັນຊີ ຈ່າຍເງິນໄດ້","ဝန်ထမ်းများ လင့်ခ်ကို ပထမဆုံးဖွင့်သည့်အခါ ဤနေရာတွင် ပေါ်မည် · ဌာနမှူး သည် မိမိဌာန၏ ပထမအဆင့်ကို အတည်ပြုသည် (မရွေးလည်းရ၊ ပိုင်ရှင်ထံ တိုက်ရိုက်ရောက်မည်) · ပိုင်ရှင်ကိုယ်စား Approve/Credit/Reject လုပ်နိုင်သည် · စာရင်းကိုင် ငွေပေးချေနိုင်သည်"],
+you:[" (คุณ)"," (ທ່ານ)"," (သင်)"],can_all:["ทำได้ทุกอย่าง","ເຮັດໄດ້ທຸກຢ່າງ","အားလုံးလုပ်နိုင်"],
+r_head:["หัวหน้าแผนก","ຫົວໜ້າພະແນກ","ဌာနမှူး"],r_final:["อนุมัติแทนเจ้าของ","ອະນຸມັດແທນເຈົ້າຂອງ","ပိုင်ရှင်ကိုယ်စား အတည်ပြု"],r_finance:["ฝ่ายบัญชี","ຝ່າຍບັນຊີ","စာရင်းကိုင်"],nobody:["ยังไม่มีใครเข้าร่วม","ຍັງບໍ່ມີໃຜເຂົ້າຮ່ວມ","မည်သူမျှ မဝင်ရသေး"],dept_of:["แผนกของ {n}","ພະແນກຂອງ {n}","{n} ၏ ဌာန"],
+co_h:["ตั้งค่าบริษัท","ຕັ້ງຄ່າບໍລິສັດ","ကုမ္ပဏီ ဆက်တင်"],l_depts:["แผนก (บรรทัดละ 1)","ພະແນກ (ແຖວລະ 1)","ဌာနများ (တစ်ကြောင်းလျှင် ၁ ခု)"],l_cats:["หมวดค่าใช้จ่าย (บรรทัดละ 1)","ໝວດຄ່າໃຊ້ຈ່າຍ (ແຖວລະ 1)","စရိတ်အမျိုးအစား (တစ်ကြောင်းလျှင် ၁ ခု)"],
+l_deal:["วันดีล (จ่ายรายการเครดิต) ทุกวันที่","ວັນຈ່າຍເຄຣດິດ ທຸກວັນທີ","အကြွေးပေးချေရက် (လစဉ်)"],save_cfg:["บันทึกการตั้งค่า","ບັນທຶກການຕັ້ງຄ່າ","ဆက်တင် သိမ်းမည်"],
+invite_h:["ชวนพนักงานเข้าใช้","ເຊີນພະນັກງານເຂົ້າໃຊ້","ဝန်ထမ်းများကို ဖိတ်ကြားရန်"],
+invite_p:["กดปุ่ม Share ของหน้านี้ แล้วเชิญอีเมลพนักงานแต่ละคนเป็น Editor (ต้องเป็น Editor ถึงจะแนบรูปบิลได้) พนักงานเปิดลิงก์ในมือถือ ลงชื่อเข้าใช้ Claude แล้วกรอกชื่อ แผนก และบัญชีรับเงินครั้งแรกครั้งเดียว","ກົດປຸ່ມ Share ຂອງໜ້ານີ້ ແລ້ວເຊີນອີເມວພະນັກງານແຕ່ລະຄົນເປັນ Editor (ຕ້ອງເປັນ Editor ຈຶ່ງແນບຮູບບິນໄດ້) ພະນັກງານເປີດລິ້ງໃນມືຖື ເຂົ້າສູ່ລະບົບ Claude ແລ້ວປ້ອນຊື່ ພະແນກ ແລະ ບັນຊີຮັບເງິນເທື່ອທຳອິດເທື່ອດຽວ","ဤစာမျက်နှာ၏ Share ခလုတ်ကိုနှိပ်ပြီး ဝန်ထမ်းတစ်ဦးချင်း၏ အီးမေးလ်ကို Editor အဖြစ် ဖိတ်ပါ (ဘောင်ချာပုံတင်ရန် Editor ဖြစ်ရမည်)။ ဝန်ထမ်းများက ဖုန်းဖြင့်လင့်ခ်ဖွင့်၊ Claude ဝင်ပြီး အမည်၊ ဌာန၊ ဘဏ်အကောင့်ကို တစ်ကြိမ်သာ ဖြည့်ရမည်"],
+welcome_h:["ยินดีต้อนรับสู่ระบบเบิกจ่าย","ຍິນດີຕ້ອນຮັບສູ່ລະບົບເບີກຈ່າຍ","စရိတ်တောင်းခံစနစ်မှ ကြိုဆိုပါသည်"],
+welcome_p:["กรอกครั้งเดียว เพื่อให้คำขอเบิกไปถึงผู้อนุมัติที่ถูกคน และบริษัทโอนเงินให้คุณได้","ປ້ອນເທື່ອດຽວ ເພື່ອໃຫ້ຄຳຂໍເບີກໄປຮອດຜູ້ອະນຸມັດທີ່ຖືກຕ້ອງ ແລະ ບໍລິສັດໂອນເງິນໃຫ້ທ່ານໄດ້","တောင်းခံလွှာများ မှန်ကန်သောအတည်ပြုသူထံရောက်ရန်နှင့် ကုမ္ပဏီမှ ငွေလွှဲပေးနိုင်ရန် တစ်ကြိမ်သာ ဖြည့်ပါ"],
+start:["เริ่มใช้งาน","ເລີ່ມໃຊ້ງານ","စတင်အသုံးပြုမည်"],close:["ปิด","ປິດ","ပိတ်"],
+form_h:["ขอเบิกเงิน","ຂໍເບີກເງິນ","ငွေတောင်းခံရန်"],type_aria:["ประเภทการเบิก","ປະເພດການເບີກ","တောင်းခံမှုအမျိုးအစား"],
+t_reimb:["เบิกคืน (สำรองจ่ายไปแล้ว)","ເບີກຄືນ (ຈ່າຍໄປກ່ອນແລ້ວ)","ပြန်အမ်းငွေ (ကြိုပေးပြီး)"],t_adv:["เบิกล่วงหน้า (เงินทดรอง)","ເບີກລ່ວງໜ້າ (ເງິນທົດລອງ)","ကြိုတင်ငွေ"],
+no_upload:["บัญชีนี้ยังแนบไฟล์ไม่ได้ ขอให้เจ้าของแชร์หน้านี้ให้คุณแบบ Editor","ບັນຊີນີ້ຍັງແນບໄຟລ໌ບໍ່ໄດ້ ຂໍໃຫ້ເຈົ້າຂອງແບ່ງປັນໜ້ານີ້ໃຫ້ທ່ານແບບ Editor","ဤအကောင့်ဖြင့် ဖိုင်မတင်နိုင်သေးပါ။ ပိုင်ရှင်ထံမှ Editor အဖြစ် မျှဝေခိုင်းပါ"],
+d_bill:["บิล / ใบกำกับภาษี","ບິນ / ໃບກຳກັບພາສີ","ဘောင်ချာ / အခွန်ပြေစာ"],d_bill_s:["ซื้ออะไร","ຊື້ຫຍັງ","ဘာဝယ်သလဲ"],d_slip:["สลิปโอน","ສະລິບໂອນ","ငွေလွှဲစလစ်"],d_slip_s:["หลักฐานว่าจ่ายแล้ว","ຫຼັກຖານວ່າຈ່າຍແລ້ວ","ပေးချေပြီးကြောင်း အထောက်အထား"],
+up_bill:["+ ถ่ายรูป / อัปโหลดบิล","+ ຖ່າຍຮູບ / ອັບໂຫຼດບິນ","+ ဓာတ်ပုံရိုက် / ဘောင်ချာတင်"],up_slip:["+ แนบสลิป","+ ແນບສະລິບ","+ စလစ်တင်"],up_bill_s:["+ แนบบิล","+ ແນບບິນ","+ ဘောင်ချာတင်"],
+req_hint:["แนบบิลหรือสลิปอย่างน้อย 1 อย่าง ถ้ามีแค่สลิปจะขึ้นว่า “ไม่มีใบเสร็จ” ให้บัญชีเห็น","ແນບບິນ ຫຼື ສະລິບຢ່າງໜ້ອຍ 1 ຢ່າງ ຖ້າມີແຕ່ສະລິບຈະຂຶ້ນວ່າ “ບໍ່ມີໃບຮັບເງິນ” ໃຫ້ບັນຊີເຫັນ","ဘောင်ချာ သို့မဟုတ် စလစ် အနည်းဆုံး ၁ ခု တင်ပါ။ စလစ်သာရှိလျှင် စာရင်းကိုင်မြင်ရန် “ဘောင်ချာမရှိ” ဟု ပြမည်"],
+adv_hint:["เบิกล่วงหน้าไม่ต้องแนบตอนนี้ แนบบิลจริงตอนเคลียร์เงินทดรอง","ເບີກລ່ວງໜ້າບໍ່ຕ້ອງແນບຕອນນີ້ ແນບບິນແທ້ຕອນເຄລຍເງິນລ່ວງໜ້າ","ကြိုတင်ငွေအတွက် ယခုမတင်ရ။ ရှင်းလင်းချိန်တွင် အမှန်ဘောင်ချာ တင်ပါ"],
+scan_btn:["อ่านบิลและสลิปอัตโนมัติ","ອ່ານບິນ ແລະ ສະລິບອັດຕະໂນມັດ","ဘောင်ချာနှင့်စလစ် အလိုအလျောက်ဖတ်"],
+scan_hint:["AI จะกรอกหมวด ยอดเงิน วันที่ และเลขอ้างอิงสลิปให้ พร้อมเช็กว่ายอดในบิลกับสลิปตรงกัน","AI ຈະປ້ອນໝວດ ຍອດເງິນ ວັນທີ ແລະ ເລກອ້າງອີງສະລິບໃຫ້ ພ້ອມກວດວ່າຍອດໃນບິນກັບສະລິບກົງກັນ","AI က အမျိုးအစား၊ ငွေပမာဏ၊ ရက်စွဲ၊ စလစ်နံပါတ်ကို ဖြည့်ပေးပြီး ဘောင်ချာနှင့်စလစ် ပမာဏကိုက်ညီမှု စစ်ပေးမည်"],
+l_amount:["ยอดเงิน (บาท)","ຍອດເງິນ (ບາດ)","ငွေပမာဏ (ဘတ်)"],today_s:["{d} (วันนี้)","{d} (ມື້ນີ້)","{d} (ယနေ့)"],
+ph_job:["เช่น บ้านคุณสมชาย บางนา / QT-2610-014 · ไม่เกี่ยวกับงานใส่ “สำนักงาน”","ເຊັ່ນ ບ້ານຄຸນສົມຊາຍ ບາງນາ / QT-2610-014 · ບໍ່ກ່ຽວກັບວຽກໃສ່ “ສຳນັກງານ”","ဥပမာ Somchai အိမ် Bangna / QT-2610-014 · လုပ်ငန်းမဟုတ်လျှင် “ရုံး” ဟုထည့်"],
+l_title:["รายละเอียด","ລາຍລະອຽດ","အသေးစိတ်"],ph_title:["เช่น ค่าน้ำมันไปติดตั้งม่าน","ເຊັ່ນ ຄ່ານ້ຳມັນໄປຕິດຕັ້ງຜ້າມ່ານ","ဥပမာ လိုက်ကာတပ်ဆင်ရန် ဓာတ်ဆီဖိုး"],
+l_vendor:["ร้านค้า / ผู้รับเงิน","ຮ້ານຄ້າ / ຜູ້ຮັບເງິນ","ဆိုင် / ငွေလက်ခံသူ"],ph_vendor:["เช่น PTT สาขาบางนา","ເຊັ່ນ PTT ສາຂາບາງນາ","ဥပမာ PTT Bangna"],
+l_sref:["เลขที่รายการบนสลิป (ถ้ามีสลิป)","ເລກທີລາຍການໃນສະລິບ (ຖ້າມີ)","စလစ်ပေါ်ရှိ ငွေလွှဲနံပါတ် (ရှိလျှင်)"],ph_sref:["กันส่งสลิปซ้ำ","ກັນສົ່ງສະລິບຊ້ຳ","စလစ်ထပ်မတင်မိရန်"],
+l_vat:["รวม VAT 7% (มีใบกำกับภาษี)","ລວມ VAT 7% (ມີໃບກຳກັບພາສີ)","VAT 7% ပါဝင် (အခွန်ပြေစာရှိ)"],l_note:["หมายเหตุ","ໝາຍເຫດ","မှတ်ချက်"],ph_note:["รายละเอียดเพิ่มเติมสำหรับผู้อนุมัติ","ລາຍລະອຽດເພີ່ມເຕີມສຳລັບຜູ້ອະນຸມັດ","အတည်ပြုသူအတွက် အသေးစိတ်"],
+cancel:["ยกเลิก","ຍົກເລີກ","မလုပ်တော့"],submit:["ส่งขออนุมัติ","ສົ່ງຂໍອະນຸມັດ","အတည်ပြုရန် တင်သွင်း"],sending:["กำลังส่ง…","ກຳລັງສົ່ງ…","ပို့နေသည်…"],
+not_found_h:["ไม่พบรายการนี้","ບໍ່ພົບລາຍການນີ້","ဤစာရင်းကို မတွေ့ပါ"],not_found_p:["รายการอาจถูกยกเลิกไปแล้ว","ລາຍການອາດຖືກຍົກເລີກແລ້ວ","ပယ်ဖျက်ပြီး ဖြစ်နိုင်သည်"],
+w_norec:["ไม่มีใบเสร็จ มีแค่สลิปโอน รายการนี้ลงค่าใช้จ่าย/ขอคืน VAT ไม่ได้","ບໍ່ມີໃບຮັບເງິນ ມີແຕ່ສະລິບໂອນ ລາຍການນີ້ບັນທຶກເປັນຄ່າໃຊ້ຈ່າຍ/ຂໍຄືນ VAT ບໍ່ໄດ້","ဘောင်ချာမရှိ၊ ငွေလွှဲစလစ်သာရှိ။ စရိတ်စာရင်းသွင်း/VAT ပြန်တောင်း မရပါ"],
+w_mismatch:["ยอดในสลิป ฿{a} ไม่ตรงกับยอดเบิก ฿{b}","ຍອດໃນສະລິບ ฿{a} ບໍ່ກົງກັບຍອດເບີກ ฿{b}","စလစ်ပမာဏ ฿{a} သည် တောင်းခံငွေ ฿{b} နှင့် မကိုက်ညီ"],
+w_dup:["สลิปเลขที่ {r} เคยใช้เบิกแล้วใน {x}","ສະລິບເລກທີ {r} ເຄີຍໃຊ້ເບີກແລ້ວໃນ {x}","စလစ်နံပါတ် {r} ကို {x} တွင် တောင်းခံပြီးဖြစ်သည်"],
+dt_vendor:["ร้านค้า","ຮ້ານຄ້າ","ဆိုင်"],dt_sref:["เลขที่สลิป","ເລກທີສະລິບ","စလစ်နံပါတ်"],vat_line:["฿{v} (ก่อน VAT ฿{b})","฿{v} (ກ່ອນ VAT ฿{b})","฿{v} (VAT မပါ ฿{b})"],
+dt_due:["กำหนดจ่าย","ກຳນົດຈ່າຍ","ပေးချေမည့်ရက်"],due_s:["{d} (วันดีล)","{d} (ວັນຈ່າຍ)","{d} (ပေးချေရက်)"],dt_paid:["โอนเมื่อ","ໂອນເມື່ອ","လွှဲသည့်အချိန်"],dt_used:["ใช้จริง","ໃຊ້ແທ້","အမှန်သုံးငွေ"],dt_diff:["ส่วนต่าง","ສ່ວນຕ່າງ","ကွာခြားချက်"],
+diff_back:["พนักงานคืนบริษัท ฿{v}","ພະນັກງານຄືນບໍລິສັດ ฿{v}","ဝန်ထမ်းမှ ကုမ္ပဏီသို့ ပြန်ပေး ฿{v}"],diff_more:["บริษัทจ่ายเพิ่ม ฿{v}","ບໍລິສັດຈ່າຍເພີ່ມ ฿{v}","ကုမ္ပဏီမှ ထပ်ပေး ฿{v}"],
+f_slips:["สลิปที่พนักงานจ่าย","ສະລິບທີ່ພະນັກງານຈ່າຍ","ဝန်ထမ်းပေးချေသည့် စလစ်"],f_payslip:["สลิปที่บริษัทโอนคืน","ສະລິບທີ່ບໍລິສັດໂອນຄືນ","ကုမ္ပဏီ ပြန်လွှဲသည့် စလစ်"],f_clear:["บิลเคลียร์เงินทดรอง","ບິນເຄລຍເງິນລ່ວງໜ້າ","ကြိုတင်ငွေ ရှင်းလင်းဘောင်ချာ"],
+no_files:["ไม่มีไฟล์แนบ","ບໍ່ມີໄຟລ໌ແນບ","ဖိုင်မရှိ"],open_file:["เปิดไฟล์ที่ {n}","ເປີດໄຟລ໌ທີ {n}","ဖိုင် {n} ဖွင့်"],file_n:["ไฟล์ที่ {n}","ໄຟລ໌ທີ {n}","ဖိုင် {n}"],rm_file:["เอาไฟล์ที่ {n} ออก","ເອົາໄຟລ໌ທີ {n} ອອກ","ဖိုင် {n} ဖယ်ရှား"],uploading:["กำลังอัปโหลด…","ກຳລັງອັບໂຫຼດ…","တင်နေသည်…"],
+head_h:["อนุมัติขั้นแรก (หัวหน้าแผนก)","ອະນຸມັດຂັ້ນທຳອິດ (ຫົວໜ້າພະແນກ)","ပထမအဆင့် အတည်ပြု (ဌာနမှူး)"],ph_reason:["หมายเหตุ (ต้องใส่ถ้าไม่อนุมัติ)","ໝາຍເຫດ (ຕ້ອງໃສ່ຖ້າບໍ່ອະນຸມັດ)","မှတ်ချက် (ငြင်းပယ်လျှင် ဖြည့်ရန်လို)"],
+b_reject:["Reject · ไม่อนุมัติ","Reject · ບໍ່ອະນຸມັດ","Reject · ငြင်းပယ်"],b_forward:["อนุมัติ ส่งต่อเจ้าของ","ອະນຸມັດ ສົ່ງຕໍ່ເຈົ້າຂອງ","အတည်ပြုပြီး ပိုင်ရှင်ထံပို့"],decide_h:["ตัดสินใจรายการนี้","ຕັດສິນລາຍການນີ້","ဤစာရင်းကို ဆုံးဖြတ်ပါ"],
+b_approve:["Approve · ทำจ่ายทันที","Approve · ຈ່າຍທັນທີ","Approve · ချက်ချင်းပေး"],b_credit:["Credit · จ่าย {d}","Credit · ຈ່າຍ {d}","Credit · {d} ပေးမည်"],b_reject_end:["Reject · ไม่อนุมัติ (จบ)","Reject · ບໍ່ອະນຸມັດ (ຈົບ)","Reject · ငြင်းပယ် (ပိတ်)"],
+b_paythis:["ทำจ่ายรายการนี้ ฿{v}","ຈ່າຍລາຍການນີ້ ฿{v}","ဤစာရင်းကို ပေးချေ ฿{v}"],
+clr_hint:["แนบบิลจริงทั้งหมดและกรอกยอดที่ใช้ไป ระบบจะคำนวณเงินที่ต้องคืนหรือเบิกเพิ่ม","ແນບບິນແທ້ທັງໝົດ ແລະ ປ້ອນຍອດທີ່ໃຊ້ໄປ ລະບົບຈະຄິດໄລ່ເງິນທີ່ຕ້ອງຄືນ ຫຼື ເບີກເພີ່ມ","အမှန်ဘောင်ချာအားလုံးတင်ပြီး သုံးငွေကိုဖြည့်ပါ။ ပြန်ပေးရမည့်ငွေ သို့မဟုတ် ထပ်ယူမည့်ငွေကို တွက်ပေးမည်"],
+l_used:["ยอดที่ใช้จริง (บาท)","ຍອດທີ່ໃຊ້ແທ້ (ບາດ)","အမှန်သုံးငွေ (ဘတ်)"],b_sendclr:["ส่งเคลียร์บิล","ສົ່ງເຄລຍບິນ","ရှင်းလင်းမှု တင်သွင်း"],
+b_cancel:["ยกเลิกคำขอนี้","ຍົກເລີກຄຳຂໍນີ້","ဤတောင်းခံမှုကို ပယ်ဖျက်"],b_cancel_no:["ไม่ยกเลิก","ບໍ່ຍົກເລີກ","မပယ်ဖျက်တော့"],b_cancel_yes:["ยืนยันยกเลิกและลบบิล","ຢືນຢັນຍົກເລີກ ແລະ ລຶບບິນ","ပယ်ဖျက်ပြီး ဖိုင်များဖျက်မည်"],hist:["ประวัติ","ປະຫວັດ","မှတ်တမ်း"],
+paid_done_h:["ทำจ่ายเรียบร้อยแล้ว","ຈ່າຍຮຽບຮ້ອຍແລ້ວ","ပေးချေပြီးပါပြီ"],paid_done_p:["รายการเหล่านี้ถูกบันทึกว่าโอนแล้ว","ລາຍການເຫຼົ່ານີ້ຖືກບັນທຶກວ່າໂອນແລ້ວ","ဤစာရင်းများကို လွှဲပြီးဟု မှတ်တမ်းတင်ပြီး"],pay_h:["ทำจ่าย · {n}","ຈ່າຍ · {n}","ပေးချေ · {n}"],
+cp_amt:["ยอดโอน","ຍອດໂອນ","လွှဲမည့်ငွေ"],cp_pp:["พร้อมเพย์","ພ້ອມເພ","PromptPay"],copy:["Copy","Copy","Copy"],copied:["คัดลอกแล้ว","ສຳເນົາແລ້ວ","ကော်ပီပြီး"],
+pay_nobank:["{n} ยังไม่ได้กรอกบัญชีรับเงิน ให้เข้าไปกรอกที่หน้า “ตั้งค่า” ก่อน","{n} ຍັງບໍ່ໄດ້ປ້ອນບັນຊີຮັບເງິນ ໃຫ້ເຂົ້າໄປປ້ອນທີ່ໜ້າ “ຕັ້ງຄ່າ” ກ່ອນ","{n} သည် ဘဏ်အကောင့် မဖြည့်ရသေးပါ။ “ဆက်တင်” တွင် အရင်ဖြည့်ခိုင်းပါ"],
+after_h:["หลังโอนแล้ว","ຫຼັງໂອນແລ້ວ","လွှဲပြီးနောက်"],up_payslip:["+ แนบสลิปการโอน (ไม่บังคับ)","+ ແນບສະລິບການໂອນ (ບໍ່ບັງຄັບ)","+ ငွေလွှဲစလစ်တင် (မဖြစ်မနေမဟုတ်)"],
+ph_payref:["เลขอ้างอิงการโอน / หมายเหตุ (ไม่บังคับ)","ເລກອ້າງອີງການໂອນ / ໝາຍເຫດ (ບໍ່ບັງຄັບ)","ငွေလွှဲနံပါတ် / မှတ်ချက် (မဖြစ်မနေမဟုတ်)"],b_confirm_paid:["ยืนยันว่าโอนแล้ว ฿{v}","ຢືນຢັນວ່າໂອນແລ້ວ ฿{v}","လွှဲပြီးကြောင်း အတည်ပြု ฿{v}"],
+e_conn:["เชื่อมต่อข้อมูลไม่ได้ ลองโหลดหน้าใหม่ ({c})","ເຊື່ອມຕໍ່ຂໍ້ມູນບໍ່ໄດ້ ລອງໂຫຼດໜ້າໃໝ່ ({c})","ဒေတာ ချိတ်ဆက်မရပါ။ စာမျက်နှာ ပြန်ဖွင့်ပါ ({c})"],wait_upload:["รออัปโหลดไฟล์ให้เสร็จก่อน","ລໍອັບໂຫຼດໄຟລ໌ໃຫ້ແລ້ວກ່ອນ","ဖိုင်တင်ပြီးသည်အထိ စောင့်ပါ"],
+u_too_large:["ไฟล์ใหญ่เกิน 20MB","ໄຟລ໌ໃຫຍ່ເກີນ 20MB","ဖိုင် 20MB ထက်ကြီးနေသည်"],u_unsupported:["รองรับเฉพาะรูป JPG/PNG/WebP และ PDF","ຮອງຮັບສະເພາະຮູບ JPG/PNG/WebP ແລະ PDF","JPG/PNG/WebP ပုံနှင့် PDF သာ ရသည်"],
+u_quota:["พื้นที่เก็บไฟล์เต็ม แจ้งเจ้าของระบบ","ພື້ນທີ່ເກັບໄຟລ໌ເຕັມ ແຈ້ງເຈົ້າຂອງລະບົບ","ဖိုင်သိုလှောင်ရာ ပြည့်နေသည်။ ပိုင်ရှင်ကို အကြောင်းကြားပါ"],u_rate:["อัปโหลดถี่เกินไป รอสักครู่แล้วลองใหม่","ອັບໂຫຼດຖີ່ເກີນໄປ ລໍຈັກໜ້ອຍແລ້ວລອງໃໝ່","အကြိမ်များလွန်းသည်။ ခဏစောင့်ပြီး ထပ်ကြိုးစားပါ"],
+u_notgranted:["บัญชีนี้ยังแนบไฟล์ไม่ได้ (ต้องเป็น Editor)","ບັນຊີນີ້ຍັງແນບໄຟລ໌ບໍ່ໄດ້ (ຕ້ອງເປັນ Editor)","ဤအကောင့်ဖြင့် ဖိုင်မတင်နိုင်သေး (Editor ဖြစ်ရမည်)"],u_fail:["อัปโหลดไม่สำเร็จ ลองใหม่อีกครั้ง","ອັບໂຫຼດບໍ່ສຳເລັດ ລອງໃໝ່ອີກຄັ້ງ","တင်၍မရပါ။ ထပ်ကြိုးစားပါ"],u_only:["รองรับเฉพาะรูปภาพและ PDF","ຮອງຮັບສະເພາະຮູບພາບ ແລະ PDF","ပုံနှင့် PDF သာ ရသည်"],
+s_need:["ถ่ายรูปบิลหรือสลิปก่อน (PDF ยังอ่านอัตโนมัติไม่ได้)","ຖ່າຍຮູບບິນ ຫຼື ສະລິບກ່ອນ (PDF ຍັງອ່ານອັດຕະໂນມັດບໍ່ໄດ້)","ဘောင်ချာ သို့မဟုတ် စလစ် ဓာတ်ပုံ အရင်ရိုက်ပါ (PDF ကို အလိုအလျောက် မဖတ်နိုင်သေး)"],s_reading:["กำลังอ่าน…","ກຳລັງອ່ານ…","ဖတ်နေသည်…"],
+s_wait:["กำลังอ่านข้อมูลจากรูป อาจใช้เวลา 10–30 วินาที","ກຳລັງອ່ານຂໍ້ມູນຈາກຮູບ ອາດໃຊ້ເວລາ 10–30 ວິນາທີ","ပုံမှ ဖတ်နေသည်။ ၁၀–၃၀ စက္ကန့် ကြာနိုင်သည်"],s_mis:["ยอดในบิล ฿{a} ไม่ตรงกับสลิป ฿{b} ตรวจอีกครั้ง","ຍອດໃນບິນ ฿{a} ບໍ່ກົງກັບສະລິບ ฿{b} ກວດອີກຄັ້ງ","ဘောင်ချာ ฿{a} နှင့် စလစ် ฿{b} မကိုက်ညီ။ ပြန်စစ်ပါ"],
+s_dup:["สลิปนี้เคยใช้เบิกแล้วใน {x}","ສະລິບນີ້ເຄີຍໃຊ້ເບີກແລ້ວໃນ {x}","ဤစလစ်ကို {x} တွင် တောင်းခံပြီး"],s_ok:["กรอกข้อมูลให้แล้ว ใส่ชื่องานและตรวจยอดเงินก่อนกดส่ง","ປ້ອນຂໍ້ມູນໃຫ້ແລ້ວ ໃສ່ຊື່ວຽກ ແລະ ກວດຍອດເງິນກ່ອນກົດສົ່ງ","ဖြည့်ပြီးပါပြီ။ မတင်မီ လုပ်ငန်းအမည်ထည့်ပြီး ငွေပမာဏ စစ်ပါ"],
+s_none:["อ่านข้อมูลจากรูปนี้ไม่ได้ ลองถ่ายให้ชัดขึ้น หรือกรอกเอง","ອ່ານຂໍ້ມູນຈາກຮູບນີ້ບໍ່ໄດ້ ລອງຖ່າຍໃຫ້ຊັດຂຶ້ນ ຫຼື ປ້ອນເອງ","ဤပုံမှ မဖတ်နိုင်ပါ။ ပိုကြည်အောင်ရိုက်ပါ သို့မဟုတ် ကိုယ်တိုင်ဖြည့်ပါ"],
+s_notgranted:["ยังไม่ได้อนุญาตให้ใช้ AI อ่านบิล กรอกข้อมูลเองได้เลย","ຍັງບໍ່ໄດ້ອະນຸຍາດໃຫ້ໃຊ້ AI ອ່ານບິນ ປ້ອນຂໍ້ມູນເອງໄດ້ເລີຍ","AI ဖတ်ခွင့် မပေးရသေးပါ။ ကိုယ်တိုင် ဖြည့်နိုင်ပါသည်"],s_rate:["ใช้งาน AI ถี่เกินไป รอสักครู่แล้วลองใหม่","ໃຊ້ AI ຖີ່ເກີນໄປ ລໍຈັກໜ້ອຍແລ້ວລອງໃໝ່","AI ကို အကြိမ်များလွန်းသည်။ ခဏစောင့်ပါ"],
+s_badimg:["รูปนี้อ่านไม่ได้ ลองถ่ายใหม่","ຮູບນີ້ອ່ານບໍ່ໄດ້ ລອງຖ່າຍໃໝ່","ဤပုံကို မဖတ်နိုင်ပါ။ ပြန်ရိုက်ပါ"],s_fail:["อ่านไม่สำเร็จ ลองอีกครั้งหรือกรอกเอง","ອ່ານບໍ່ສຳເລັດ ລອງອີກຄັ້ງ ຫຼື ປ້ອນເອງ","ဖတ်၍မရပါ။ ထပ်ကြိုးစားပါ သို့မဟုတ် ကိုယ်တိုင်ဖြည့်ပါ"],
+s_disabled:["บัญชีนี้ใช้ AI อ่านบิลไม่ได้ กรอกข้อมูลเองได้เลย","ບັນຊີນີ້ໃຊ້ AI ອ່ານບິນບໍ່ໄດ້ ປ້ອນເອງໄດ້ເລີຍ","ဤအကောင့်ဖြင့် AI မသုံးနိုင်ပါ။ ကိုယ်တိုင် ဖြည့်ပါ"],
+v_need_file:["แนบบิลหรือสลิปอย่างน้อย 1 อย่าง","ແນບບິນ ຫຼື ສະລິບຢ່າງໜ້ອຍ 1 ຢ່າງ","ဘောင်ချာ သို့မဟုတ် စလစ် အနည်းဆုံး ၁ ခု တင်ပါ"],
+v_dup_confirm:["สลิปเลขนี้เคยใช้เบิกแล้วใน {x} ถ้าถูกต้องกดส่งอีกครั้งเพื่อยืนยัน","ສະລິບເລກນີ້ເຄີຍໃຊ້ເບີກແລ້ວໃນ {x} ຖ້າຖືກຕ້ອງກົດສົ່ງອີກຄັ້ງເພື່ອຢືນຢັນ","ဤစလစ်ကို {x} တွင် တောင်းခံပြီး။ မှန်ကန်လျှင် အတည်ပြုရန် ထပ်နှိပ်ပါ"],
+v_amount:["กรอกยอดเงินให้ถูกต้อง","ປ້ອນຍອດເງິນໃຫ້ຖືກຕ້ອງ","ငွေပမာဏ မှန်ကန်စွာ ဖြည့်ပါ"],v_date:["เลือกวันที่ในบิล","ເລືອກວັນທີໃນບິນ","ဘောင်ချာရက်စွဲ ရွေးပါ"],
+v_job:["ใส่ชื่องาน (ถ้าไม่เกี่ยวกับงานใส่ “สำนักงาน”)","ໃສ່ຊື່ວຽກ (ຖ້າບໍ່ກ່ຽວກັບວຽກໃສ່ “ສຳນັກງານ”)","လုပ်ငန်းအမည် ထည့်ပါ (မဆိုင်လျှင် “ရုံး”)"],sent:["ส่งแล้ว · {s}","ສົ່ງແລ້ວ · {s}","ပို့ပြီး · {s}"],
+e_perm:["บันทึกไม่ได้ บัญชีนี้อาจยังไม่มีสิทธิ์แก้ไข","ບັນທຶກບໍ່ໄດ້ ບັນຊີນີ້ອາດຍັງບໍ່ມີສິດແກ້ໄຂ","မသိမ်းနိုင်ပါ။ ဤအကောင့်တွင် ပြင်ဆင်ခွင့် မရှိသေးနိုင်"],e_quota:["พื้นที่ข้อมูลเต็ม แจ้งเจ้าของระบบ","ພື້ນທີ່ຂໍ້ມູນເຕັມ ແຈ້ງເຈົ້າຂອງລະບົບ","ဒေတာနေရာ ပြည့်နေသည်။ ပိုင်ရှင်ကို အကြောင်းကြားပါ"],
+e_rate:["ทำรายการถี่เกินไป รอสักครู่","ເຮັດລາຍການຖີ່ເກີນໄປ ລໍຈັກໜ້ອຍ","အကြိမ်များလွန်းသည်။ ခဏစောင့်ပါ"],e_revoked:["สิทธิ์การเข้าถึงถูกเปลี่ยน โหลดหน้าใหม่","ສິດການເຂົ້າເຖິງຖືກປ່ຽນ ໂຫຼດໜ້າໃໝ່","ဝင်ရောက်ခွင့် ပြောင်းသွားသည်။ စာမျက်နှာ ပြန်ဖွင့်ပါ"],e_generic:["บันทึกไม่สำเร็จ ลองอีกครั้ง","ບັນທຶກບໍ່ສຳເລັດ ລອງອີກຄັ້ງ","မသိမ်းနိုင်ပါ။ ထပ်ကြိုးစားပါ"],
+t_need_reason:["ใส่เหตุผลที่ไม่อนุมัติ","ໃສ່ເຫດຜົນທີ່ບໍ່ອະນຸມັດ","ငြင်းပယ်ရသည့် အကြောင်းရင်း ထည့်ပါ"],t_fwd:["อนุมัติแล้ว ส่งต่อให้เจ้าของ","ອະນຸມັດແລ້ວ ສົ່ງຕໍ່ໃຫ້ເຈົ້າຂອງ","အတည်ပြုပြီး ပိုင်ရှင်ထံ ပို့ပြီး"],
+t_appr:["อนุมัติแล้ว · อยู่ในรายการทำจ่าย","ອະນຸມັດແລ້ວ · ຢູ່ໃນລາຍການລໍຈ່າຍ","အတည်ပြုပြီး · ပေးချေရန်စာရင်းတွင်ရှိ"],t_credit:["อนุมัติแบบเครดิต · จ่าย {d}","ອະນຸມັດແບບເຄຣດິດ · ຈ່າຍ {d}","အကြွေးဖြင့် အတည်ပြု · {d} ပေးမည်"],credit_note:["จ่าย {d}","ຈ່າຍ {d}","{d} ပေးမည်"],
+t_paid_n:["บันทึกการโอนแล้ว {n} รายการ","ບັນທຶກການໂອນແລ້ວ {n} ລາຍການ","ငွေလွှဲမှု {n} ခု မှတ်တမ်းတင်ပြီး"],paid_batch:["โอนรวม {n} รายการ ฿{v}","ໂອນລວມ {n} ລາຍການ ฿{v}","{n} ခု ပေါင်းလွှဲ ฿{v}"],
+t_need_bill:["แนบบิลจริงอย่างน้อย 1 ใบ","ແນບບິນແທ້ຢ່າງໜ້ອຍ 1 ໃບ","အမှန်ဘောင်ချာ အနည်းဆုံး ၁ ခု တင်ပါ"],t_need_used:["กรอกยอดที่ใช้จริง","ປ້ອນຍອດທີ່ໃຊ້ແທ້","အမှန်သုံးငွေ ဖြည့်ပါ"],used_note:["ใช้จริง ฿{v}","ໃຊ້ແທ້ ฿{v}","အမှန်သုံး ฿{v}"],t_cleared:["ส่งเคลียร์บิลแล้ว","ສົ່ງເຄລຍບິນແລ້ວ","ရှင်းလင်းမှု တင်ပြီး"],
+t_cancelled:["ยกเลิกคำขอ {n} แล้ว","ຍົກເລີກຄຳຂໍ {n} ແລ້ວ","{n} ကို ပယ်ဖျက်ပြီး"],t_need_nick:["ใส่ชื่อที่แสดงก่อน","ໃສ່ຊື່ທີ່ສະແດງກ່ອນ","ပြမည့်အမည် အရင်ထည့်ပါ"],t_need_dept:["เลือกแผนกก่อน","ເລືອກພະແນກກ່ອນ","ဌာန အရင်ရွေးပါ"],
+t_pp_bad:["พร้อมเพย์ต้องเป็นเบอร์มือถือ 10 หลัก หรือเลขบัตร 13 หลัก","ພ້ອມເພຕ້ອງເປັນເບີມືຖື 10 ຕົວ ຫຼື ເລກບັດ 13 ຕົວ","PromptPay သည် ဖုန်း ၁၀ လုံး သို့မဟုတ် ကတ် ၁၃ လုံး ဖြစ်ရမည်"],t_saved:["บันทึกแล้ว","ບັນທຶກແລ້ວ","သိမ်းပြီး"],t_cfg_saved:["บันทึกการตั้งค่าแล้ว","ບັນທຶກການຕັ້ງຄ່າແລ້ວ","ဆက်တင် သိမ်းပြီး"],
+t_moved:["ย้ายแผนกแล้ว","ຍ້າຍພະແນກແລ້ວ","ဌာန ပြောင်းပြီး"],t_cfg_min:["ต้องมีอย่างน้อย 1 แผนกและ 1 หมวด","ຕ້ອງມີຢ່າງໜ້ອຍ 1 ພະແນກ ແລະ 1 ໝວດ","ဌာန ၁ ခုနှင့် အမျိုးအစား ၁ ခု အနည်းဆုံးလို"],t_deal_bad:["วันดีลต้องอยู่ระหว่าง 1–28","ວັນຈ່າຍຕ້ອງຢູ່ລະຫວ່າງ 1–28","ပေးချေရက်သည် ၁–၂၈ ဖြစ်ရမည်"],
+t_file_saved:["บันทึกไฟล์แล้ว","ບັນທຶກໄຟລ໌ແລ້ວ","ဖိုင် သိမ်းပြီး"],t_dl_fail:["ดาวน์โหลดไม่สำเร็จ","ດາວໂຫຼດບໍ່ສຳເລັດ","ဒေါင်းလုဒ် မအောင်မြင်"],t_copy_hold:["กดค้างที่ข้อความเพื่อคัดลอก","ກົດຄ້າງທີ່ຂໍ້ຄວາມເພື່ອສຳເນົາ","စာသားကို ဖိထားပြီး ကော်ပီကူးပါ"],
+csv_type:["ประเภท","ປະເພດ","အမျိုးအစား"],csv_vat:["รวม VAT","ລວມ VAT","VAT ပါ"],csv_paid:["วันที่โอน","ວັນທີໂອນ","လွှဲသည့်ရက်"],csv_payref:["อ้างอิงการโอน","ອ້າງອີງການໂອນ","ငွေလွှဲနံပါတ်"],csv_nb:["จำนวนบิล","ຈຳນວນບິນ","ဘောင်ချာ အရေအတွက်"],csv_ns:["จำนวนสลิป","ຈຳນວນສະລິບ","စလစ် အရေအတွက်"],csv_hasrec:["มีใบเสร็จ","ມີໃບຮັບເງິນ","ဘောင်ချာ ရှိ"],
+hello:["สวัสดี","ສະບາຍດີ","မင်္ဂလာပါ"],brand_all:["ทั้งหมด","ທັງໝົດ","အားလုံး"],l_brand:["บริษัท","ບໍລິສັດ","ကုမ္ပဏီ"],
+overview:["ภาพรวมค่าใช้จ่าย","ພາບລວມຄ່າໃຊ້ຈ່າຍ","အသုံးစရိတ် ခြုံငုံ"],my_overview:["ค่าใช้จ่ายของฉัน","ຄ່າໃຊ້ຈ່າຍຂອງຂ້ອຍ","ကျွန်ုပ်၏ အသုံးစရိတ်"],vs_last:["จากเดือนก่อน","ຈາກເດືອນກ່ອນ","ယခင်လထက်"],
+k_approved:["อนุมัติแล้ว","ອະນຸມັດແລ້ວ","အတည်ပြုပြီး"],k_recorded:["บันทึกแล้ว","ບັນທຶກແລ້ວ","မှတ်တမ်းတင်ပြီး"],k_all:["ทั้งหมด","ທັງໝົດ","အားလုံး"],
+monthly:["ค่าใช้จ่ายรายเดือน","ຄ່າໃຊ້ຈ່າຍລາຍເດືອນ","လစဉ် အသုံးစရိတ်"],share:["สัดส่วนตามหมวด","ສັດສ່ວນຕາມໝວດ","အမျိုးအစားအလိုက် အချိုး"],others:["อื่นๆ","ອື່ນໆ","အခြား"],
+recent:["รายการล่าสุด","ລາຍການລ່າສຸດ","နောက်ဆုံးစာရင်း"],see_all:["ดูทั้งหมด","ເບິ່ງທັງໝົດ","အားလုံးကြည့်"],
+tab_home:["หน้าหลัก","ໜ້າຫຼັກ","ပင်မ"],tab_list:["รายการ","ລາຍການ","စာရင်း"],tab_new:["บันทึกค่าใช้จ่าย","ບັນທຶກຄ່າໃຊ້ຈ່າຍ","စရိတ်ထည့်"],st_credit_s:["เครดิต","ເຄຣດິດ","အကြွေး"],tab_new_s:["เบิกเงิน","ເບີກເງິນ","တောင်းခံ"],
+list_h:["รายการค่าใช้จ่าย","ລາຍການຄ່າໃຊ້ຈ່າຍ","အသုံးစရိတ် စာရင်း"],search_ph:["ค้นหาด้วยรายการ / ผู้เบิก / เลขที่ / ชื่องาน","ຄົ້ນຫາດ້ວຍລາຍການ / ຜູ້ເບີກ / ເລກທີ / ຊື່ວຽກ","အကြောင်းအရာ / တောင်းခံသူ / နံပါတ် / လုပ်ငန်း ဖြင့်ရှာ"],
+only_mine:["เฉพาะของฉัน","ສະເພາະຂອງຂ້ອຍ","ကျွန်ုပ်၏ဟာသာ"],f_all:["ทุกสถานะ","ທຸກສະຖານະ","အခြေအနေအားလုံး"],no_match:["ไม่พบรายการที่ค้นหา","ບໍ່ພົບລາຍການທີ່ຄົ້ນຫາ","ကိုက်ညီသည့်စာရင်း မရှိ"],
+login_h:["เข้าสู่ระบบ","ເຂົ້າສູ່ລະບົບ","အကောင့်ဝင်ရန်"],setup_h:["ตั้งค่าครั้งแรก · บัญชีเจ้าของ","ຕັ້ງຄ່າເທື່ອທຳອິດ · ບັນຊີເຈົ້າຂອງ","ပထမဆုံး ဆက်တင် · ပိုင်ရှင်အကောင့်"],
+setup_p:["ยังไม่มีผู้ใช้ในระบบ บัญชีแรกที่สร้างจะเป็นเจ้าของ","ຍັງບໍ່ມີຜູ້ໃຊ້ໃນລະບົບ ບັນຊີທຳອິດຈະເປັນເຈົ້າຂອງ","စနစ်တွင် အသုံးပြုသူ မရှိသေး။ ပထမအကောင့်သည် ပိုင်ရှင် ဖြစ်မည်"],
+l_code:["รหัสพนักงาน","ລະຫັດພະນັກງານ","ဝန်ထမ်းကုဒ်"],l_pin:["PIN","PIN","PIN"],b_login:["เข้าสู่ระบบ","ເຂົ້າສູ່ລະບົບ","ဝင်မည်"],b_setup:["สร้างบัญชีเจ้าของ","ສ້າງບັນຊີເຈົ້າຂອງ","ပိုင်ရှင်အကောင့် ဖန်တီး"],
+login_help:["ลืม PIN? ติดต่อเจ้าของหรือแอดมินให้รีเซ็ต","ລືມ PIN? ຕິດຕໍ່ເຈົ້າຂອງ ຫຼື ແອັດມິນໃຫ້ຣີເຊັດ","PIN မေ့သွားလျှင် ပိုင်ရှင် သို့မဟုတ် အက်ဒမင်ထံ ပြန်သတ်မှတ်ခိုင်းပါ"],
+e_login:["รหัสพนักงานหรือ PIN ไม่ถูกต้อง","ລະຫັດພະນັກງານ ຫຼື PIN ບໍ່ຖືກຕ້ອງ","ဝန်ထမ်းကုဒ် သို့မဟုတ် PIN မှားနေသည်"],e_locked:["ใส่ PIN ผิดหลายครั้ง ลองใหม่ใน 10 นาที","ໃສ່ PIN ຜິດຫຼາຍເທື່ອ ລອງໃໝ່ໃນ 10 ນາທີ","PIN အကြိမ်များစွာ မှားသဖြင့် ၁၀ မိနစ်အကြာ ထပ်ကြိုးစားပါ"],
+e_401:["หมดเวลาเข้าระบบ กรุณาเข้าสู่ระบบใหม่","ໝົດເວລາເຂົ້າລະບົບ ກະລຸນາເຂົ້າສູ່ລະບົບໃໝ່","အချိန်ကုန်သွားသည်။ ပြန်ဝင်ပါ"],e_403:["คุณไม่มีสิทธิ์ทำรายการนี้","ທ່ານບໍ່ມີສິດເຮັດລາຍການນີ້","ဤလုပ်ဆောင်ချက်အတွက် ခွင့်မရှိပါ"],
+e_409:["รายการนี้ถูกเปลี่ยนไปแล้ว ลองโหลดใหม่","ລາຍການນີ້ຖືກປ່ຽນແລ້ວ ລອງໂຫຼດໃໝ່","ဤစာရင်း ပြောင်းသွားပြီ။ ပြန်ဖွင့်ကြည့်ပါ"],e_conn_s:["ไม่มีอินเทอร์เน็ต ลองใหม่อีกครั้ง","ບໍ່ມີອິນເຕີເນັດ ລອງໃໝ່ອີກຄັ້ງ","အင်တာနက် မရှိပါ။ ထပ်ကြိုးစားပါ"],
+e_wrongpin:["PIN เดิมไม่ถูกต้อง","PIN ເກົ່າບໍ່ຖືກຕ້ອງ","PIN အဟောင်း မှားနေသည်"],e_code_used:["รหัสพนักงานนี้มีอยู่แล้ว","ລະຫັດພະນັກງານນີ້ມີແລ້ວ","ဤဝန်ထမ်းကုဒ် ရှိပြီးသား"],
+pin_h:["เปลี่ยน PIN","ປ່ຽນ PIN","PIN ပြောင်းရန်"],l_oldpin:["PIN เดิม","PIN ເກົ່າ","PIN အဟောင်း"],l_newpin:["PIN ใหม่ (ตัวเลข 6–12 หลัก)","PIN ໃໝ່ (ຕົວເລກ 6–12 ຕົວ)","PIN အသစ် (ဂဏန်း ၆–၁၂ လုံး)"],
+b_changepin:["เปลี่ยน PIN","ປ່ຽນ PIN","PIN ပြောင်း"],t_pin_changed:["เปลี่ยน PIN แล้ว","ປ່ຽນ PIN ແລ້ວ","PIN ပြောင်းပြီး"],t_pin_bad:["PIN ต้องเป็นตัวเลข 6–12 หลัก","PIN ຕ້ອງເປັນຕົວເລກ 6–12 ຕົວ","PIN သည် ဂဏန်း ၆–၁၂ လုံး ဖြစ်ရမည်"],
+logout:["ออกจากระบบ","ອອກຈາກລະບົບ","ထွက်မည်"],users_h:["ผู้ใช้และสิทธิ์","ຜູ້ໃຊ້ ແລະ ສິດ","အသုံးပြုသူနှင့် ခွင့်"],
+users_p:["พนักงานเห็นและกรอกได้เฉพาะรายการเบิกของตัวเอง และเช็กได้ว่าจ่ายแล้วหรือยัง · บัญชี เห็นทุกรายการและทำจ่ายได้ · แอดมิน อนุมัติ ทำจ่าย และจัดการผู้ใช้ได้ · เจ้าของ ทำได้ทุกอย่าง","ພະນັກງານເຫັນ ແລະ ປ້ອນໄດ້ສະເພາະລາຍການເບີກຂອງຕົນເອງ ແລະ ກວດໄດ້ວ່າຈ່າຍແລ້ວຫຼືຍັງ · ບັນຊີ ເຫັນທຸກລາຍການ ແລະ ຈ່າຍເງິນໄດ້ · ແອັດມິນ ອະນຸມັດ ຈ່າຍເງິນ ແລະ ຈັດການຜູ້ໃຊ້ໄດ້ · ເຈົ້າຂອງ ເຮັດໄດ້ທຸກຢ່າງ","ဝန်ထမ်းသည် မိမိ၏ တောင်းခံမှုကိုသာ မြင်/ဖြည့်နိုင်ပြီး ပေးချေပြီးမပြီး စစ်နိုင်သည် · စာရင်းကိုင် အားလုံးကြည့်ပြီး ငွေပေးနိုင်သည် · အက်ဒမင် အတည်ပြု၊ ငွေပေး၊ အသုံးပြုသူ စီမံနိုင်သည် · ပိုင်ရှင် အားလုံးလုပ်နိုင်သည်"],
+role_owner:["เจ้าของ","ເຈົ້າຂອງ","ပိုင်ရှင်"],role_admin:["แอดมิน","ແອັດມິນ","အက်ဒမင်"],role_finance:["บัญชี","ບັນຊີ","စာရင်းကိုင်"],role_staff:["พนักงาน","ພະນັກງານ","ဝန်ထမ်း"],l_role:["สิทธิ์","ສິດ","ခွင့်"],
+add_user:["เพิ่มพนักงาน","ເພີ່ມພະນັກງານ","ဝန်ထမ်းထည့်ရန်"],l_initpin:["PIN เริ่มต้น","PIN ເລີ່ມຕົ້ນ","ကနဦး PIN"],b_adduser:["เพิ่มผู้ใช้","ເພີ່ມຜູ້ໃຊ້","အသုံးပြုသူ ထည့်"],
+reset_pin:["รีเซ็ต PIN","ຣີເຊັດ PIN","PIN ပြန်သတ်မှတ်"],deactivate:["ปิดใช้งาน","ປິດໃຊ້ງານ","ပိတ်မည်"],activate:["เปิดใช้งาน","ເປີດໃຊ້ງານ","ဖွင့်မည်"],inactive:["ปิดใช้งานแล้ว","ປິດໃຊ້ງານແລ້ວ","ပိတ်ထားသည်"],
+t_user_saved:["บันทึกผู้ใช้แล้ว","ບັນທຶກຜູ້ໃຊ້ແລ້ວ","အသုံးပြုသူ သိမ်းပြီး"],pin_ready:["ข้อมูลเข้าระบบ","ຂໍ້ມູນເຂົ້າລະບົບ","ဝင်ရောက်ရန် အချက်အလက်"],
+pin_note:["ส่งรหัสและ PIN นี้ให้ {n} ทางช่องทางส่วนตัว ระบบจะไม่แสดง PIN นี้อีก แนะนำให้เปลี่ยน PIN หลังเข้าระบบครั้งแรก","ສົ່ງລະຫັດ ແລະ PIN ນີ້ໃຫ້ {n} ທາງຊ່ອງທາງສ່ວນຕົວ ລະບົບຈະບໍ່ສະແດງ PIN ນີ້ອີກ ແນະນຳໃຫ້ປ່ຽນ PIN ຫຼັງເຂົ້າລະບົບເທື່ອທຳອິດ","ဤကုဒ်နှင့် PIN ကို {n} ထံ သီးသန့်ပို့ပါ။ PIN ကို နောက်ထပ် မပြတော့ပါ။ ပထမအကြိမ်ဝင်ပြီးနောက် PIN ပြောင်းရန် အကြံပြုသည်"],
+bank_hint2:["เฉพาะคุณ เจ้าของ แอดมิน และบัญชีเท่านั้นที่เห็นข้อมูลบัญชีนี้ ใช้สำหรับโอนเงินเบิกให้คุณ","ສະເພາະທ່ານ ເຈົ້າຂອງ ແອັດມິນ ແລະ ບັນຊີເທົ່ານັ້ນທີ່ເຫັນຂໍ້ມູນນີ້ ໃຊ້ສຳລັບໂອນເງິນເບີກໃຫ້ທ່ານ","သင်၊ ပိုင်ရှင်၊ အက်ဒမင်နှင့် စာရင်းကိုင်သာ ဤအချက်အလက်ကို မြင်ရသည်။ ငွေလွှဲပေးရန် အသုံးပြုသည်"],
+v_dup_srv:["สลิปเลขนี้เคยถูกใช้เบิกแล้ว ถ้าถูกต้องกดส่งอีกครั้งเพื่อยืนยัน","ສະລິບເລກນີ້ເຄີຍຖືກໃຊ້ເບີກແລ້ວ ຖ້າຖືກຕ້ອງກົດສົ່ງອີກຄັ້ງເພື່ອຢືນຢັນ","ဤစလစ်ကို တောင်းခံပြီးဖြစ်သည်။ မှန်ကန်လျှင် အတည်ပြုရန် ထပ်နှိပ်ပါ"],
+yes:["ใช่","ແມ່ນ","ဟုတ်"],has:["มี","ມີ","ရှိ"],hasnot:["ไม่มี","ບໍ່ມີ","မရှိ"]
+};
+/* default category / department / bank names are stored in Thai; show them in the viewer's language */
+const VMAP={
+"ค่าน้ำมัน/เดินทาง":["ຄ່ານ້ຳມັນ/ເດີນທາງ","ဓာတ်ဆီ/ခရီးစရိတ်"],"ค่าทางด่วน/ที่จอดรถ":["ຄ່າທາງດ່ວນ/ບ່ອນຈອດລົດ","အမြန်လမ်း/ကားပါကင်"],"ค่าอาหาร/รับรองลูกค้า":["ຄ່າອາຫານ/ຕ້ອນຮັບລູກຄ້າ","အစားအသောက်/ဧည့်ခံ"],
+"วัสดุ/อุปกรณ์หน้างาน":["ວັດສະດຸ/ອຸປະກອນໜ້າງານ","ပစ္စည်း/ကိရိယာ"],"ค่าขนส่ง/ค่าส่งของ":["ຄ່າຂົນສົ່ງ","သယ်ယူပို့ဆောင်ခ"],"ค่าที่พัก":["ຄ່າທີ່ພັກ","တည်းခိုခ"],"ค่าโทรศัพท์/อินเทอร์เน็ต":["ຄ່າໂທລະສັບ/ອິນເຕີເນັດ","ဖုန်း/အင်တာနက်"],"อื่นๆ":["ອື່ນໆ","အခြား"],
+"ฝ่ายขาย":["ຝ່າຍຂາຍ","အရောင်း"],"ทีมติดตั้ง":["ທີມຕິດຕັ້ງ","တပ်ဆင်ရေး"],"ทีมสำรวจหน้างาน":["ທີມສຳຫຼວດໜ້າງານ","ကွင်းဆင်းစစ်ဆေးရေး"],"บัญชี/ธุรการ":["ບັນຊີ/ທຸລະການ","စာရင်း/ရုံးလုပ်ငန်း"],"ผู้บริหาร":["ຜູ້ບໍລິຫານ","စီမံခန့်ခွဲမှု"],"ไม่ระบุแผนก":["ບໍ່ລະບຸພະແນກ","ဌာနမဖော်ပြ"],
+"กสิกรไทย":["Kasikorn (KBank)","Kasikorn (KBank)"],"ไทยพาณิชย์":["SCB","SCB"],"กรุงเทพ":["Bangkok Bank","Bangkok Bank"],"กรุงไทย":["Krungthai","Krungthai"],"กรุงศรีอยุธยา":["Krungsri","Krungsri"],"ทหารไทยธนชาต (ttb)":["ttb","ttb"],"ออมสิน":["GSB","GSB"],"ธ.ก.ส.":["BAAC","BAAC"],
+"ยูโอบี":["UOB","UOB"],"ซีไอเอ็มบี ไทย":["CIMB Thai","CIMB Thai"],"เกียรตินาคินภัทร":["KKP","KKP"],"แลนด์ แอนด์ เฮ้าส์":["LH Bank","LH Bank"],"อาคารสงเคราะห์":["GH Bank","GH Bank"]
+};
+const LANGS=["th","lo","my"];
+let LANG=(()=>{try{const s=localStorage.getItem("vynn_exp_lang");if(LANGS.includes(s))return s}catch(e){}const n=(navigator.language||"").slice(0,2);return n==="lo"||n==="my"?n:"th"})();
+const LI=()=>LANGS.indexOf(LANG);
+function t(k,v){const a=D[k];let s=a?(a[LI()]||a[0]):k;if(v)for(const x in v)s=s.split("{"+x+"}").join(v[x]);return s}
+const tv=v=>{const m=VMAP[v];return(m&&LANG!=="th")?m[LI()-1]:v};
+
+const CATS_DEFAULT=["ค่าน้ำมัน/เดินทาง","ค่าทางด่วน/ที่จอดรถ","ค่าอาหาร/รับรองลูกค้า","วัสดุ/อุปกรณ์หน้างาน","ค่าขนส่ง/ค่าส่งของ","ค่าที่พัก","ค่าโทรศัพท์/อินเทอร์เน็ต","อื่นๆ"];
+const DEPTS_DEFAULT=["ฝ่ายขาย","ทีมติดตั้ง","ทีมสำรวจหน้างาน","บัญชี/ธุรการ","ผู้บริหาร"];
+const BANKS=["กสิกรไทย","ไทยพาณิชย์","กรุงเทพ","กรุงไทย","กรุงศรีอยุธยา","ทหารไทยธนชาต (ttb)","ออมสิน","ธ.ก.ส.","ยูโอบี","ซีไอเอ็มบี ไทย","เกียรตินาคินภัทร","แลนด์ แอนด์ เฮ้าส์","อาคารสงเคราะห์","อื่นๆ"];
+const ST_C={pending_head:"warn",pending_owner:"warn",approved:"ok",credit:"acc",paid:"paid",rejected:"bad",cleared:"paid"};
+const BRANDS={vynn:{name:"VYNN",sub:"Collection",color:"#A38B78"},vangarde:{name:"VANGARDE",sub:"",color:"#3F5B4B"}};
+const brandOf=c=>c.brand==="vangarde"?"vangarde":"vynn";
+const brandName=b=>BRANDS[b].name+(BRANDS[b].sub?" "+BRANDS[b].sub:"");
+const brandOk=c=>S.brand==="all"||brandOf(c)===S.brand;
+const CAT_COLORS=["#A38B78","#3F5B4B","#C9B6A4","#7C9585","#8A7261","#BCC9BF","#5E544C","#E0D5C9"];
+const ICONS={
+car:'<path d="M4 15l1.6-5.2A2 2 0 0 1 7.5 8.4h9a2 2 0 0 1 1.9 1.4L20 15v3h-2.5v-1.5h-11V18H4z"/><circle cx="8" cy="13.6" r=".9"/><circle cx="16" cy="13.6" r=".9"/>',
+ticket:'<path d="M4 8h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z"/><path d="M14 8v10" stroke-dasharray="2 2"/>',
+cup:'<path d="M5 9h11v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M16 10.5h1.5a2 2 0 0 1 0 4H16M8.5 4.5v2M11.5 4.5v2"/>',
+cart:'<path d="M3 5h2l2 10h11l2-7H6.2"/><circle cx="9" cy="19" r="1.3"/><circle cx="17" cy="19" r="1.3"/>',
+truck:'<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.5"/><circle cx="17" cy="17.5" r="1.5"/>',
+bed:'<path d="M3 18V7M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="1.6"/>',
+phone:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 17.5h2"/>',
+doc:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 15.5h5"/>',
+clock:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
+check:'<path d="M7.5 12.5l3 3L17 9"/>',
+home:'<path d="M4 11l8-7 8 7v9h-5.5v-6h-5v6H4z"/>',
+list:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>',
+approve:'<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+chart:'<path d="M5 20v-7M10 20V9M15 20V5M20 20v-9"/>',
+gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>',
+plus:'<path d="M12 5v14M5 12h14"/>',search:'<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',chev:'<path d="M9 6l6 6-6 6"/>',
+up:'<path d="M12 19V5M6 11l6-6 6 6"/>',down:'<path d="M12 5v14M6 13l6 6 6-6"/>'
+};
+const ic=(n,cls)=>`<svg class="ic ${cls||""}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||ICONS.doc}</svg>`;
+const CAT_IC=["car","ticket","cup","cart","truck","bed","phone","doc"];
+const catIc=c=>{const i=CATS_DEFAULT.indexOf(c);return CAT_IC[i]||"doc"};
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=n=>(+n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pad=n=>String(n).padStart(2,"0");
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const today=()=>ymd(new Date());
+const parseD=s=>{const[y,m,d]=s.slice(0,10).split("-").map(Number);return new Date(y,m-1,d)};
+const MON={th:["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."],
+  lo:["ມ.ກ.","ກ.ພ.","ມ.ນ.","ມ.ສ.","ພ.ພ.","ມິ.ຖ.","ກ.ລ.","ສ.ຫ.","ກ.ຍ.","ຕ.ລ.","ພ.ຈ.","ທ.ວ."],
+  my:["ဇန်","ဖေ","မတ်","ဧပြီ","မေ","ဇွန်","ဇူ","ဩ","စက်","အောက်","နို","ဒီ"]};
+const TM=()=>MON[LANG];
+const yr=y=>LANG==="th"?String(+y+543):String(y);           // Thai: Buddhist Era, Lao/Myanmar: CE
+const yrS=y=>LANG==="th"?yr(y).slice(2):String(y);
+const fmtDate=s=>{if(!s)return"-";const[y,m,d]=s.slice(0,10).split("-");return +d+" "+TM()[+m-1]+" "+yrS(y)};
+const fmtTime=iso=>{const d=new Date(iso);return fmtDate(ymd(d))+" "+pad(d.getHours())+":"+pad(d.getMinutes())};
+const localDay=iso=>iso?ymd(new Date(iso)):"";
+
+const PERIODS=["day","week","month","quarter","year"];
+function pkey(dateStr,p){
+  if(!dateStr)return"";
+  if(p==="day")return dateStr;
+  if(p==="month")return dateStr.slice(0,7);
+  if(p==="year")return dateStr.slice(0,4);
+  if(p==="quarter")return dateStr.slice(0,4)+"-Q"+(Math.floor((+dateStr.slice(5,7)-1)/3)+1);
+  const d=parseD(dateStr);d.setDate(d.getDate()-((d.getDay()+6)%7));return ymd(d); // week -> Monday
+}
+function plabel(k,p){
+  if(!k)return"-";
+  if(p==="day")return fmtDate(k);
+  if(p==="month"){const[y,m]=k.split("-");return TM()[+m-1]+" "+yr(y)}
+  if(p==="year")return t("y_label",{y:yr(k)});
+  if(p==="quarter"){const[y,q]=k.split("-Q");return t("q_label",{q,y:yrS(y)})}
+  const s=parseD(k),e=new Date(s);e.setDate(e.getDate()+6);
+  return s.getDate()+(s.getMonth()===e.getMonth()?"":" "+TM()[s.getMonth()])+"–"+e.getDate()+" "+TM()[e.getMonth()]+" "+yrS(e.getFullYear());
+}
+
+const S={me:null,meAvatar:"",isOwner:false,db:null,user:null,assets:null,sample:null,downloads:null,canScan:false,
+  cfg:{},people:{},claims:[],names:{},avatars:{},loaded:{cfg:false,people:false,claims:false},
+  tab:"home",hm:today().slice(0,7),lf:{q:"",status:"all",mine:false},
+  brand:(()=>{try{const b=localStorage.getItem("vynn_exp_brand");if(b==="vynn"||b==="vangarde"||b==="all")return b}catch(e){}return"all"})(),
+  rp:{period:"month",key:pkey(today(),"month"),basis:"bill",group:"person",status:"valid",dept:"all",doc:"all"},
+  sheet:null,form:null,fslip:null,bag:null,live:"connecting",readOnly:false,pendingRender:false,onboarded:false};
+
+/* ---------- derived ---------- */
+const cats=()=>(S.cfg.categories&&S.cfg.categories.length)?S.cfg.categories:CATS_DEFAULT;
+const depts=()=>(S.cfg.departments&&S.cfg.departments.length)?S.cfg.departments:DEPTS_DEFAULT;
+const dealDay=()=>Math.min(28,Math.max(1,+S.cfg.dealDay||25));
+/* roles come from the server: owner / admin / finance see everything; staff only receive their own claims */
+const myRole=()=>(S.people[S.me]&&S.people[S.me].role)||"staff";
+const role=uid=>{const r=(S.people[uid]&&S.people[uid].role)||"staff";return{final:r==="owner"||r==="admin",finance:r==="finance"}};
+const myDept=()=>(S.people[S.me]&&S.people[S.me].dept)||"";
+const nm=uid=>(S.people[uid]&&S.people[uid].nick)||t("staff");
+const jobOf=c=>c.job||c.jobRef||"";
+const isApprover=()=>["owner","admin","finance"].includes(myRole());
+const canPayRole=()=>isApprover();
+const canHead=c=>false;
+const canFinal=c=>(c.status==="pending_owner"||c.status==="pending_head")&&(myRole()==="owner"||myRole()==="admin");
+const fileUrl=id=>"/api/exp?a=file&id="+encodeURIComponent(id);
+function avatarData(uid){
+  const n=nm(uid).trim(),ch=esc(Array.from(n)[0]||"?").replace(/'/g,"");
+  const col=["#A38B78","#3F5B4B","#8A7261","#7C9585","#5E544C"][[...String(uid)].reduce((a,c)=>a+c.charCodeAt(0),0)%5];
+  return"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' rx='20' fill='${col}'/><text x='20' y='26' font-size='17' text-anchor='middle' fill='#fff' font-family='sans-serif'>${ch}</text></svg>`);
+}
+const payable=c=>c.status==="approved"||c.status==="credit";
+function nextDeal(from){const d=from||new Date(),dd=dealDay();let m=d.getMonth();if(d.getDate()>dd)m++;return ymd(new Date(d.getFullYear(),m,dd))}
+const stLabel=s=>D["st_"+s]?t("st_"+s):s;
+const stat=c=>{
+  if(c.type==="advance"&&c.status==="paid")return{t:t("st_advpaid"),c:"warn"};
+  if(c.status==="credit")return{t:t("st_credit",{d:fmtDate(c.dueDate)}),c:"acc"};
+  return{t:stLabel(c.status),c:ST_C[c.status]||"acc"};
+};
+function headsOf(){return[]}
+function scopeAll(){return isApprover()?S.claims:[]}
+const sum=a=>a.reduce((s,c)=>s+(+c.amount||0),0);
+const noReceipt=c=>c.type!=="advance"&&!(c.receipts||[]).length;
+const normRef=s=>String(s||"").toUpperCase().replace(/[^0-9A-Z]/g,"");
+function dupsOf(ref,exceptId){const r=normRef(ref);if(r.length<6)return[];return S.claims.filter(c=>c.id!==exceptId&&normRef(c.slipRef)===r)}
+function slipMismatch(c){return c.slipAmount>0&&Math.abs(c.slipAmount-c.amount)>1}
+
+/* ---------- PromptPay ---------- */
+const tlv=(id,v)=>id+pad(v.length)+v;
+function crc16(s){let c=0xFFFF;for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=(c&0x8000)?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF}return c.toString(16).toUpperCase().padStart(4,"0")}
+function ppPayload(id,amt){
+  const d=String(id||"").replace(/\D/g,"");let acc;
+  if(d.length===13)acc=tlv("02",d);else if(d.length===10&&d[0]==="0")acc=tlv("01","0066"+d.slice(1));else if(d.length===15)acc=tlv("03",d);else return null;
+  const p=tlv("00","01")+tlv("01",amt?"12":"11")+tlv("29",tlv("00","A000000677010111")+acc)+tlv("53","764")+(amt?tlv("54",amt.toFixed(2)):"")+tlv("58","TH")+"6304";
+  return p+crc16(p);
+}
+function qrSvg(text){
+  if(typeof qrcode!=="function")return"";
+  try{const q=qrcode(0,"M");q.addData(text);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true})}catch(e){return""}
+}
+
+/* ---------- language ---------- */
+function applyLang(){
+  document.documentElement.lang=LANG;
+  document.title="VYNN "+t("brand_sub");
+  $("#tabs").setAttribute("aria-label",t("menu"));
+  document.querySelectorAll("#langsw button").forEach(b=>b.classList.toggle("on",b.dataset.lang===LANG));
+}
+function setLang(l){
+  if(!LANGS.includes(l)||l===LANG)return;
+  if(S.sheet&&S.sheet.kind==="form"&&$("#f-title")){S.formVals=readVals();if(isNaN(S.formVals.amount))S.formVals.amount=""}
+  LANG=l;try{localStorage.setItem("vynn_exp_lang",l)}catch(e){}
+  applyLang();render(true);if(S.sheet)renderSheet();
+}
+
+/* ---------- boot ---------- */
+/* ---------- server API ---------- */
+async function api(a,body){
+  let r;
+  try{r=await fetch("/api/exp",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify(Object.assign({a},body||{}))})}
+  catch(e){S.live="error";schedule();throw{code:"offline"}}
+  const j=await r.json().catch(()=>({}));
+  if(r.status===401&&a!=="login"&&a!=="changePin"){S.me=null;S.auth="login";render(true);if(S.sheet)closeSheet(true)}
+  if(!r.ok)throw{code:r.status,message:j.error||""};
+  return j;
+}
+const b64=blob=>new Promise((ok,no)=>{const fr=new FileReader();fr.onload=()=>ok(String(fr.result).split(",")[1]);fr.onerror=no;fr.readAsDataURL(blob)});
+/* same shapes the page used before, now backed by /api/exp */
+S.assets={
+  async upload(blob,o){const mime=(o&&o.type)||blob.type||"image/jpeg";const r=await api("upload",{mime,data:await b64(blob)});return{id:r.id,url:fileUrl(r.id)}},
+  delete(id){return api("discardFile",{id}).catch(()=>{})}
+};
+S.downloads={async save({filename,data}){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"text/csv;charset=utf-8"}));a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);return{status:"saved"}}};
+S.sample={async json(prompt,{images}){const imgs=[];for(const b of images)imgs.push({mime:b.type||"image/jpeg",data:await b64(b)});const r=await api("scan",{prompt,images:imgs});return r.result}};
+
+async function boot(){
+  applyLang();render(true);
+  try{const st=await api("status");S.auth=st.needsSetup?"setup":st.me?"in":"login"}catch(e){S.live="error";S.auth="login"}
+  if(S.auth==="in")await refresh();else render(true);
+  setInterval(()=>{if(S.me&&document.visibilityState==="visible")refresh(true)},20000);
+  document.addEventListener("visibilitychange",()=>{if(S.me&&document.visibilityState==="visible")refresh(true)});
+}
+async function refresh(quiet){
+  if(refresh.busy)return;refresh.busy=true;
+  try{
+    const d=await api("sync");
+    S.me=d.me.id;S.isOwner=d.me.role==="owner";S.cfg=d.cfg||{};S.canScan=!!d.scan;S.auth="in";
+    const p={};d.users.forEach(u=>{p[u.id]=Object.assign({},u,{nick:u.name})});S.people=p;
+    const key=JSON.stringify([d.claims.length,d.claims.map(c=>c.updatedAt).join()]);
+    const changed=key!==S.lastKey;S.lastKey=key;
+    S.claims=d.claims;S.loaded={cfg:true,people:true,claims:true};S.live="live";
+    if(!quiet||changed){schedule();refreshSheet()}
+    if(!quiet&&d.me.lang&&LANGS.includes(d.me.lang)&&!refresh.langDone){refresh.langDone=true;try{if(!localStorage.getItem("vynn_exp_lang"))setLang(d.me.lang)}catch(e){}}
+    maybeOnboard();
+  }catch(e){if(S.me){S.live="error";schedule()}}
+  finally{refresh.busy=false}
+}
+function onErr(e){S.live="error";toast(t("e_conn",{c:(e&&e.code)||"error"}),"bad");schedule()}
+function maybeOnboard(){const p=S.people[S.me];if(!S.onboarded&&p&&!p.acctNo&&!p.promptpay&&!S.sheet){S.onboarded=true;openSheet("profile")}}
+
+/* ---------- render ---------- */
+let raf=0;
+function schedule(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;render()})}
+function typingIn(el){const a=document.activeElement;return a&&el.contains(a)&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.type!=="checkbox"&&a.type!=="file"}
+function render(force){
+  if(!force&&typingIn($("#main"))){S.pendingRender=true;return}
+  S.pendingRender=false;
+  const lv=$("#live");lv.className="live "+({live:"on",saving:"saving",error:"err"}[S.live]||"");
+  lv.querySelector("span").textContent=t({live:"live_live",saving:"live_saving",error:"live_error",none:"live_none",connecting:"live_conn"}[S.live]);
+  $("#hello").textContent=t("hello");
+  $("#hname").textContent=S.me?nm(S.me)+(S.isOwner?" · "+t("owner"):""):"VYNN · VANGARDE";
+  $("#bsw").hidden=!S.me||S.live==="none";
+  $("#bsw").innerHTML=["vynn","vangarde"].map(b=>`<button data-brand="${b}" class="${b}${S.brand===b?" on":""}">${BRANDS[b].name}${BRANDS[b].sub?`<small>${BRANDS[b].sub}</small>`:""}</button>`).join("")+`<button data-brand="all" class="all${S.brand==="all"?" on":""}">${t("brand_all")}</button>`;
+  renderTabs();
+  $("#main").innerHTML=renderMain();
+}
+document.addEventListener("focusout",()=>setTimeout(()=>{if(S.pendingRender&&!typingIn($("#main")))render();if(S.sheet&&S.sheet.stale&&!typingIn($("#panel"))){S.sheet.stale=false;renderSheet()}},0));
+
+function renderTabs(){
+  if(!S.me||S.live==="none"){$("#tabs").innerHTML="";return}
+  const n=S.claims.filter(c=>brandOk(c)&&(canHead(c)||canFinal(c)||(canPayRole()&&c.status==="approved"))).length;
+  const ap=isApprover();
+  const tb=ap?[["home","home"],["approve","approve",n],["+"],["report","chart"],["settings","gear"]]:[["home","home"],["list","list"],["+"],["settings","gear"]];
+  const valid=["home","list","approve","report","settings"].filter(k=>k!=="approve"&&k!=="report"||ap);
+  if(!valid.includes(S.tab))S.tab="home";
+  $("#tabs").innerHTML=`<div class="bnav-in">${tb.map(([k,i,b])=>k==="+"
+    ?`<div class="fabw"><button class="fab" id="fab" aria-label="${esc(t("tab_new"))}" ${S.readOnly?"disabled":""}>${ic("plus")}</button><span>${t("tab_new_s")}</span></div>`
+    :`<button data-tab="${k}" class="${S.tab===k?"on":""}">${ic(i)}<span>${t("tab_"+k)}</span>${b?`<span class="badge">${b}</span>`:""}</button>`).join("")}</div>`;
+}
+function renderMain(){
+  if(S.auth==="login"||S.auth==="setup")return viewLogin();
+  if(!S.auth)return`<div class="splash"><div class="wm"><span class="v">VYNN</span><i>|</i><span class="g">VANGARDE</span></div><div class="tl">Shared Finance System</div></div>`;
+  if(!S.loaded.claims)return`<div class="skel"></div><div class="skel"></div><div class="skel"></div>`;
+  let h="";
+  if(S.readOnly)h+=`<div class="notice"><h3>${t("n_ro_h")}</h3><p class="muted small">${t("n_ro_p")}</p></div>`;
+  else if(S.people[S.me]&&!S.people[S.me].acctNo&&!S.people[S.me].promptpay)h+=`<div class="notice"><h3>${t("n_bank_h")}</h3><p class="muted small">${t("n_bank_p")}</p></div>`;
+  return h+({home:viewHome,list:viewList,approve:viewApprove,report:viewReport,settings:viewSettings}[S.tab]||viewHome)();
+}
+function row(c,who){
+  const st=stat(c),j=jobOf(c),dup=who&&dupsOf(c.slipRef,c.id).length,b=brandOf(c);
+  const tags=(c.type==="advance"?`<span class="tag">${t("tag_adv")}</span>`:"")+(noReceipt(c)?`<span class="pill warn">${t("tag_norec")}</span>`:"")+(dup?`<span class="pill flag">${t("tag_dup")}</span>`:"")+(j?`<span class="job">${esc(j)}</span>`:"");
+  return`<button class="row" data-open="${esc(c.id)}"><span class="rico">${ic(catIc(c.category))}</span>
+    <div class="r-main"><div class="r-meta">${esc(tv(c.category))}${who?" · "+esc(nm(c.by)):""}</div>
+      <div class="r-title">${esc(c.title)}</div>
+      <div class="r-meta">${fmtDate(c.date)} · <i class="bdot" style="background:${BRANDS[b].color}"></i>${esc(brandName(b))} · <span class="docno">${esc(c.docNo)}</span></div>
+      ${tags?`<div class="r-tags">${tags}</div>`:""}</div>
+    <div class="r-side"><span class="amt">฿${money(c.amount)}</span><span class="pill ${st.c}">${esc(c.status==="credit"?t("st_credit_s"):st.t)}</span></div></button>`;
+}
+function kpi(cls,k,v,s,icon,go){return`<${go?`button data-goto="${go}"`:"div"} class="kpi ${cls}">${icon?`<span class="kic">${ic(icon)}</span>`:""}<span class="k">${k}</span><span class="v">${typeof v==="number"?"฿"+Math.round(v).toLocaleString("en-US"):esc(v)}</span><span class="s">${s}</span></${go?"button":"div"}>`}
+const prevYm=ym=>{const[y,m]=ym.split("-").map(Number);const d=new Date(y,m-2,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)};
+const fmtK=v=>v>=1e6?(v/1e6).toFixed(v>=1e7?0:1).replace(/\.0$/,"")+"M":v>=1e3?Math.round(v/1e3)+"K":String(Math.round(v));
+function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p;return(n<=1?1:n<=2?2:n<=3?3:n<=5?5:10)*p}
+function homeScope(){return(isApprover()?scopeAll():S.claims.filter(c=>c.by===S.me)).filter(brandOk)}
+function barChart(rows,endYm){
+  const months=[];let ym=endYm;for(let i=0;i<9;i++){months.unshift(ym);ym=prevYm(ym)}
+  const series=S.brand==="all"?["vynn","vangarde"]:[S.brand];
+  const val={};rows.forEach(c=>{if(c.status==="rejected")return;const k=(c.date||"").slice(0,7)+"|"+brandOf(c);val[k]=(val[k]||0)+(+c.amount||0)});
+  const mx=niceMax(Math.max(0,...months.flatMap(m=>series.map(b=>val[m+"|"+b]||0))));
+  const W=600,H=210,L=44,B=26,T=10,pw=W-L-8,ph=H-B-T,gw=pw/months.length,bw=Math.min(16,gw/(series.length+1.2));
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t("monthly"))}">`;
+  for(let i=0;i<=3;i++){const v=mx*i/3,y=T+ph-ph*i/3;s+=`<line x1="${L}" x2="${W-8}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${L-8}" y="${y+4}" text-anchor="end">${fmtK(v)}</text>`}
+  months.forEach((m,i)=>{const cx=L+gw*i+gw/2,start=cx-bw*series.length/2-(series.length-1)*1.5;
+    series.forEach((b,j)=>{const v=val[m+"|"+b]||0,h=Math.max(v>0?2:0,ph*v/mx),x=start+j*(bw+3);s+=`<rect x="${x.toFixed(1)}" y="${(T+ph-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${BRANDS[b].color}"><title>${esc(brandName(b))} ${plabel(m,"month")}: ฿${money(v)}</title></rect>`});
+    s+=`<text x="${cx}" y="${H-8}" text-anchor="middle">${TM()[+m.slice(5)-1]}</text>`});
+  return s+"</svg>";
+}
+function donut(rows){
+  const g={};rows.forEach(c=>{if(c.status!=="rejected")g[c.category]=(g[c.category]||0)+(+c.amount||0)});
+  let e=Object.entries(g).sort((a,b)=>b[1]-a[1]);const tot=e.reduce((s,x)=>s+x[1],0);
+  if(!tot)return`<p class="muted small">${t("no_data")}</p>`;
+  if(e.length>5){const rest=e.slice(4).reduce((s,x)=>s+x[1],0);e=e.slice(0,4).concat([["\u0001",rest]])}
+  let a=0;const stops=e.map(([k,v],i)=>{const b=a;a+=v/tot*360;return`${CAT_COLORS[i%CAT_COLORS.length]} ${b}deg ${a}deg`}).join(",");
+  const lab=k=>k==="\u0001"?t("others"):tv(k),pct=v=>Math.round(v/tot*100)+"%";
+  return`<div class="donut-wrap"><div class="donut" style="background:conic-gradient(${stops})"><div class="donut-c"><b>${pct(e[0][1])}</b>${esc(lab(e[0][0]))}</div></div>
+    <div class="dleg">${e.map(([k,v],i)=>`<div><i style="background:${CAT_COLORS[i%CAT_COLORS.length]}"></i><span>${esc(lab(k))}</span><b class="num small">${pct(v)}</b></div>`).join("")}</div></div>`;
+}
+function viewHome(){
+  const ap=isApprover(),all=homeScope(),m=S.hm,pm=prevYm(m);
+  const inM=c=>(c.date||"").slice(0,7)===m,rows=all.filter(inM),valid=rows.filter(c=>c.status!=="rejected");
+  const tot=sum(valid),prev=sum(all.filter(c=>(c.date||"").slice(0,7)===pm&&c.status!=="rejected"));
+  const pct=prev>0?Math.round((tot-prev)/prev*100):null;
+  const pend=rows.filter(c=>c.status.startsWith("pending")),appr=rows.filter(c=>["approved","credit","paid","cleared"].includes(c.status));
+  const months=[];let ym=today().slice(0,7);for(let i=0;i<12;i++){months.push(ym);ym=prevYm(ym)}
+  const mine=S.claims.filter(c=>c.by===S.me),clr=mine.filter(c=>c.type==="advance"&&c.status==="paid");
+  let h="";
+  if(clr.length)h+=`<div class="notice"><h3>${t("clr_h",{n:clr.length})}</h3><p class="muted small">${t("clr_p")}</p></div>`;
+  h+=`<section class="card"><div class="ov-top"><h2>${ap?t("overview"):t("my_overview")}</h2>
+      <select id="h-month" aria-label="${esc(t("th_period"))}" style="width:auto">${months.map(x=>`<option value="${x}"${x===m?" selected":""}>${esc(plabel(x,"month"))}</option>`).join("")}</select></div>
+    <div class="ov-total"><span class="big">฿${money(tot).replace(/\.00$/,"")}</span>${pct!==null?`<span class="delta"><b class="${pct>0?"up":""}">${ic(pct>0?"up":"down")}${Math.abs(pct)}%</b>${t("vs_last")}</span>`:""}</div>
+    <div class="kpis">${kpi("warn",t("k_pending"),sum(pend),t("n_items",{n:pend.length}),"clock","pending")}${kpi("ok",t("k_approved"),sum(appr),t("n_items",{n:appr.length}),"check","approved")}${kpi("acc",t("k_recorded"),t("n_items",{n:rows.length}),t("k_all"),"doc","all")}</div></section>`;
+  h+=`<section class="card"><div class="sec-h"><h3>${t("monthly")}</h3><div class="legend">${(S.brand==="all"?["vynn","vangarde"]:[S.brand]).map(b=>`<span><i style="background:${BRANDS[b].color}"></i>${esc(brandName(b))}</span>`).join("")}</div></div><div class="chart">${barChart(all,m)}</div></section>`;
+  h+=`<section class="card"><div class="sec-h"><h3>${t("share")} · ${esc(plabel(m,"month"))}</h3></div>${donut(rows)}</section>`;
+  const recent=all.slice(0,6);
+  h+=`<section class="sec"><div class="sec-h"><h3>${t("recent")}</h3><button class="link" data-tab="list">${t("see_all")}${ic("chev")}</button></div>`;
+  h+=recent.length?`<div class="list">${recent.map(c=>row(c,ap)).join("")}</div>`
+    :`<div class="empty">${ic("doc")}<h3>${t("empty_mine_h")}</h3><p class="muted small">${t("empty_mine_p")}</p></div>`;
+  return h+"</section>";
+}
+function listRows(){
+  const f=S.lf,q=f.q.trim().toLowerCase();
+  const base=(isApprover()&&!f.mine?scopeAll():S.claims.filter(c=>c.by===S.me)).filter(brandOk);
+  const rows=base.filter(c=>(f.status==="all"||(f.status==="pending"?c.status.startsWith("pending"):f.status==="approved"?["approved","credit","paid","cleared"].includes(c.status):f.status==="unpaid"?payable(c):f.status==="paid"?(c.status==="paid"||c.status==="cleared"):c.status===f.status))
+    &&(!q||[c.title,c.docNo,jobOf(c),c.vendor,nm(c.by),tv(c.category)].join(" ").toLowerCase().includes(q)));
+  return rows.length?`<div class="list">${rows.map(c=>row(c,isApprover()&&!f.mine)).join("")}</div>`:`<div class="empty">${ic("search")}<h3>${S.claims.length?t("no_match"):t("empty_mine_h")}</h3></div>`;
+}
+function viewList(){
+  const f=S.lf;
+  return`<section class="sec"><h2>${t("list_h")}</h2>
+    <div class="search">${ic("search")}<input id="l-q" type="search" value="${esc(f.q)}" placeholder="${esc(t("search_ph"))}" aria-label="${esc(t("search_ph"))}"></div>
+    <div class="filters"><select id="l-status" aria-label="${esc(t("th_status"))}">${[["all",t("f_all")],["pending",t("k_pending")],["approved",t("k_approved")],["unpaid",t("f_unpaid")],["paid",t("st_paid")],["rejected",t("st_rejected")]].map(([k,l])=>`<option value="${k}"${k===f.status?" selected":""}>${esc(l)}</option>`).join("")}</select>
+    ${isApprover()?`<label class="chk"><input id="l-mine" type="checkbox"${f.mine?" checked":""}> ${t("only_mine")}</label>`:""}</div>
+    <div id="lres">${listRows()}</div></section>`;
+}
+
+function viewMine(){
+  const mine=S.claims.filter(c=>c.by===S.me),m=today().slice(0,7);
+  const pend=mine.filter(c=>c.status.startsWith("pending")),wait=mine.filter(payable);
+  const paid=mine.filter(c=>(c.status==="paid"||c.status==="cleared")&&localDay(c.paidAt).slice(0,7)===m);
+  const clr=mine.filter(c=>c.type==="advance"&&c.status==="paid");
+  const cr=wait.filter(c=>c.status==="credit");
+  let h=`<section class="sec"><div class="sec-h"><h2>${t("mine_h")}</h2><span class="muted small">${esc(myDept()?tv(myDept()):t("no_dept"))}</span></div>
+  <div class="kpis">${kpi("warn",t("k_pending"),sum(pend),t("n_items",{n:pend.length}))}${kpi("ink",t("k_waitpay"),sum(wait),cr.length?t("credit_round",{n:cr.length,d:fmtDate(nextDeal())}):t("n_items",{n:wait.length}))}${kpi("ok",t("k_got"),sum(paid),plabel(m,"month"))}</div></section>`;
+  if(clr.length)h+=`<div class="notice"><h3>${t("clr_h",{n:clr.length})}</h3><p class="muted small">${t("clr_p")}</p></div>`;
+  h+=`<section class="sec"><div class="sec-h"><h3>${t("all_n",{n:mine.length})}</h3></div>`;
+  h+=mine.length?`<div class="list">${mine.map(c=>row(c,false)).join("")}</div>`
+    :`<div class="empty"><div class="ic">฿</div><h3>${t("empty_mine_h")}</h3><p class="muted small">${t("empty_mine_p")}</p></div>`;
+  return h+"</section>";
+}
+function batches(list){
+  const g={};list.forEach(c=>{(g[c.by]=g[c.by]||[]).push(c)});
+  return Object.entries(g).sort((a,b)=>sum(b[1])-sum(a[1]));
+}
+function batchRow(uid,cs,label){
+  const p=S.people[uid]||{},ok=p.acctNo||p.promptpay;
+  return`<div class="batch"><div class="who"><img src="${avatarData(uid)}" alt=""><div><b>${esc(nm(uid))}</b><span class="muted small">${t("n_items",{n:cs.length})}${ok?"":" · "+t("no_bank_short")}</span></div></div>
+    <span class="amt">฿${money(sum(cs))}</span><button class="btn primary sm" data-pay="${esc(cs.map(c=>c.id).join(","))}">${label}</button></div>`;
+}
+function viewApprove(){
+  const ap=S.claims.filter(c=>brandOk(c)&&(canHead(c)||canFinal(c)));
+  let h=`<section class="sec"><div class="sec-h"><h2>${t("ap_h")}</h2><span class="amt">฿${money(sum(ap))}</span></div>`;
+  h+=ap.length?`<div class="list">${ap.map(c=>row(c,true)).join("")}</div>`:`<div class="empty"><div class="ic">✓</div><h3>${t("ap_empty_h")}</h3><p class="muted small">${t("ap_empty_p")}</p></div>`;
+  h+="</section>";
+  if(canPayRole()){
+    const now=S.claims.filter(c=>brandOk(c)&&c.status==="approved");
+    h+=`<section class="sec"><div class="sec-h"><h2>${t("pay_now_h")}</h2><span class="amt">฿${money(sum(now))}</span></div>`;
+    h+=now.length?batches(now).map(([u,cs])=>batchRow(u,cs,t("btn_pay"))).join(""):`<div class="empty"><h3>${t("pay_none")}</h3></div>`;
+    h+="</section>";
+    const cr=S.claims.filter(c=>brandOk(c)&&c.status==="credit"),due={};
+    cr.forEach(c=>{(due[c.dueDate]=due[c.dueDate]||[]).push(c)});
+    const td=today();
+    h+=`<section class="sec"><div class="sec-h"><h2>${t("credit_h",{d:dealDay()})}</h2><span class="amt">฿${money(sum(cr))}</span></div>`;
+    h+=cr.length?Object.keys(due).sort().map(d=>`<div class="sec-h"><h3>${t("round",{d:fmtDate(d)})}${d<=td?` <span class="pill warn">${t("due")}</span>`:""}</h3><span class="amt small">฿${money(sum(due[d]))}</span></div>`+batches(due[d]).map(([u,cs])=>batchRow(u,cs,d<=td?t("btn_pay"):t("btn_payearly"))).join("")).join("")
+      :`<div class="empty"><h3>${t("credit_none_h")}</h3><p class="muted small">${t("credit_none_p",{d:dealDay()})}</p></div>`;
+    h+="</section>";
+  }
+  return h;
+}
+function reportRows(withPeriod){
+  const r=S.rp;
+  return scopeAll().filter(c=>{
+    if(!brandOk(c))return false;
+    const d=r.basis==="bill"?c.date:localDay(c.createdAt);
+    if(withPeriod&&r.key!=="all"&&pkey(d,r.period)!==r.key)return false;
+    if(r.status==="valid"&&c.status==="rejected")return false;
+    if(r.status==="pending"&&!c.status.startsWith("pending"))return false;
+    if(r.status==="unpaid"&&!payable(c))return false;
+    if(r.status==="paid"&&!(c.status==="paid"||c.status==="cleared"))return false;
+    if(r.status==="rejected"&&c.status!=="rejected")return false;
+    if(r.dept!=="all"&&c.dept!==r.dept)return false;
+    if(r.doc==="receipt"&&noReceipt(c))return false;
+    if(r.doc==="noreceipt"&&!noReceipt(c))return false;
+    return true;
+  });
+}
+const GROUPS=["person","category","job","dept","brand"];
+D.g_brand=D.l_brand;
+const gkey=(c,g)=>g==="person"?c.by:g==="category"?c.category:g==="job"?(jobOf(c)||"\u0000"):g==="brand"?brandOf(c):(c.dept||"-");
+const glabel=(k,g)=>g==="person"?nm(k):g==="brand"?brandName(k):k==="\u0000"?t("no_job"):tv(k);
+function viewReport(){
+  const r=S.rp,base=reportRows(false),rows=reportRows(true);
+  const dateOf=c=>r.basis==="bill"?c.date:localDay(c.createdAt);
+  const keys=[...new Set(base.map(c=>pkey(dateOf(c),r.period)).filter(Boolean))];
+  const cur=pkey(today(),r.period);if(!keys.includes(cur))keys.push(cur);
+  keys.sort().reverse();
+  const sel=(id,opts,v)=>`<select id="${id}">${opts.map(([k,l])=>`<option value="${esc(k)}"${k===v?" selected":""}>${esc(l)}</option>`).join("")}</select>`;
+  const showDept=S.isOwner||role(S.me).final||role(S.me).finance;
+  const g={};rows.forEach(c=>{const k=gkey(c,r.group);g[k]=g[k]||{s:0,n:0};g[k].s+=+c.amount||0;g[k].n++});
+  const ge=Object.entries(g).sort((a,b)=>b[1].s-a[1].s),mx=ge.length?ge[0][1].s:1;
+  const tr={};base.forEach(c=>{const k=pkey(dateOf(c),r.period);if(!k)return;tr[k]=tr[k]||{s:0,n:0};tr[k].s+=+c.amount||0;tr[k].n++});
+  const tk=Object.keys(tr).sort().reverse().slice(0,12);
+  const pendS=sum(rows.filter(c=>c.status.startsWith("pending"))),unpaidS=sum(rows.filter(payable)),paidS=sum(rows.filter(c=>c.status==="paid"||c.status==="cleared"));
+  const nr=rows.filter(noReceipt);
+  let h=`<section class="sec"><div class="sec-h"><h2>${t("rp_h")}</h2>${S.downloads?`<button class="btn sm" id="csv">${t("csv")}</button>`:""}</div>
+  <div class="filters">
+    ${sel("r-period",PERIODS.map(p=>[p,t("p_"+p)]),r.period)}
+    ${sel("r-key",[["all",t("all_time")],...keys.map(k=>[k,plabel(k,r.period)])],r.key)}
+    <span class="lbl">${t("group_by")}</span>${sel("r-group",GROUPS.map(x=>[x,t("g_"+x)]),r.group)}
+  </div>
+  <div class="filters">
+    ${sel("r-status",[["valid",t("f_valid")],["pending",t("k_pending")],["unpaid",t("f_unpaid")],["paid",t("st_paid")],["rejected",t("st_rejected")]],r.status)}
+    ${showDept?sel("r-dept",[["all",t("all_depts")],...depts().map(d=>[d,tv(d)])],r.dept):""}
+    ${sel("r-basis",[["bill",t("basis_bill")],["claim",t("basis_claim")]],r.basis)}
+    ${sel("r-doc",[["all",t("doc_all")],["receipt",t("doc_rec")],["noreceipt",t("doc_norec")]],r.doc)}
+  </div>
+  <div class="kpis">${kpi("ink",t("k_total",{p:r.key==="all"?t("k_allp"):plabel(r.key,r.period)}),sum(rows),t("n_items",{n:rows.length}))}${kpi("warn",t("k_pendpay"),pendS+unpaidS,t("k_waitpay_s",{v:money(unpaidS)}))}${kpi("ok",t("st_paid"),paidS,nr.length?t("k_norec_s",{n:nr.length,v:money(sum(nr))}):"")}</div>
+  <div class="two">
+    <div class="panel"><h3>${t("by_x",{g:t("g_"+r.group)})}</h3>${ge.length?`<div class="bars">${ge.map(([k,v])=>`<div class="bar"><span class="lb">${esc(glabel(k,r.group))}<small>${v.n}</small></span><span class="tr"><i style="width:${Math.max(2,v.s/mx*100)}%"></i></span><span class="amt small">฿${money(v.s)}</span></div>`).join("")}</div>`:`<p class="muted small">${t("no_data")}</p>`}</div>
+    <div class="panel"><h3>${t("trend_h",{p:t("p_"+r.period),n:tk.length})}</h3>${tk.length?`<div class="tbl-wrap"><table><thead><tr><th>${t("th_period")}</th><th class="r">${t("th_count")}</th><th class="r">${t("th_amount")}</th></tr></thead><tbody>${tk.map(k=>`<tr data-period="${esc(k)}" class="${k===r.key?"sel":""}"><td>${esc(plabel(k,r.period))}</td><td class="r num">${tr[k].n}</td><td class="r amt">${money(tr[k].s)}</td></tr>`).join("")}</tbody></table></div>`:`<p class="muted small">${t("no_data2")}</p>`}</div>
+  </div>`;
+  h+=rows.length?`<div class="tbl-wrap"><table class="wide"><thead><tr><th>${t("th_no")}</th><th>${t("th_claimdate")}</th><th>${t("th_billdate")}</th><th>${t("th_who")}</th><th>${t("g_job")}</th><th>${t("g_category")}</th><th>${t("th_item")}</th><th>${t("th_status")}</th><th class="r">${t("th_amount")}</th></tr></thead><tbody>
+    ${rows.map(c=>`<tr data-open="${esc(c.id)}"><td class="docno">${esc(c.docNo)}${noReceipt(c)?` <span class="pill warn">${t("tag_norec")}</span>`:""}</td><td>${fmtDate(localDay(c.createdAt))}</td><td>${fmtDate(c.date)}</td><td>${esc(nm(c.by))}</td><td>${esc(jobOf(c)||"-")}</td><td>${esc(tv(c.category))}</td><td>${esc(c.title)}</td><td><span class="pill ${stat(c).c}">${esc(stat(c).t)}</span></td><td class="r amt">${money(c.amount)}</td></tr>`).join("")}
+    </tbody><tfoot><tr><td colspan="8">${t("sum_n",{n:rows.length})}</td><td class="r amt">${money(sum(rows))}</td></tr></tfoot></table></div>`
+    :`<div class="empty"><h3>${t("rp_empty_h")}</h3><p class="muted small">${t("rp_empty_p")}</p></div>`;
+  return h+"</section>";
+}
+const deptOpts=(v,emptyKey)=>`<option value="">${t(emptyKey)}</option>`+depts().map(d=>`<option value="${esc(d)}"${d===v?" selected":""}>${esc(tv(d))}</option>`).join("");
+function bankFields(p,pre){
+  return`<div class="field"><label for="${pre}-bank">${t("l_bank")}</label><select id="${pre}-bank"><option value="">${t("pick_bank")}</option>${BANKS.map(b=>`<option value="${esc(b)}"${b===p.bank?" selected":""}>${esc(tv(b))}</option>`).join("")}</select></div>
+    <div class="field"><label for="${pre}-acct">${t("l_acct")}</label><input id="${pre}-acct" type="text" inputmode="numeric" maxlength="20" value="${esc(p.acctNo||"")}" placeholder="xxx-x-xxxxx-x"></div>
+    <div class="field"><label for="${pre}-aname">${t("l_aname")}</label><input id="${pre}-aname" type="text" maxlength="80" value="${esc(p.acctName||"")}" placeholder="${esc(t("ph_aname"))}"></div>
+    <div class="field"><label for="${pre}-pp">${t("l_pp")}</label><input id="${pre}-pp" type="tel" inputmode="numeric" maxlength="17" value="${esc(p.promptpay||"")}" placeholder="08x-xxx-xxxx"></div>`;
+}
+function readProfile(pre){
+  const g=id=>($("#"+pre+"-"+id)||{}).value||"";
+  return{nick:g("nick").trim(),dept:g("dept"),bank:g("bank"),acctNo:g("acct").trim(),acctName:g("aname").trim(),promptpay:g("pp").replace(/[^\d]/g,"")};
+}
+const ROLE_KEYS=["owner","admin","finance","staff"];
+function viewSettings(){
+  const p=S.people[S.me]||{};
+  let h=`<section class="card"><div class="sec-h"><h2>${t("me_h")}</h2><span class="pill acc">${t("role_"+myRole())}</span></div>
+    <p class="muted small">${t("l_code")}: <b class="num">${esc(p.code||"")}</b></p>
+    <div class="grid2">
+    <div class="field"><label for="p-nick">${t("l_nick")}</label><input id="p-nick" type="text" maxlength="60" value="${esc(p.nick||"")}" placeholder="${esc(t("ph_nick"))}"></div>
+    <div class="field"><label for="p-dept">${t("g_dept")}</label><select id="p-dept">${deptOpts(p.dept,"pick_dept")}</select></div></div>
+    <h3>${t("bank_h")}</h3><div class="grid2">${bankFields(p,"p")}</div>
+    <p class="hint">${t("bank_hint2")}</p>
+    <div><button class="btn primary" id="p-save">${t("save")}</button></div></section>
+  <section class="card"><h3>${t("pin_h")}</h3><div class="grid2">
+    <div class="field"><label for="pin-old">${t("l_oldpin")}</label><input id="pin-old" type="password" inputmode="numeric" autocomplete="current-password" maxlength="12"></div>
+    <div class="field"><label for="pin-new">${t("l_newpin")}</label><input id="pin-new" type="password" inputmode="numeric" autocomplete="new-password" maxlength="12"></div></div>
+    <div class="filters"><button class="btn" id="pin-save">${t("b_changepin")}</button><button class="btn bad" id="logout">${t("logout")}</button></div></section>`;
+  if(!(myRole()==="owner"||myRole()==="admin"))return h;
+  const ppl=Object.keys(S.people).sort((a,b)=>nm(a).localeCompare(nm(b),"th"));
+  const roleOpts=(v,lock)=>ROLE_KEYS.filter(r=>myRole()==="owner"||(r!=="owner"&&r!=="admin")||r===v).map(r=>`<option value="${r}"${r===v?" selected":""}>${t("role_"+r)}</option>`).join("");
+  h+=`<section class="card"><div class="sec-h"><h2>${t("users_h")}</h2><span class="muted small">${t("people_n",{n:ppl.length})}</span></div>
+  <p class="muted small">${t("users_p")}</p>
+  <div class="people">${ppl.map(u=>{const pp=S.people[u],me=u===S.me,locked=!me&&myRole()!=="owner"&&(pp.role==="owner"||pp.role==="admin");
+    return`<div class="person" data-user="${esc(u)}"><div class="who"><img src="${avatarData(u)}" alt=""><div><b>${esc(nm(u))}${me?t("you"):""}</b><span class="muted small num">${esc(pp.code||"")}${pp.active===false?" · "+t("inactive"):""} · ${(pp.acctNo||pp.promptpay)?t("has_bank"):t("no_bank_short")}</span></div></div>
+    <select data-udept aria-label="${esc(t("dept_of",{n:nm(u)}))}" ${locked?"disabled":""}>${deptOpts(pp.dept,"no_dept_opt")}</select>
+    <div class="roles"><select data-urole aria-label="${esc(t("l_role"))}" ${me||locked?"disabled":""}>${roleOpts(pp.role)}</select>
+      ${me||locked?"":`<button class="btn sm" data-upin>${t("reset_pin")}</button><button class="btn sm ${pp.active===false?"":"bad"}" data-uactive="${pp.active===false?1:0}">${pp.active===false?t("activate"):t("deactivate")}</button>`}</div></div>`}).join("")}</div>
+  <h3>${t("add_user")}</h3>
+  <div class="grid2">
+    <div class="field"><label for="nu-code">${t("l_code")}</label><input id="nu-code" type="text" maxlength="20" placeholder="E101" autocapitalize="characters"></div>
+    <div class="field"><label for="nu-name">${t("l_nick")}</label><input id="nu-name" type="text" maxlength="60" placeholder="${esc(t("ph_nick"))}"></div>
+    <div class="field"><label for="nu-dept">${t("g_dept")}</label><select id="nu-dept">${deptOpts("","pick_dept")}</select></div>
+    <div class="field"><label for="nu-role">${t("l_role")}</label><select id="nu-role">${roleOpts("staff")}</select></div>
+    <div class="field"><label for="nu-pin">${t("l_initpin")}</label><input id="nu-pin" type="text" inputmode="numeric" maxlength="12" placeholder="6–12"></div>
+  </div>
+  <div><button class="btn primary" id="nu-save">${t("b_adduser")}</button></div></section>
+  <section class="card"><h2>${t("co_h")}</h2><div class="grid2">
+    <div class="field"><label for="o-depts">${t("l_depts")}</label><textarea id="o-depts" rows="6">${esc(depts().join("\n"))}</textarea></div>
+    <div class="field"><label for="o-cats">${t("l_cats")}</label><textarea id="o-cats" rows="6">${esc(cats().join("\n"))}</textarea></div>
+    <div class="field"><label for="o-deal">${t("l_deal")}</label><input id="o-deal" type="number" min="1" max="28" value="${dealDay()}"></div></div>
+    <div><button class="btn primary" id="o-save">${t("save_cfg")}</button></div></section>`;
+  return h;
+}
+function viewLogin(){
+  const setup=S.auth==="setup";
+  return`<div class="splash"><div class="wm"><span class="v">VYNN</span><i>|</i><span class="g">VANGARDE</span></div><div class="tl">Shared Finance System</div>
+  <div class="lang big" role="group" aria-label="Language">${LANGS.map((l,i)=>`<button data-lang="${l}" lang="${l}" class="${l===LANG?"on":""}">${["ไทย","ລາວ","မြန်မာ"][i]}</button>`).join("")}</div>
+  <form class="card" id="loginf" style="width:min(380px,100%);text-align:left" autocomplete="on">
+    <h2>${setup?t("setup_h"):t("login_h")}</h2>${setup?`<p class="muted small">${t("setup_p")}</p>`:""}
+    <div class="field"><label for="lg-code">${t("l_code")}</label><input id="lg-code" name="username" type="text" autocomplete="username" autocapitalize="characters" maxlength="20" placeholder="A001" required></div>
+    ${setup?`<div class="field"><label for="lg-name">${t("l_nick")}</label><input id="lg-name" type="text" maxlength="60" required></div>`:""}
+    <div class="field"><label for="lg-pin">${setup?t("l_newpin"):t("l_pin")}</label><input id="lg-pin" name="password" type="password" inputmode="numeric" autocomplete="${setup?"new-password":"current-password"}" maxlength="12" required></div>
+    <p class="hint bad" id="lg-err" hidden></p>
+    <button class="btn primary wide" type="submit">${setup?t("b_setup"):t("b_login")}</button>
+    ${setup?"":`<p class="muted small">${t("login_help")}</p>`}
+  </form></div>`;
+}
+
+/* ---------- sheet ---------- */
+const newBag=()=>({receipts:[],blobs:{},uploading:0,newIds:[]});
+function openSheet(kind,arg){
+  S.sheet={kind,arg,note:"",payRef:"",confirmCancel:false,key:null};
+  S.bag=newBag();
+  if(kind==="form")initForm();
+  renderSheet();$("#sheet").hidden=false;document.body.classList.add("lock");
+  setTimeout(()=>{const f=$("#panel").querySelector(".x");f&&f.focus()},30);
+}
+function closeSheet(force){
+  const bags=[S.bag,S.sheet&&S.sheet.kind==="form"?S.form:null,S.sheet&&S.sheet.kind==="form"?S.fslip:null].filter(Boolean);
+  if(!force&&bags.some(b=>b.uploading>0)){toast(t("wait_upload"),"warn");return}
+  bags.forEach(b=>b.newIds.forEach(id=>S.assets&&S.assets.delete(id).catch(()=>{})));
+  S.sheet=null;S.form=null;S.fslip=null;S.bag=null;$("#sheet").hidden=true;document.body.classList.remove("lock");
+  if(S.pendingRender)render();
+}
+const xBtn=()=>`<button class="x" data-close aria-label="${esc(t("close"))}">✕</button>`;
+function renderSheet(){
+  if(!S.sheet)return;
+  const k=S.sheet.kind;
+  $("#panel").innerHTML=k==="form"?renderForm():k==="detail"?renderDetail():k==="pay"?renderPay():renderProfile();
+  if(k==="form"){bindDrop("#drop",()=>S.form,drawForm);bindDrop("#sdrop",()=>S.fslip,drawSlip)}
+}
+function sheetKey(){
+  const s=S.sheet;
+  if(s.kind==="detail"){const c=S.claims.find(x=>x.id===s.arg);return c?c.updatedAt+"|"+(S.cfg.dealDay||""):"gone"}
+  if(s.kind==="pay")return s.arg.map(id=>{const c=S.claims.find(x=>x.id===id);return c?c.updatedAt:"x"}).join()+JSON.stringify(S.people[payUid()]||{});
+  return null;
+}
+function refreshSheet(force){
+  if(!S.sheet||(S.sheet.kind!=="detail"&&S.sheet.kind!=="pay"))return;
+  const k=sheetKey();
+  if(!force&&k===S.sheet.key)return;
+  if(typingIn($("#panel"))){S.sheet.stale=true;return}
+  renderSheet();
+}
+function renderProfile(){
+  const p=S.people[S.me]||{};
+  return`<div class="sh-head"><h2>${t("welcome_h")}</h2>${xBtn()}</div>
+  <div class="lang big" role="group" aria-label="Language">${LANGS.map((l,i)=>`<button data-lang="${l}" lang="${l}" class="${l===LANG?"on":""}">${["ไทย","ລາວ","မြန်မာ"][i]}</button>`).join("")}</div>
+  <p class="muted">${t("welcome_p")}</p>
+  <div class="grid2"><div class="field"><label for="s-nick">${t("l_nick")}</label><input id="s-nick" type="text" maxlength="40" value="${esc(p.nick||S.names[S.me]||"")}" placeholder="${esc(t("ph_nick"))}"></div>
+  <div class="field"><label for="s-dept">${t("g_dept")}</label><select id="s-dept">${deptOpts(p.dept,"pick_dept")}</select></div></div>
+  <h3>${t("bank_h")}</h3><div class="grid2">${bankFields(p,"s")}</div>
+  <div class="sh-foot"><button class="btn primary" id="s-save">${t("start")}</button></div>`;
+}
+function initForm(){
+  let lb="vynn";try{lb=localStorage.getItem("vynn_exp_lastbrand")||"vynn"}catch(e){}
+  S.form=Object.assign(newBag(),{type:"reimburse",slipAmount:0,dupAck:"",brand:S.brand!=="all"?S.brand:(lb==="vangarde"?"vangarde":"vynn")});
+  S.fslip=newBag();
+  S.formVals={title:"",category:cats()[0],date:today(),vendor:"",amount:"",vatIncl:false,note:"",job:"",slipRef:""};
+}
+function thumbs(bag,rmAttr){
+  return bag.receipts.map((r,i)=>`<div class="th">${r.type==="pdf"?'<div class="pdf">PDF</div>':`<img src="${esc(r.url)}" alt="${esc(t("file_n",{n:i+1}))}">`}${r.uploading?`<div class="up">${t("uploading")}</div>`:""}${r.uploading?"":`<button class="rm" ${rmAttr}="${i}" aria-label="${esc(t("rm_file",{n:i+1}))}">✕</button>`}</div>`).join("");
+}
+function renderForm(){
+  const f=S.form,v=S.formVals;
+  const jobs=[...new Set(S.claims.map(jobOf).filter(Boolean))].slice(0,60);
+  const pick=(id,l)=>S.assets?`<div class="drop-act"><label class="btn sm" for="${id}">${l}</label><input id="${id}" class="vh" type="file" accept="image/*,application/pdf" multiple></div>`:"";
+  const req=f.type==="reimburse";
+  return`<div class="sh-head"><h2>${t("tab_new")}</h2>${xBtn()}</div>
+  <div class="seg brand" role="radiogroup" aria-label="${esc(t("l_brand"))}">${["vynn","vangarde"].map(b=>`<button type="button" role="radio" aria-checked="${f.brand===b}" data-fbrand="${b}" class="${b}${f.brand===b?" on":""}">${BRANDS[b].name}</button>`).join("")}</div>
+  <div class="seg" role="radiogroup" aria-label="${esc(t("type_aria"))}"><button type="button" role="radio" aria-checked="${f.type==="reimburse"}" data-ftype="reimburse" class="${f.type==="reimburse"?"on":""}">${t("t_reimb")}</button><button type="button" role="radio" aria-checked="${f.type==="advance"}" data-ftype="advance" class="${f.type==="advance"?"on":""}">${t("t_adv")}</button></div>
+  ${S.assets?"":`<p class="hint bad">${t("no_upload")}</p>`}
+  <div class="drops">
+    <div class="drop" id="drop"><span class="lbl"><b>${t("d_bill")}</b> · ${t("d_bill_s")}</span><div class="thumbs" id="thumbs">${thumbs(f,"data-rm")}</div>${pick("f-files",t("up_bill"))}</div>
+    <div class="drop" id="sdrop"><span class="lbl"><b>${t("d_slip")}</b> · ${t("d_slip_s")}</span><div class="thumbs" id="sthumbs">${thumbs(S.fslip,"data-srm")}</div>${pick("f-slips",t("up_slip"))}</div>
+  </div>
+  <p class="hint">${req?t("req_hint"):t("adv_hint")}</p>
+  ${S.canScan&&S.assets?`<div class="drop-act"><button class="btn ai" id="scan" type="button">${t("scan_btn")}</button></div>`:""}
+  <p class="hint" id="scanmsg">${S.canScan&&S.assets?t("scan_hint"):""}</p>
+  <div class="form">
+    <div class="field"><label for="f-cat">${t("g_category")}</label><select id="f-cat">${cats().map(c=>`<option value="${esc(c)}"${c===v.category?" selected":""}>${esc(tv(c))}</option>`).join("")}</select></div>
+    <div class="field"><label for="f-amount">${t("l_amount")}</label><input id="f-amount" type="number" inputmode="decimal" step="0.01" min="0" value="${esc(v.amount)}" placeholder="0.00"></div>
+    <div class="field"><label for="f-today">${t("th_claimdate")}</label><input id="f-today" type="text" value="${esc(t("today_s",{d:fmtDate(today())}))}" disabled></div>
+    <div class="field"><label for="f-date">${t("th_billdate")}</label><input id="f-date" type="date" value="${esc(v.date)}"></div>
+    <div class="field full"><label for="f-job">${t("g_job")}</label><input id="f-job" type="text" maxlength="80" list="jobs" value="${esc(v.job)}" placeholder="${esc(t("ph_job"))}"><datalist id="jobs">${jobs.map(j=>`<option value="${esc(j)}"></option>`).join("")}</datalist></div>
+    <div class="field full"><label for="f-title">${t("l_title")}</label><input id="f-title" type="text" maxlength="120" value="${esc(v.title)}" placeholder="${esc(t("ph_title"))}"></div>
+    <div class="field"><label for="f-vendor">${t("l_vendor")}</label><input id="f-vendor" type="text" maxlength="80" value="${esc(v.vendor)}" placeholder="${esc(t("ph_vendor"))}"></div>
+    <div class="field"><label for="f-sref">${t("l_sref")}</label><input id="f-sref" type="text" maxlength="40" value="${esc(v.slipRef)}" placeholder="${esc(t("ph_sref"))}"></div>
+    <div class="field full"><label class="chk"><input id="f-vat" type="checkbox"${v.vatIncl?" checked":""}> ${t("l_vat")}</label></div>
+    <div class="field full"><label for="f-note">${t("l_note")}</label><textarea id="f-note" rows="2" maxlength="500" placeholder="${esc(t("ph_note"))}">${esc(v.note)}</textarea></div>
+  </div>
+  <div class="sh-foot"><button class="btn" data-close type="button">${t("cancel")}</button><button class="btn acc" id="submit" type="button">${t("submit")}</button></div>`;
+}
+function readVals(){
+  return{title:$("#f-title").value,amount:parseFloat($("#f-amount").value),date:$("#f-date").value,category:$("#f-cat").value,
+    vendor:$("#f-vendor").value,job:$("#f-job").value,vatIncl:$("#f-vat").checked,note:$("#f-note").value,slipRef:$("#f-sref").value};
+}
+function renderDetail(){
+  const c=S.claims.find(x=>x.id===S.sheet.arg);
+  S.sheet.key=sheetKey();
+  if(!c)return`<div class="sh-head"><h2>${t("not_found_h")}</h2>${xBtn()}</div><p class="muted">${t("not_found_p")}</p>`;
+  const st=stat(c),mine=c.by===S.me,vat=c.vatIncl?(+c.amount*7/107):0;
+  const ths=a=>a.length?`<div class="thumbs">${a.map((r,i)=>`<div class="th"><a href="${fileUrl(r.id)}" target="_blank" rel="noopener" aria-label="${esc(t("open_file",{n:i+1}))}">${r.type==="pdf"?'<div class="pdf">PDF</div>':`<img src="${fileUrl(r.id)}" alt="${esc(t("file_n",{n:i+1}))}" loading="lazy">`}</a></div>`).join("")}</div>`:`<p class="muted small">${t("no_files")}</p>`;
+  const rc=c.receipts||[],cr=c.clearReceipts||[],sl=c.paySlips||[],es=c.slips||[],dups=dupsOf(c.slipRef,c.id);
+  const warns=[noReceipt(c)?`<div class="alert">${t("w_norec")}</div>`:"",
+    slipMismatch(c)?`<div class="alert">${t("w_mismatch",{a:money(c.slipAmount),b:money(c.amount)})}</div>`:"",
+    dups.length?`<div class="alert bad">${esc(t("w_dup",{r:c.slipRef,x:dups.map(d=>d.docNo+" ("+nm(d.by)+")").join(", ")}))}</div>`:""].join("");
+  let h=`<div class="sh-head"><span class="docno">${esc(c.docNo)}</span>${xBtn()}</div>
+  <div class="slip"><div class="slip-top"><div><div class="eyebrow"><i class="bdot" style="background:${BRANDS[brandOf(c)].color}"></i>${esc(brandName(brandOf(c)))} · ${c.type==="advance"?t("tag_adv"):t("type_reimb")} · ${esc(tv(c.category))}</div><div class="slip-amt">฿${money(c.amount)}</div></div><span class="stamp ${st.c}">${esc(st.t)}</span></div>
+    <h2>${esc(c.title)}</h2>${warns}
+    <dl class="kv"><dt>${t("th_who")}</dt><dd>${esc(nm(c.by))} · ${esc(tv(c.dept||"-"))}</dd><dt>${t("g_job")}</dt><dd>${esc(jobOf(c)||"-")}</dd>
+    <dt>${t("th_claimdate")}</dt><dd>${fmtDate(localDay(c.createdAt))}</dd><dt>${t("th_billdate")}</dt><dd>${fmtDate(c.date)}</dd>
+    ${c.vendor?`<dt>${t("dt_vendor")}</dt><dd>${esc(c.vendor)}</dd>`:""}
+    ${c.slipRef?`<dt>${t("dt_sref")}</dt><dd class="num">${esc(c.slipRef)}</dd>`:""}
+    ${c.vatIncl?`<dt>VAT 7%</dt><dd class="num">${t("vat_line",{v:money(vat),b:money(c.amount-vat)})}</dd>`:""}
+    ${c.note?`<dt>${t("l_note")}</dt><dd>${esc(c.note)}</dd>`:""}
+    ${c.status==="credit"?`<dt>${t("dt_due")}</dt><dd>${t("due_s",{d:fmtDate(c.dueDate)})}</dd>`:""}
+    ${c.paidAt?`<dt>${t("dt_paid")}</dt><dd>${fmtTime(c.paidAt)}${c.payRef?" · "+esc(c.payRef):""}</dd>`:""}
+    ${c.status==="cleared"?`<dt>${t("dt_used")}</dt><dd class="num">฿${money(c.clearedAmount)}</dd><dt>${t("dt_diff")}</dt><dd class="diff">${c.amount-c.clearedAmount>=0?t("diff_back",{v:money(c.amount-c.clearedAmount)}):t("diff_more",{v:money(c.clearedAmount-c.amount)})}</dd>`:""}</dl>
+    <hr class="dash"><span class="lbl">${t("d_bill")} (${rc.length})</span>${ths(rc)}
+    ${es.length?`<span class="lbl">${t("f_slips")} (${es.length})</span>${ths(es)}`:""}
+    ${sl.length?`<span class="lbl">${t("f_payslip")}</span>${ths(sl)}`:""}
+    ${cr.length?`<span class="lbl">${t("f_clear")} (${cr.length})</span>${ths(cr)}`:""}</div>`;
+  if(canHead(c)){
+    h+=`<div class="act"><h3>${t("head_h")}</h3>
+      <textarea id="d-note" rows="2" maxlength="300" placeholder="${esc(t("ph_reason"))}">${esc(S.sheet.note)}</textarea>
+      <div class="btns"><button class="btn bad" id="d-reject">${t("b_reject")}</button><button class="btn ok" id="d-head">${t("b_forward")}</button></div></div>`;
+  }else if(canFinal(c)){
+    h+=`<div class="act"><h3>${t("decide_h")}</h3>
+      <textarea id="d-note" rows="2" maxlength="300" placeholder="${esc(t("ph_reason"))}">${esc(S.sheet.note)}</textarea>
+      <div class="btns"><button class="btn ok" id="d-approve">${t("b_approve")}</button><button class="btn ink" id="d-credit">${t("b_credit",{d:fmtDate(nextDeal())})}</button></div>
+      <div class="btns"><button class="btn bad" id="d-reject">${t("b_reject_end")}</button></div></div>`;
+  }
+  if(payable(c)&&canPayRole())h+=`<div class="act"><div class="btns"><button class="btn primary" data-pay="${esc(c.id)}">${t("b_paythis",{v:money(c.amount)})}</button></div></div>`;
+  if(mine&&c.type==="advance"&&c.status==="paid"){
+    h+=`<div class="act"><h3>${t("a_clear")}</h3><p class="hint">${t("clr_hint")}</p>
+      <div class="thumbs" id="bthumbs">${thumbs(S.bag,"data-brm")}</div>
+      ${S.assets?`<div class="drop-act"><label class="btn" for="b-files">${t("up_bill_s")}</label><input id="b-files" class="vh" type="file" accept="image/*,application/pdf" multiple></div>`:""}
+      <div class="field"><label for="c-amt">${t("l_used")}</label><input id="c-amt" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00"></div>
+      <div class="btns"><button class="btn primary" id="c-send">${t("b_sendclr")}</button></div></div>`;
+  }
+  if(mine&&c.status.startsWith("pending")&&(c.history||[]).every(x=>x.by===S.me)){
+    h+=`<div class="act"><div class="btns">${S.sheet.confirmCancel?`<button class="btn" id="d-cancel-no">${t("b_cancel_no")}</button><button class="btn bad solid" id="d-cancel-yes">${t("b_cancel_yes")}</button>`:`<button class="btn bad" id="d-cancel">${t("b_cancel")}</button>`}</div></div>`;
+  }
+  const hist=(c.history||[]).slice().reverse();
+  h+=`<div class="act"><h3>${t("hist")}</h3><ol class="tl">${hist.map(x=>`<li><i class="${x.a==="reject"?"bad":(x.a==="paid"||x.a==="approve_final"||x.a==="auto"||x.a==="clear"||x.a==="credit")?"ok":""}"></i><div><div>${esc(D["a_"+x.a]?t("a_"+x.a):x.a)} · ${esc(nm(x.by))}</div>${x.note?`<div class="small">“${esc(x.note)}”</div>`:""}<div class="t">${fmtTime(x.at)}</div></div></li>`).join("")}</ol></div>`;
+  return h;
+}
+function payUid(){const c=S.sheet&&S.sheet.kind==="pay"&&S.claims.find(x=>x.id===S.sheet.arg[0]);return c?c.by:null}
+function renderPay(){
+  const cs=S.sheet.arg.map(id=>S.claims.find(x=>x.id===id)).filter(c=>c&&payable(c));
+  S.sheet.key=sheetKey();
+  if(!cs.length)return`<div class="sh-head"><h2>${t("paid_done_h")}</h2>${xBtn()}</div><p class="muted">${t("paid_done_p")}</p>`;
+  const uid=cs[0].by,p=S.people[uid]||{},total=Math.round(sum(cs)*100)/100;
+  const pl=p.promptpay&&ppPayload(p.promptpay,total),svg=pl?qrSvg(pl):"";
+  const cp=(k,shown,val,cls)=>`<div class="cp"><span class="k">${k}</span><span class="v ${cls||""}">${esc(shown||"-")}</span>${val?`<button class="btn sm" data-copy="${esc(val)}">${t("copy")}</button>`:"<span></span>"}</div>`;
+  const acct=(p.acctNo||"").replace(/[^\d]/g,"");
+  return`<div class="sh-head"><h2>${esc(t("pay_h",{n:nm(uid)}))}</h2>${xBtn()}</div>
+  <div class="paybox"><div class="payee"><div>
+    ${cp(t("cp_amt"),total.toFixed(2),total.toFixed(2),"num")}
+    ${cp(t("l_bank"),p.bank?tv(p.bank):"",p.bank?tv(p.bank):"")}
+    ${cp(t("l_acct"),acct,acct,"num")}
+    ${cp(t("l_aname"),p.acctName,p.acctName)}
+    ${p.promptpay?cp(t("cp_pp"),p.promptpay,p.promptpay,"num"):""}
+  </div>${svg?`<div class="qr">${svg}<span>PromptPay · ฿${money(total)}</span></div>`:""}</div>
+  ${!p.acctNo&&!p.promptpay?`<p class="hint bad">${esc(t("pay_nobank",{n:nm(uid)}))}</p>`:""}
+  <div class="inc"><span class="lbl">${t("sum_n",{n:cs.length})}</span>${cs.map(c=>`<div><span>${esc(c.docNo)} · ${esc(c.title)}</span><span class="amt">${money(c.amount)}</span></div>`).join("")}</div></div>
+  <div class="act"><h3>${t("after_h")}</h3>
+    <div class="thumbs" id="bthumbs">${thumbs(S.bag,"data-brm")}</div>
+    ${S.assets?`<div class="drop-act"><label class="btn" for="b-files">${t("up_payslip")}</label><input id="b-files" class="vh" type="file" accept="image/*,application/pdf" multiple></div>`:""}
+    <input id="d-payref" type="text" maxlength="60" aria-label="${esc(t("ph_payref"))}" placeholder="${esc(t("ph_payref"))}" value="${esc(S.sheet.payRef)}">
+    <div class="btns"><button class="btn ok" id="d-paid">${t("b_confirm_paid",{v:money(total)})}</button></div></div>`;
+}
+
+/* ---------- files ---------- */
+async function shrink(f){
+  if(!f.type.startsWith("image/")||f.type==="image/gif")return f;
+  if(f.type==="image/jpeg"&&f.size<700*1024)return f;
+  try{
+    const bmp=await createImageBitmap(f),s=Math.min(1,1800/Math.max(bmp.width,bmp.height));
+    const cv=document.createElement("canvas");cv.width=Math.round(bmp.width*s);cv.height=Math.round(bmp.height*s);
+    cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
+    return await new Promise(r=>cv.toBlob(b=>r(b||f),"image/jpeg",.82));
+  }catch(e){return f}
+}
+function upErr(e){const k={too_large:"u_too_large",unsupported_type:"u_unsupported",quota_or_state:"u_quota",rate_limited:"u_rate",not_granted:"u_notgranted"}[e&&e.code];return t(k||"u_fail")}
+function addFiles(bag,files,redraw){
+  if(!S.assets){toast(t("u_notgranted"),"bad");return}
+  [...files].forEach(f=>{
+    const pdf=f.type==="application/pdf";
+    if(!pdf&&!f.type.startsWith("image/")){toast(t("u_only"),"bad");return}
+    const it={type:pdf?"pdf":"image",uploading:true,url:pdf?"":URL.createObjectURL(f)};
+    bag.receipts.push(it);bag.uploading++;redraw();
+    (async()=>{
+      try{const b=pdf?f:await shrink(f);const res=await S.assets.upload(b,{type:pdf?"application/pdf":(b.type||"image/jpeg")});
+        it.id=res.id;it.url=res.url;it.uploading=false;bag.newIds.push(res.id);if(!pdf)bag.blobs[res.id]=b;}
+      catch(e){bag.receipts.splice(bag.receipts.indexOf(it),1);toast(upErr(e),"bad")}
+      finally{bag.uploading--;redraw()}
+    })();
+  });
+}
+function removeFile(bag,i,redraw){
+  const r=bag.receipts[i];if(!r)return;bag.receipts.splice(i,1);
+  if(r.id&&bag.newIds.includes(r.id)){bag.newIds=bag.newIds.filter(x=>x!==r.id);S.assets&&S.assets.delete(r.id).catch(()=>{})}
+  redraw();
+}
+const drawForm=()=>{const e=$("#thumbs");if(e&&S.form)e.innerHTML=thumbs(S.form,"data-rm")};
+const drawBag=()=>{const e=$("#bthumbs");if(e&&S.bag)e.innerHTML=thumbs(S.bag,"data-brm")};
+const drawSlip=()=>{const e=$("#sthumbs");if(e&&S.fslip)e.innerHTML=thumbs(S.fslip,"data-srm")};
+const fileRefs=bag=>bag.receipts.filter(r=>r.id).map(r=>({id:r.id,type:r.type}));
+function bindDrop(sel,getBag,draw){
+  const d=$(sel);if(!d||!S.assets)return;
+  d.addEventListener("dragover",e=>{e.preventDefault();d.classList.add("over")});
+  d.addEventListener("dragleave",()=>d.classList.remove("over"));
+  d.addEventListener("drop",e=>{e.preventDefault();d.classList.remove("over");addFiles(getBag(),e.dataTransfer.files,draw)});
+}
+
+/* ---------- AI scan ---------- */
+async function scan(){
+  const f=S.form,sb=S.fslip,msg=$("#scanmsg"),btn=$("#scan");
+  const imgs=b=>b.receipts.filter(r=>r.id&&b.blobs[r.id]).map(r=>b.blobs[r.id]);
+  const bills=imgs(f).slice(0,3),slips=imgs(sb).slice(0,4-bills.length);
+  if(!bills.length&&!slips.length){msg.className="hint bad";msg.textContent=(f.uploading||sb.uploading)?t("wait_upload"):t("s_need");return}
+  btn.disabled=true;btn.textContent=t("s_reading");msg.className="hint";msg.textContent=t("s_wait");
+  const list=cats();
+  const prompt=`You are reading photos for ONE employee expense claim at a Thai curtain & blinds company. Staff may be Thai, Lao or Myanmar; receipts may be in Thai, Lao, Burmese or English.
+The first ${bills.length} image(s) are receipts / tax invoices (what was bought). The next ${slips.length} image(s) are bank transfer slips (mobile banking / PromptPay) showing the employee paid.
+Reply with ONLY a JSON object:
+{"vendor": string|null, "date": "YYYY-MM-DD"|null, "billTotal": number|null, "vatIncluded": boolean, "title": string|null, "category": string|null, "slipAmount": number|null, "slipRef": string|null, "slipPayee": string|null, "slipDate": "YYYY-MM-DD"|null}
+- Convert Buddhist Era years to Gregorian (2569 -> 2026). Thai month abbreviations: ม.ค.=1 … ธ.ค.=12.
+- billTotal: grand total in THB on the receipts (sum if several bills); null if no receipts.
+- vatIncluded: true only if a receipt is a tax invoice showing VAT 7%.
+- slipAmount: total amount on the transfer slip(s) (sum if several); slipRef: the transaction reference / เลขที่รายการ of the first slip exactly as printed; slipPayee: the receiver name on the slip.
+- vendor: shop name from the receipt, else the slip receiver. date: receipt date, else slip date.
+- title: a short THAI description of what was bought (max 60 characters) — always Thai, because approvers read Thai.
+- category: exactly one of ${JSON.stringify(list)}.
+Use null for anything you cannot read.`;
+  try{
+    const o=await S.sample.json(prompt,{images:[...bills,...slips]});
+    let n=0;const set=(id,v)=>{if(v!==null&&v!==undefined&&v!==""){$(id).value=v;n++}};
+    const okD=d=>d&&/^\d{4}-\d{2}-\d{2}$/.test(d);
+    set("#f-vendor",o.vendor||o.slipPayee);
+    if(okD(o.date))set("#f-date",o.date);else if(okD(o.slipDate))set("#f-date",o.slipDate);
+    const bt=typeof o.billTotal==="number"&&o.billTotal>0?Math.round(o.billTotal*100)/100:0;
+    const sa=typeof o.slipAmount==="number"&&o.slipAmount>0?Math.round(o.slipAmount*100)/100:0;
+    if(bt||sa)set("#f-amount",bt||sa);
+    f.slipAmount=sa;
+    if(o.slipRef)set("#f-sref",String(o.slipRef).slice(0,40));
+    if(o.title&&!$("#f-title").value.trim())set("#f-title",String(o.title).slice(0,120));
+    if(list.includes(o.category))set("#f-cat",o.category);
+    if(typeof o.vatIncluded==="boolean")$("#f-vat").checked=o.vatIncluded;
+    const notes=[];
+    if(bt&&sa&&Math.abs(bt-sa)>1)notes.push(t("s_mis",{a:money(bt),b:money(sa)}));
+    const d=dupsOf(o.slipRef);if(d.length)notes.push(t("s_dup",{x:d.map(x=>x.docNo).join(", ")}));
+    msg.className=notes.length?"hint bad":n?"hint ok":"hint bad";
+    msg.textContent=notes.length?notes.join(" · "):n?t("s_ok"):t("s_none");
+  }catch(e){
+    msg.className="hint bad";
+    msg.textContent=t({not_granted:"s_notgranted",rate_limited:"s_rate",image_rejected:"s_badimg",invalid_json:"s_fail",sampling_disabled:"s_disabled"}[e&&e.code]||"s_fail");
+    if(e&&(e.code==="not_granted"||e.code==="sampling_disabled"))S.canScan=false;
+  }finally{if(btn.isConnected){btn.disabled=false;btn.textContent=t("scan_btn")}}
+}
+
+/* ---------- writes ---------- */
+const nowISO=()=>new Date().toISOString();
+function apiErr(e){return t({401:"e_401",403:"e_403",409:"e_409",413:"u_too_large",429:"e_locked",offline:"e_conn_s"}[e&&e.code]||"e_generic")}
+const dbErr=apiErr;
+async function submitForm(btn){
+  const f=S.form,sb=S.fslip,v=readVals();
+  if(f.uploading>0||sb.uploading>0)return toast(t("wait_upload"),"warn");
+  if(f.type==="reimburse"&&!f.receipts.length&&!sb.receipts.length)return toast(t("v_need_file"),"warn");
+  if(!(v.amount>0))return toast(t("v_amount"),"warn");
+  if(!v.date)return toast(t("v_date"),"warn");
+  if(!v.job.trim())return toast(t("v_job"),"warn");
+  const body={type:f.type,brand:f.brand,title:v.title.trim(),category:v.category,date:v.date,vendor:v.vendor.trim(),amount:v.amount,vatIncl:v.vatIncl,
+    note:v.note.trim(),job:v.job.trim(),slipRef:v.slipRef.trim(),slipAmount:f.slipAmount||0,
+    receipts:fileRefs(f).map(x=>x.id),slips:fileRefs(sb).map(x=>x.id),confirmDup:f.dupAck===normRef(v.slipRef)};
+  btn.disabled=true;btn.textContent=t("sending");
+  try{
+    const r=await api("submit",body);
+    if(r.needConfirm){f.dupAck=normRef(v.slipRef);const m=$("#scanmsg");m.className="hint bad";m.textContent=t("v_dup_srv");m.scrollIntoView({block:"center"});btn.disabled=false;btn.textContent=t("submit");return}
+    try{localStorage.setItem("vynn_exp_lastbrand",f.brand)}catch(e){}
+    f.newIds=[];sb.newIds=[];closeSheet();S.tab="home";await refresh();toast(t("sent",{s:stLabel(r.status)}));
+  }catch(e){btn.disabled=false;btn.textContent=t("submit");toast(apiErr(e),"bad")}
+}
+async function decide(kind,btn){
+  const c=S.claims.find(x=>x.id===S.sheet.arg);if(!c)return;
+  const note=(($("#d-note")||{}).value||"").trim();
+  if(kind==="reject"&&!note){toast(t("t_need_reason"),"warn");$("#d-note").focus();return}
+  btn.disabled=true;
+  try{const r=await api("decide",{id:c.id,kind,note});S.sheet.note="";await refresh();
+    toast(kind==="reject"?t("a_reject"):kind==="credit"?t("t_credit",{d:fmtDate(r.dueDate)}):t("t_appr"))}
+  catch(e){btn.disabled=false;toast(apiErr(e),"bad")}
+}
+async function markPaid(btn){
+  if(S.bag.uploading>0)return toast(t("wait_upload"),"warn");
+  const cs=S.sheet.arg.map(id=>S.claims.find(x=>x.id===id)).filter(c=>c&&payable(c));
+  const ref=($("#d-payref").value||"").trim();
+  btn.disabled=true;btn.textContent=t("live_saving");
+  try{const r=await api("pay",{ids:cs.map(c=>c.id),payRef:ref,slips:fileRefs(S.bag).map(x=>x.id),note:cs.length>1?t("paid_batch",{n:cs.length,v:money(sum(cs))}):""});
+    S.bag.newIds=[];S.sheet.payRef="";closeSheet();await refresh();toast(t("t_paid_n",{n:r.paid}))}
+  catch(e){btn.disabled=false;btn.textContent=t("b_confirm_paid",{v:money(sum(cs))});toast(apiErr(e),"bad")}
+}
+async function sendClear(btn){
+  const c=S.claims.find(x=>x.id===S.sheet.arg);if(!c)return;
+  const amt=parseFloat($("#c-amt").value);
+  if(S.bag.uploading>0)return toast(t("wait_upload"),"warn");
+  if(!S.bag.receipts.length)return toast(t("t_need_bill"),"warn");
+  if(!(amt>=0))return toast(t("t_need_used"),"warn");
+  btn.disabled=true;
+  try{await api("clear",{id:c.id,amount:amt,receipts:fileRefs(S.bag).map(x=>x.id)});S.bag=newBag();await refresh();toast(t("t_cleared"))}
+  catch(e){btn.disabled=false;toast(apiErr(e),"bad")}
+}
+async function cancelClaim(btn){
+  const c=S.claims.find(x=>x.id===S.sheet.arg);if(!c)return;btn.disabled=true;
+  try{await api("cancel",{id:c.id});closeSheet();await refresh();toast(t("t_cancelled",{n:c.docNo}))}
+  catch(e){btn.disabled=false;toast(apiErr(e),"bad")}
+}
+async function saveProfile(pre,btn){
+  const v=readProfile(pre);
+  if(!v.nick)return toast(t("t_need_nick"),"warn");
+  if(!v.dept)return toast(t("t_need_dept"),"warn");
+  if(v.promptpay&&!ppPayload(v.promptpay,0))return toast(t("t_pp_bad"),"warn");
+  btn.disabled=true;
+  try{await api("saveProfile",{name:v.nick,dept:v.dept,lang:LANG,bank:v.bank,acctNo:v.acctNo,acctName:v.acctName,promptpay:v.promptpay});await refresh();toast(t("t_saved"));return true}
+  catch(e){toast(apiErr(e),"bad");return false}finally{btn.disabled=false}
+}
+async function saveCfg(patch){
+  const base=Object.assign({departments:depts(),categories:cats(),dealDay:dealDay()},patch);
+  try{await api("saveCfg",base);await refresh();toast(t("t_cfg_saved"))}catch(e){toast(apiErr(e),"bad")}
+}
+async function saveUser(body,btn){
+  if(btn)btn.disabled=true;
+  try{await api("saveUser",body);await refresh();toast(t("t_user_saved"));return true}
+  catch(e){toast(e&&e.code===409?t("e_code_used"):apiErr(e),"bad");return false}
+  finally{if(btn)btn.disabled=false}
+}
+async function exportCsv(){
+  const r=S.rp,rows=reportRows(true),q=x=>{const s=String(x??"");return/[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+  const head=[t("l_brand"),t("th_no"),t("th_claimdate"),t("th_billdate"),t("th_who"),t("g_dept"),t("g_job"),t("csv_type"),t("g_category"),t("l_title"),t("l_vendor"),t("th_amount"),t("csv_vat"),t("th_status"),t("dt_due"),t("csv_paid"),t("csv_payref"),t("csv_nb"),t("csv_ns"),t("csv_hasrec"),t("dt_sref")];
+  const lines=[head,...rows.map(c=>[brandName(brandOf(c)),c.docNo,localDay(c.createdAt),c.date,nm(c.by),tv(c.dept),jobOf(c),c.type==="advance"?t("tag_adv"):t("type_reimb"),tv(c.category),c.title,c.vendor,(+c.amount).toFixed(2),c.vatIncl?t("yes"):"",stat(c).t,c.dueDate||"",localDay(c.paidAt),c.payRef||"",(c.receipts||[]).length,(c.slips||[]).length,noReceipt(c)?t("hasnot"):t("has"),c.slipRef||""])].map(x=>x.map(q).join(","));
+  const tag=r.key==="all"?"all":r.key;
+  try{const res=await S.downloads.save({filename:"VYNN-expense-"+tag+".csv",data:"﻿"+lines.join("\r\n")});if(res.status==="saved")toast(t("t_file_saved"))}
+  catch(e){if(e&&e.code!=="declined")toast(t("t_dl_fail"),"bad")}
+}
+async function copyText(v,btn){
+  try{await navigator.clipboard.writeText(v);btn.textContent=t("copied");setTimeout(()=>{if(btn.isConnected)btn.textContent=t("copy")},1500)}
+  catch(e){const s=btn.previousElementSibling;if(s){const r=document.createRange();r.selectNodeContents(s);const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}toast(t("t_copy_hold"),"warn")}
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click",e=>{
+  const el=e.target.closest("button,[data-open],[data-close],[data-period]");if(!el)return;
+  if(el.dataset.lang){setLang(el.dataset.lang);return}
+  if(el.hasAttribute("data-upin")){const u=S.people[el.closest("[data-user]").dataset.user];
+    const pin=String(100000+(crypto.getRandomValues(new Uint32Array(1))[0]%900000));
+    saveUser({id:u.id,name:u.name,dept:u.dept,role:u.role,active:u.active!==false,pin},el).then(ok=>{if(ok)showPin(u,pin)});return}
+  if(el.hasAttribute("data-uactive")){const u=S.people[el.closest("[data-user]").dataset.user];
+    saveUser({id:u.id,name:u.name,dept:u.dept,role:u.role,active:el.dataset.uactive==="1"},el);return}
+  if(el.id==="nu-save"){const g=id=>$("#"+id).value.trim(),pin=g("nu-pin");
+    if(!g("nu-code")||!g("nu-name"))return toast(t("t_need_nick"),"warn");
+    if(!/^\d{6,12}$/.test(pin))return toast(t("t_pin_bad"),"warn");
+    const u={code:g("nu-code"),name:g("nu-name")};
+    saveUser({code:u.code,name:u.name,dept:$("#nu-dept").value,role:$("#nu-role").value,pin},el).then(ok=>{if(ok)showPin(u,pin)});return}
+  if(el.id==="pin-save"){const o=$("#pin-old").value,n=$("#pin-new").value;
+    if(!/^\d{6,12}$/.test(n))return toast(t("t_pin_bad"),"warn");
+    el.disabled=true;api("changePin",{old:o,pin:n}).then(()=>{$("#pin-old").value="";$("#pin-new").value="";toast(t("t_pin_changed"))}).catch(e=>toast(e.code===401?t("e_wrongpin"):apiErr(e),"bad")).finally(()=>{el.disabled=false});return}
+  if(el.id==="logout"){api("logout").finally(()=>{S.me=null;S.auth="login";S.claims=[];S.people={};S.tab="home";render(true)});return}
+  if(el.id==="pinok"){closeSheet();return}
+  if(el.dataset.brand){S.brand=el.dataset.brand;try{localStorage.setItem("vynn_exp_brand",S.brand)}catch(x){}render(true);return}
+  if(el.dataset.goto){S.lf.status=el.dataset.goto;S.lf.q="";S.tab="list";render(true);window.scrollTo(0,0);return}
+  if(el.dataset.fbrand){S.form.brand=el.dataset.fbrand;el.parentNode.querySelectorAll("button").forEach(b=>{const on=b.dataset.fbrand===S.form.brand;b.classList.toggle("on",on);b.setAttribute("aria-checked",on)});return}
+  if(el.matches("[data-close]")){closeSheet();return}
+  if(el.dataset.tab){S.tab=el.dataset.tab;render(true);window.scrollTo(0,0);return}
+  if(el.dataset.open){openSheet("detail",el.dataset.open);return}
+  if(el.dataset.period){S.rp.key=el.dataset.period;render(true);return}
+  if(el.dataset.pay){const ids=el.dataset.pay.split(",");if(S.sheet)closeSheet();openSheet("pay",ids);return}
+  if(el.dataset.copy!==undefined){copyText(el.dataset.copy,el);return}
+  if(el.id==="fab"){openSheet("form");return}
+  if(el.id==="mechip"){S.tab="settings";render(true);return}
+  if(el.id==="csv"){exportCsv();return}
+  if(el.dataset.ftype){S.formVals=readVals();if(isNaN(S.formVals.amount))S.formVals.amount="";S.form.type=el.dataset.ftype;renderSheet();return}
+  if(el.dataset.rm!==undefined){removeFile(S.form,+el.dataset.rm,drawForm);return}
+  if(el.dataset.srm!==undefined){removeFile(S.fslip,+el.dataset.srm,drawSlip);return}
+  if(el.dataset.brm!==undefined){removeFile(S.bag,+el.dataset.brm,drawBag);return}
+  switch(el.id){
+    case"scan":scan();break;
+    case"submit":submitForm(el);break;
+    case"d-head":decide("head",el);break;
+    case"d-approve":decide("approve",el);break;
+    case"d-credit":decide("credit",el);break;
+    case"d-reject":decide("reject",el);break;
+    case"d-paid":markPaid(el);break;
+    case"c-send":sendClear(el);break;
+    case"d-cancel":S.sheet.confirmCancel=true;renderSheet();break;
+    case"d-cancel-no":S.sheet.confirmCancel=false;renderSheet();break;
+    case"d-cancel-yes":cancelClaim(el);break;
+    case"s-save":saveProfile("s",el).then(ok=>{if(ok)closeSheet()});break;
+    case"p-save":saveProfile("p",el);break;
+    case"o-save":{const l=id=>[...new Set($(id).value.split("\n").map(s=>s.trim()).filter(Boolean))];
+      const d=l("#o-depts"),c=l("#o-cats"),dd=Math.round(+$("#o-deal").value);
+      if(!d.length||!c.length){toast(t("t_cfg_min"),"warn");break}
+      if(!(dd>=1&&dd<=28)){toast(t("t_deal_bad"),"warn");break}
+      saveCfg({departments:d,categories:c,dealDay:dd});break}
+  }
+});
+document.addEventListener("change",e=>{
+  const el=e.target;
+  if(el.id==="f-files"){addFiles(S.form,el.files,drawForm);el.value="";return}
+  if(el.id==="f-slips"){addFiles(S.fslip,el.files,drawSlip);el.value="";return}
+  if(el.id==="b-files"){addFiles(S.bag,el.files,drawBag);el.value="";return}
+  if(el.id==="h-month"){S.hm=el.value;el.blur();render(true);return}
+  if(el.id==="l-status"){S.lf.status=el.value;$("#lres").innerHTML=listRows();return}
+  if(el.id==="l-mine"){S.lf.mine=el.checked;$("#lres").innerHTML=listRows();return}
+  if(el.id&&el.id.startsWith("r-")){const k=el.id.slice(2);S.rp[k]=el.value;if(k==="period"||k==="basis")S.rp.key=pkey(today(),S.rp.period);el.blur();render(true);return}
+  if(el.hasAttribute("data-udept")||el.hasAttribute("data-urole")){
+    const row=el.closest("[data-user]"),u=S.people[row.dataset.user];
+    saveUser({id:u.id,name:u.name,dept:row.querySelector("[data-udept]").value,role:row.querySelector("[data-urole]").value,active:u.active!==false});return}
+});
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.id==="l-q"){S.lf.q=el.value;$("#lres").innerHTML=listRows();return}
+  if(!S.sheet)return;
+  if(el.id==="d-note")S.sheet.note=el.value;
+  if(el.id==="d-payref")S.sheet.payRef=el.value;
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&S.sheet)closeSheet()});
+document.addEventListener("submit",async e=>{
+  if(e.target.id!=="loginf")return;e.preventDefault();
+  const err=$("#lg-err"),btn=e.target.querySelector("button[type=submit]"),code=$("#lg-code").value.trim(),pin=$("#lg-pin").value;
+  err.hidden=true;btn.disabled=true;
+  try{
+    if(S.auth==="setup"){if(!/^\d{6,12}$/.test(pin))throw{code:"pin"};await api("setup",{code,name:$("#lg-name").value.trim(),pin,lang:LANG})}
+    else await api("login",{code,pin});
+    S.tab="home";await refresh();
+  }catch(x){err.textContent=x.code==="pin"?t("t_pin_bad"):x.code===429?t("e_locked"):x.code===401?t("e_login"):apiErr(x);err.hidden=false}
+  finally{btn.disabled=false}
+});
+/* one-time PIN hand-over for a new / reset user */
+function showPin(u,pin){
+  S.sheet={kind:"pin",arg:null};S.bag=newBag();
+  $("#panel").innerHTML=`<div class="sh-head"><h2>${t("pin_ready")}</h2>${xBtn()}</div>
+    <div class="paybox"><div class="cp"><span class="k">${t("l_code")}</span><span class="v num">${esc(String(u.code||"").toUpperCase())}</span><button class="btn sm" data-copy="${esc(String(u.code||"").toUpperCase())}">${t("copy")}</button></div>
+    <div class="cp"><span class="k">PIN</span><span class="v num">${esc(pin)}</span><button class="btn sm" data-copy="${esc(pin)}">${t("copy")}</button></div>
+    <div class="cp"><span class="k">URL</span><span class="v small">${esc(location.origin+location.pathname)}</span><button class="btn sm" data-copy="${esc(location.origin+location.pathname)}">${t("copy")}</button></div></div>
+    <p class="hint">${t("pin_note",{n:esc(u.name||"")})}</p><button class="btn primary wide" id="pinok">OK</button>`;
+  $("#sheet").hidden=false;document.body.classList.add("lock");
+}
+let tt=0;
+function toast(m,k){const el=$("#toast");el.textContent=m;el.className=k||"";el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>{el.hidden=true},3200)}
+
+boot();
+</script>
+
+</body>
+</html>
