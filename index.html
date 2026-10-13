@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
 <title>VYNN·OS — CRM / ERP</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Lao:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600;700&display=swap">
 </head>
 <body>
 <style>
@@ -446,6 +446,15 @@
   .ag-cell.today{background:#1C1D21;color:#fff}
   .ag-cell span{font-size:11px;font-weight:700;background:#F7DA7B;color:#1C1D21;border-radius:999px;padding:0 7px}
   .ag-cell span.ok{background:#D6EAD9;color:#2F6B3E}
+  /* language switch + Lao / Myanmar faces */
+  .lang-sw{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:2px;margin-bottom:8px}
+  .lang-sw button{flex:1;border:0;background:none;border-radius:999px;padding:5px 6px;font-size:12px;color:var(--text-muted);cursor:pointer}
+  .lang-sw button.on{background:var(--text);color:var(--surface);font-weight:600}
+  .lang-sw button:lang(lo){font-family:"Noto Sans Lao",sans-serif}.lang-sw button:lang(my){font-family:"Noto Sans Myanmar",sans-serif}
+  #loginForm .lang-sw{margin-bottom:14px}
+  :root:lang(lo){--font:"Noto Sans Lao","Inter","IBM Plex Sans Thai",system-ui,sans-serif}
+  :root:lang(my){--font:"Noto Sans Myanmar","Inter","IBM Plex Sans Thai",system-ui,sans-serif}
+  :root:lang(my) body{line-height:1.75}
   /* เบิก-จ่าย app embedded */
   .exp-wrap{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
   .exp-frame{width:100%;height:calc(100vh - 130px);min-height:560px;border:0;border-radius:18px;background:var(--surface);box-shadow:var(--shadow)}
@@ -557,7 +566,7 @@
       <div id="userChip"></div>
       <button class="logout-btn" id="logoutBtn">ออกจากระบบ</button>
       <button class="theme-toggle" id="themeToggle"><span id="themeLabel">โหมดสว่าง</span><span id="themeIcon"></span></button>
-      <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+      <div id="dataTools" style="display:flex;flex-direction:column;gap:5px;margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
         <div style="font-size:10px;color:var(--text-faint);letter-spacing:.4px">ข้อมูล · สำรอง/กู้คืน</div>
         <button class="reset-btn" id="backupBtn" style="text-align:left">⬇ สำรองข้อมูล (Backup)</button>
         <button class="reset-btn" id="restoreBtn" style="text-align:left">⬆ นำเข้าข้อมูล (Restore)</button>
@@ -3173,6 +3182,7 @@ function render(rerenderNav=true){
  if(meta.act&&canEditView('leads')){tb.style.display='inline-flex';tb.onclick=openAddLead;}else tb.style.display='none';
  if(rerenderNav)renderNav();
  const ro=isRO();
+ const dt=document.getElementById('dataTools');if(dt)dt.style.display=permRole()==='ceo'?'flex':'none'; // backup / restore / reset: CEO only
  document.body.classList.toggle('ro',ro);
  roSnap=ro?roStrip(state):null;
  renderView();
@@ -3702,6 +3712,178 @@ document.addEventListener('change',e=>{
  q.finalRev=r.rev;q.discount=r.discount||0;q.adjust=r.adjust||0;
  if(r.pts)q.points=JSON.parse(JSON.stringify(r.pts));
  logAudit('quote','ตั้ง '+qid+' Rev '+r.rev+' เป็นฉบับ Final');save();openLead(q.leadId);render(false);
+});
+
+/* ============ UI LANGUAGE: ไทย / ລາວ / မြန်မာ (installer team) ============
+   The app is written in Thai; for Lao / Myanmar the visible text is translated phrase-by-phrase
+   as it is drawn (MutationObserver), so every screen the installers reach follows the choice.
+   Shares the language setting with the เบิก-จ่าย app (same localStorage key). */
+const XL={
+ 'กดที่แถวเพื่อดูรายละเอียดลูกค้า':['ກົດທີ່ແຖວເພື່ອເບິ່ງລາຍລະອຽດລູກຄ້າ','အသေးစိတ်ကြည့်ရန် အတန်းကို နှိပ်ပါ'],
+ 'เซลล์ไม่มีสิทธิ์แก้ไข':['ເຊວບໍ່ມີສິດແກ້ໄຂ','အရောင်းဝန်ထမ်း ပြင်ခွင့်မရှိ'],
+ 'ช่างทีมเดียวกัน':['ຊ່າງທີມດຽວກັນ','တူညီသော ဆရာအဖွဲ့'],
+ 'ลูกค้า':['ລູກຄ້າ','ဖောက်သည်'],
+ 'เซลล์':['ເຊວ','အရောင်း'],
+ 'รูป':['ຮູບ','ပုံ'],
+ 'คุณกดย้อนกลับจากหน้าแรก ต้องการออกจากระบบ VANGARDE ใช่ไหม':['ທ່ານກົດກັບຄືນຈາກໜ້າຫຼັກ ຕ້ອງການອອກຈາກລະບົບ VANGARDE ບໍ?','ပင်မမှ နောက်ပြန်နှိပ်ခဲ့သည် · VANGARDE မှ ထွက်မလား?'],
+ 'จัดการงาน VANGARDE และติดตามแผนงานของคุณได้ในที่เดียว':['ຈັດການວຽກ VANGARDE ແລະ ຕິດຕາມແຜນວຽກຂອງທ່ານໄດ້ໃນບ່ອນດຽວ','VANGARDE လုပ်ငန်းနှင့် သင့်အစီအစဉ်ကို တစ်နေရာတည်းတွင် စီမံပါ'],
+ 'อัปเดตงานรายวัน รายสัปดาห์ รายเดือน และดูความคืบหน้าเป็น %':['ອັບເດດວຽກລາຍວັນ ລາຍອາທິດ ລາຍເດືອນ ແລະ ເບິ່ງຄວາມຄືບໜ້າເປັນ %','နေ့စဉ်/အပတ်စဉ်/လစဉ် အလုပ်ကို အပ်ဒိတ်ပြီး တိုးတက်မှု % ကြည့်ပါ'],
+ 'ลงพื้นที่วัดหน้างานหลายจุด บันทึกขนาด/ผ้า/อุปกรณ์/รูป':['ລົງພື້ນທີ່ວັດໜ້າງານຫຼາຍຈຸດ ບັນທຶກຂະໜາດ/ຜ້າ/ອຸປະກອນ/ຮູບ','နေရာများစွာ တိုင်းတာ · အရွယ်အစား/ပိတ်စ/ပစ္စည်း/ပုံ မှတ်တမ်း'],
+ 'แก้ไขหัวข้อนี้ไม่ได้ ถ้ากดแก้ ระบบจะไม่บันทึก':['ແກ້ໄຂຫົວຂໍ້ນີ້ບໍ່ໄດ້ ຖ້າກົດແກ້ ລະບົບຈະບໍ່ບັນທຶກ','ဤကဏ္ဍကို ပြင်၍မရပါ · ပြင်လျှင် မသိမ်းပါ'],
+ 'ไปพร้อมกับ / แจ้งให้เห็นด้วย (ไม่บังคับ)':['ໄປພ້ອມກັບ / ແຈ້ງໃຫ້ເຫັນນຳ (ບໍ່ບັງຄັບ)','အတူသွားမည့်သူ / အသိပေး (မဖြစ်မနေမဟုတ်)'],
+ 'ตารางงาน ยอดขาย งานที่ดูแล และสถานะของฉัน':['ຕາຕະລາງວຽກ ຍອດຂາຍ ວຽກທີ່ດູແລ ແລະ ສະຖານະຂອງຂ້ອຍ','အလုပ်ဇယား၊ အရောင်း၊ တာဝန်နှင့် ကျွန်ုပ်၏ အခြေအနေ'],
+ 'ทีมช่าง in-house · จัดคิวแบบ First-come-first-serve · รับประกัน 1 ปี':['ທີມຊ່າງ in-house · ຈັດຄິວຕາມລຳດັບ · ຮັບປະກັນ 1 ປີ','ကုမ္ပဏီ ဆရာအဖွဲ့ · ရောက်သည့်အစဉ်အတိုင်း · အာမခံ ၁ နှစ်'],
+ 'ผลงานเซลล์รายบุคคล แผนก และภาพรวมบริษัท':['ຜົນງານລາຍບຸກຄົນ ພະແນກ ແລະ ພາບລວມບໍລິສັດ','တစ်ဦးချင်း၊ ဌာနနှင့် ကုမ္ပဏီ စွမ်းဆောင်ရည်'],
+ 'ลืมรหัสผ่าน? ติดต่อแอดมิน':['ລືມລະຫັດຜ່ານ? ຕິດຕໍ່ແອັດມິນ','စကားဝှက်မေ့လျှင် အက်ဒမင်ထံ ဆက်သွယ်ပါ'],
+ 'เข้าสู่ระบบด้วยรหัสพนักงาน':['ເຂົ້າສູ່ລະບົບດ້ວຍລະຫັດພະນັກງານ','ဝန်ထမ်းကုဒ်ဖြင့် ဝင်ပါ'],
+ 'รหัสพนักงาน (Employee ID)':['ລະຫັດພະນັກງານ (Employee ID)','ဝန်ထမ်းကုဒ် (Employee ID)'],
+ 'รวมทุกแบรนด์ (VYNN + Vangarde)':['ລວມທຸກແບຣນ (VYNN + Vangarde)','အမှတ်တံဆိပ်အားလုံး (VYNN + Vangarde)'],
+ 'รอนัดลงพื้นที่วัดหน้างาน':['ລໍນັດລົງພື້ນທີ່ວັດໜ້າງານ','နေရာတိုင်းတာရန် ချိန်းဆိုမှု စောင့်'],
+ 'เสร็จสิ้น + อยู่ในประกัน':['ສຳເລັດ + ຢູ່ໃນປະກັນ','ပြီးဆုံး + အာမခံကာလ'],
+ 'บันทึกค่าใช้จ่าย แนบบิล':['ບັນທຶກຄ່າໃຊ້ຈ່າຍ ແນບບິນ','စရိတ်မှတ်တမ်း · ဘောင်ချာတင်'],
+ 'คิวช่างติดตั้ง และนัดหมาย':['ຄິວຊ່າງຕິດຕັ້ງ ແລະ ນັດໝາຍ','တပ်ဆင်ဆရာ အလှည့်နှင့် ချိန်းဆိုမှု'],
+ 'วัดหน้างาน ขนาด และรูปถ่าย':['ວັດໜ້າງານ ຂະໜາດ ແລະ ຮູບຖ່າຍ','နေရာတိုင်းတာ · အရွယ်အစား · ဓာတ်ပုံ'],
+ 'ยินดีต้อนรับกลับมา':['ຍິນດີຕ້ອນຮັບກັບມາ','ပြန်လည်ကြိုဆိုပါသည်'],
+ 'เบิก-จ่ายรอดำเนินการ':['ເບີກ-ຈ່າຍ ລໍດຳເນີນການ','စရိတ်တောင်းခံ ဆောင်ရွက်ရန်'],
+ 'KPI สัปดาห์นี้ของฉัน':['KPI ອາທິດນີ້ຂອງຂ້ອຍ','ဤအပတ် ကျွန်ုပ်၏ KPI'],
+ 'แผนงาน & KPI ของฉัน':['ແຜນວຽກ & KPI ຂອງຂ້ອຍ','ကျွန်ုပ်၏ အစီအစဉ် & KPI'],
+ 'KPI · โปรไฟล์ของฉัน':['KPI · ໂປຣໄຟລ໌ຂອງຂ້ອຍ','KPI · ကျွန်ုပ်၏ ပရိုဖိုင်'],
+ 'งานติดตั้งที่นัดแล้ว':['ວຽກຕິດຕັ້ງທີ່ນັດແລ້ວ','ချိန်းထားသော တပ်ဆင်လုပ်ငန်း'],
+ 'งานติดตั้งของฉัน':['ວຽກຕິດຕັ້ງຂອງຂ້ອຍ','ကျွန်ုပ်၏ တပ်ဆင်လုပ်ငန်း'],
+ 'สถานะ เบิก · ลา · สาย':['ສະຖານະ ເບີກ · ລາ · ມາຊ້າ','တောင်းခံ · ခွင့် · နောက်ကျ'],
+ 'เบิกล่วงหน้า (ค้าง)':['ເບີກລ່ວງໜ້າ (ຄ້າງ)','ကြိုတင်ငွေ (ကျန်)'],
+ 'ข้อมูลเฉพาะของคุณ':['ຂໍ້ມູນສະເພາະຂອງທ່ານ','သင့်အချက်အလက်သာ'],
+ 'ยังไม่ได้ระบุทีม':['ຍັງບໍ່ໄດ້ລະບຸທີມ','အဖွဲ့ မသတ်မှတ်ရသေး'],
+ 'ยังไม่ผูกรหัส HR':['ຍັງບໍ່ຜູກລະຫັດ HR','HR ကုဒ် မချိတ်ရသေး'],
+ 'ยังไม่มีงานในวันนี้':['ຍັງບໍ່ມີວຽກໃນມື້ນີ້','ယနေ့ အလုပ်မရှိသေးပါ'],
+ 'ยังไม่มีเป้ารายเดือน':['ຍັງບໍ່ມີເປົ້າລາຍເດືອນ','လစဉ်ပန်းတိုင် မရှိသေး'],
+ 'ไม่มีงานติดตั้ง':['ບໍ່ມີວຽກຕິດຕັ້ງ','တပ်ဆင်လုပ်ငန်း မရှိ'],
+ 'เปลี่ยนรูปโปรไฟล์':['ປ່ຽນຮູບໂປຣໄຟລ໌','ပရိုဖိုင်ပုံ ပြောင်း'],
+ 'บันทึกการวัดหน้างาน':['ບັນທຶກການວັດໜ້າງານ','တိုင်းတာမှတ်တမ်း'],
+ 'หลายจุดต่องาน':['ຫຼາຍຈຸດຕໍ່ວຽກ','အလုပ်တစ်ခုလျှင် နေရာများစွာ'],
+ 'ใบสั่งงานช่าง':['ໃບສັ່ງວຽກຊ່າງ','ဆရာ အလုပ်အမိန့်'],
+ 'ลูกค้า / สถานที่':['ລູກຄ້າ / ສະຖານທີ່','ဖောက်သည် / နေရာ'],
+ 'ทีม/ช่าง · ประเภท':['ທີມ/ຊ່າງ · ປະເພດ','အဖွဲ့/ဆရာ · အမျိုးအစား'],
+ 'สัปดาห์ของวันที่':['ອາທິດຂອງວັນທີ','ရက်စွဲပါ အပတ်'],
+ 'เดือนของวันที่':['ເດືອນຂອງວັນທີ','ရက်စွဲပါ လ'],
+ 'เป้าที่ต้องไปให้ถึง':['ເປົ້າທີ່ຕ້ອງໄປໃຫ້ເຖິງ','ရောက်ရမည့်ပန်းတိုင်'],
+ 'งาน / เป้าหมาย':['ວຽກ / ເປົ້າໝາຍ','အလုပ် / ပန်းတိုင်'],
+ 'รับประกันถึง':['ຮັບປະກັນເຖິງ','အာမခံ ကုန်ဆုံး'],
+ 'ตารางงานช่าง':['ຕາຕະລາງວຽກຊ່າງ','ဆရာ အလုပ်ဇယား'],
+ 'เพิ่มงานวันนี้':['ເພີ່ມວຽກມື້ນີ້','ယနေ့ အလုပ်ထည့်'],
+ 'สัปดาห์ก่อน':['ອາທິດກ່ອນ','ယခင်အပတ်'],
+ 'สัปดาห์ถัดไป':['ອາທິດຖັດໄປ','နောက်အပတ်'],
+ 'รอเก็บงวด':['ລໍເກັບງວດ','အရစ်ကျ ကောက်ရန်'],
+ 'งานเก็บค้าง':['ວຽກເກັບຄ້າງ','ပြင်ရန်ကျန်'],
+ 'ติดตั้งเสร็จ':['ຕິດຕັ້ງແລ້ວ','တပ်ဆင်ပြီး'],
+ 'กำลังติดตั้ง':['ກຳລັງຕິດຕັ້ງ','တပ်ဆင်နေသည်'],
+ 'รอติดตั้ง':['ລໍຕິດຕັ້ງ','တပ်ဆင်ရန် စောင့်'],
+ 'วันติดตั้ง':['ວັນຕິດຕັ້ງ','တပ်ဆင်ရက်'],
+ 'ทีมบริษัท':['ທີມບໍລິສັດ','ကုမ္ပဏီအဖွဲ့'],
+ 'ใบสั่งงาน':['ໃບສັ່ງວຽກ','အလုပ်အမိန့်'],
+ 'รับเข้าเมื่อ':['ຮັບເຂົ້າເມື່ອ','လက်ခံရက်'],
+ 'ยังไม่มอบหมาย':['ຍັງບໍ່ມອບໝາຍ','တာဝန် မပေးရသေး'],
+ 'บันทึกการวัด':['ບັນທຶກການວັດ','တိုင်းတာမှတ်တမ်း'],
+ 'จำนวนจุด':['ຈຳນວນຈຸດ','နေရာအရေအတွက်'],
+ 'ดู / แก้ไข':['ເບິ່ງ / ແກ້ໄຂ','ကြည့် / ပြင်'],
+ 'ดู + แก้ไข':['ເບິ່ງ + ແກ້ໄຂ','ကြည့် + ပြင်'],
+ 'ดูได้อย่างเดียว':['ເບິ່ງໄດ້ຢ່າງດຽວ','ကြည့်ရန်သာ'],
+ 'ดูอย่างเดียว':['ເບິ່ງຢ່າງດຽວ','ကြည့်ရန်သာ'],
+ 'ดูทั้งหมด':['ເບິ່ງທັງໝົດ','အားလုံးကြည့်'],
+ 'หัวข้อของคุณ':['ຫົວຂໍ້ຂອງທ່ານ','သင့်ကဏ္ဍများ'],
+ 'เบิกค่าใช้จ่าย':['ເບີກຄ່າໃຊ້ຈ່າຍ','စရိတ်တောင်းခံ'],
+ 'เป้ารายสัปดาห์':['ເປົ້າລາຍອາທິດ','အပတ်စဉ်ပန်းတိုင်'],
+ 'เป้ารายเดือน':['ເປົ້າລາຍເດືອນ','လစဉ်ပန်းတိုင်'],
+ 'เป้าสัปดาห์':['ເປົ້າອາທິດ','အပတ်စဉ်ပန်းတိုင်'],
+ 'เป้าเดือน':['ເປົ້າເດືອນ','လစဉ်ပန်းတိုင်'],
+ 'KPI สัปดาห์นี้':['KPI ອາທິດນີ້','ဤအပတ် KPI'],
+ 'KPI เดือน':['KPI ເດືອນ','KPI လ'],
+ 'KPI ของ':['KPI ຂອງ','KPI ·'],
+ 'รหัสผ่านไม่ถูกต้อง':['ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ','စကားဝှက် မှားနေသည်'],
+ 'ไม่พบรหัสพนักงานนี้':['ບໍ່ພົບລະຫັດພະນັກງານນີ້','ဤဝန်ထမ်းကုဒ် မတွေ့ပါ'],
+ 'แสดงรหัสผ่าน':['ສະແດງລະຫັດຜ່ານ','စကားဝှက် ပြ'],
+ 'ซ่อนรหัสผ่าน':['ເຊື່ອງລະຫັດຜ່ານ','စကားဝှက် ဖျောက်'],
+ 'ออกจากระบบ':['ອອກຈາກລະບົບ','ထွက်မည်'],
+ 'เข้าสู่ระบบ':['ເຂົ້າສູ່ລະບົບ','ဝင်မည်'],
+ 'รหัสผ่าน':['ລະຫັດຜ່ານ','စကားဝှက်'],
+ 'โหมดมืด':['ໂໝດມືດ','အမှောင်မုဒ်'],
+ 'โหมดสว่าง':['ໂໝດແຈ້ງ','အလင်းမုဒ်'],
+ 'วัดหน้างาน':['ວັດໜ້າງານ','နေရာတိုင်းတာ'],
+ 'หน้าแรก':['ໜ້າຫຼັກ','ပင်မ'],
+ 'ตารางงาน':['ຕາຕະລາງວຽກ','အလုပ်ဇယား'],
+ 'เบิก-จ่าย':['ເບີກ-ຈ່າຍ','စရိတ်တောင်းခံ'],
+ 'รายสัปดาห์':['ລາຍອາທິດ','အပတ်စဉ်'],
+ 'รายเดือน':['ລາຍເດືອນ','လစဉ်'],
+ 'รายวัน':['ລາຍວັນ','နေ့စဉ်'],
+ 'เพิ่มงาน':['ເພີ່ມວຽກ','အလုပ်ထည့်'],
+ 'แก้ไขงาน':['ແກ້ໄຂວຽກ','အလုပ်ပြင်'],
+ 'ก่อนหน้า':['ກ່ອນໜ້າ','ယခင်'],
+ 'ถัดไป':['ຖັດໄປ','နောက်'],
+ 'พรุ่งนี้':['ມື້ອື່ນ','မနက်ဖြန်'],
+ 'วันนี้':['ມື້ນີ້','ယနေ့'],
+ 'ออนไลน์':['ອອນລາຍ','အွန်လိုင်း'],
+ 'ออฟไลน์':['ອອບລາຍ','အော့ဖ်လိုင်း'],
+ 'ลาหยุด':['ລາພັກ','ခွင့်ယူ'],
+ 'มาสาย':['ມາຊ້າ','နောက်ကျ'],
+ 'ทีมช่าง':['ທີມຊ່າງ','ဆရာအဖွဲ့'],
+ 'เสร็จแล้ว':['ສຳເລັດແລ້ວ','ပြီးပြီ'],
+ 'นัดแล้ว':['ນັດແລ້ວ','ချိန်းပြီး'],
+ 'ทั้งวัน':['ໝົດມື້','တစ်နေကုန်'],
+ 'ทำเสร็จแล้ว':['ເຮັດແລ້ວ','ပြီးပြီ'],
+ 'หมายเหตุ':['ໝາຍເຫດ','မှတ်ချက်'],
+ 'สถานะ':['ສະຖານະ','အခြေအနေ'],
+ 'ประเภท':['ປະເພດ','အမျိုးအစား'],
+ 'แบรนด์':['ແບຣນ','အမှတ်တံဆိပ်'],
+ 'ผู้วัด':['ຜູ້ວັດ','တိုင်းတာသူ'],
+ 'วันที่':['ວັນທີ','ရက်စွဲ'],
+ 'เวลา':['ເວລາ','အချိန်'],
+ 'ยกเลิก':['ຍົກເລີກ','မလုပ်တော့'],
+ 'บันทึก':['ບັນທຶກ','သိမ်းမည်'],
+ 'อยู่ต่อ':['ຢູ່ຕໍ່','ဆက်နေမည်'],
+ 'สิทธิ์':['ສິດ','ခွင့်'],
+ 'ติดตั้ง':['ຕິດຕັ້ງ','တပ်ဆင်'],
+ 'เช่น':['ເຊັ່ນ','ဥပမာ'],
+ 'รหัส':['ລະຫັດ','ကုဒ်'],
+ '· กับ ':['· ກັບ ','· နှင့် '],
+ '· จาก ':['· ຈາກ ','· မှ '],
+ 'ม.ค.':['ມ.ກ.','ဇန်'],'ก.พ.':['ກ.ພ.','ဖေ'],'มี.ค.':['ມ.ນ.','မတ်'],'เม.ย.':['ມ.ສ.','ဧပြီ'],'พ.ค.':['ພ.ພ.','မေ'],'มิ.ย.':['ມິ.ຖ.','ဇွန်'],
+ 'ก.ค.':['ກ.ລ.','ဇူ'],'ส.ค.':['ສ.ຫ.','ဩ'],'ก.ย.':['ກ.ຍ.','စက်'],'ต.ค.':['ຕ.ລ.','အောက်'],'พ.ย.':['ພ.ຈ.','နို'],'ธ.ค.':['ທ.ວ.','ဒီ'],
+};
+// short words only translated when they are the whole label (weekday strip, buttons)
+const XL_EXACT={'จ':['ຈ','Mon'],'อ':['ອ','Tue'],'พ':['ພ','Wed'],'พฤ':['ພຫ','Thu'],'ศ':['ສຸ','Fri'],'ส':['ສ','Sat'],'อา':['ອາ','Sun'],
+ 'เริ่ม':['ເລີ່ມ','စ'],'ถึง':['ເຖິງ','အထိ'],'ลา':['ລາ','ခွင့်'],'ขาด':['ຂາດ','ပျက်'],'งาน':['ວຽກ','အလုပ်']};
+const XL_RX=[[/(\d[\d,]*) รายการ/g,['$1 ລາຍການ','$1 ခု']],[/(\d+) วัน/g,['$1 ມື້','$1 ရက်']],[/(\d+) ครั้ง/g,['$1 ເທື່ອ','$1 ကြိမ်']],
+ [/(\d+) งาน/g,['$1 ວຽກ','$1 ခု']],[/(\d+) หัวข้อ/g,['$1 ຫົວຂໍ້','$1 ကဏ္ဍ']],[/ขาด (\d+)/g,['ຂາດ $1','ပျက် $1']]];
+const XL_KEYS=Object.keys(XL).sort((a,b)=>b.length-a.length);
+const XL_RE=new RegExp(XL_KEYS.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'g');
+let UILANG='th';try{const l=localStorage.getItem('vynn_exp_lang');if(l==='lo'||l==='my')UILANG=l;}catch(e){}
+const THAI=/[฀-๿]/;
+function xl(s){
+ if(UILANG==='th'||!s||!THAI.test(s))return s;
+ const i=UILANG==='lo'?0:1,tr=s.trim();
+ if(XL_EXACT[tr])return s.replace(tr,XL_EXACT[tr][i]);
+ let o=s;XL_RX.forEach(([re,r])=>{o=o.replace(re,r[i]);});
+ return o.replace(XL_RE,m=>XL[m][i]);
+}
+function xlTree(root){
+ if(UILANG==='th'||!root)return;
+ if(root.nodeType===3){const v=xl(root.nodeValue);if(v!==root.nodeValue)root.nodeValue=v;return;}
+ if(root.nodeType!==1||/^(SCRIPT|STYLE|TEXTAREA)$/.test(root.tagName))return;
+ const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentNode&&/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.tagName)?2:1});
+ let n;while(n=w.nextNode()){const v=xl(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v;}
+ [root,...root.querySelectorAll('[placeholder],[title],[aria-label]')].forEach(e=>{if(!e.getAttribute)return;['placeholder','title','aria-label'].forEach(a=>{const v=e.getAttribute(a);if(v&&THAI.test(v)){const t=xl(v);if(t!==v)e.setAttribute(a,t);}});});
+}
+function setUiLang(l){try{localStorage.setItem('vynn_exp_lang',l);}catch(e){}location.reload();}
+function langSwitchHTML(){return `<div class="lang-sw" role="group" aria-label="Language">${[['th','ไทย'],['lo','ລາວ'],['my','မြန်မာ']].map(([k,t])=>`<button type="button" data-uilang="${k}" lang="${k}" class="${UILANG===k?'on':''}">${t}</button>`).join('')}</div>`;}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-uilang]');if(b&&b.dataset.uilang!==UILANG)setUiLang(b.dataset.uilang);});
+document.addEventListener('DOMContentLoaded',()=>{
+ document.documentElement.lang=UILANG;
+ const foot=document.querySelector('.side-foot');if(foot)foot.insertAdjacentHTML('afterbegin',langSwitchHTML());
+ const lf=document.getElementById('loginForm');if(lf)lf.insertAdjacentHTML('afterbegin',langSwitchHTML());
+ if(UILANG==='th')return;
+ xlTree(document.body);
+ new MutationObserver(ms=>ms.forEach(m=>{if(m.type==='characterData')xlTree(m.target);else m.addedNodes.forEach(xlTree);if(m.type==='attributes')xlTree(m.target);}))
+  .observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label']});
 });
 
 /* ============ CRM ============ */
