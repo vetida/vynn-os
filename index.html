@@ -577,7 +577,7 @@ function svg(n,cls){return `<svg class="${cls||''}" viewBox="0 0 24 24" fill="no
 
 /* ============ TEAM ============ */
 const USERS=[
- {id:'a1',name:'Vetida',short:'Ve',color:'#7A4FB5',role:'admin',login:'admin01',pw:'Kikimz018764',phone:'0889659244'},
+ {id:'a1',name:'Vetida',short:'Ve',color:'#7A4FB5',role:'admin',login:'CEO',pw:'880880880',phone:'0889659244'},
  {id:'a2',name:'Thanasarn',short:'Th',color:'#7A4FB5',role:'admin',login:'A002',pw:'admin2026'},
  {id:'sp1',name:'Hanan',short:'Ha',color:'#0E7C86',role:'sales_support',login:'SP01',pw:'sup2026'},
  {id:'sp2',name:'Oraya',short:'Or',color:'#0E7C86',role:'sales_support',login:'SP02',pw:'sup2026'},
@@ -906,6 +906,7 @@ function migrateState(){
  if(state.seq&&!state.seq.TR)state.seq.TR=1;
  if(state.seq&&!state.seq.EX)state.seq.EX=1;
  if(!state.passwords)state.passwords={}; // per-user password overrides (uid -> pw)
+ if(!state.pwCeo2610){delete state.passwords.a1;state.pwCeo2610=true;} // 2026-10: CEO login reset to CEO / new password
  if(!state.audit)state.audit=[]; // audit log
  if(!state.salesHist)state.salesHist=seedSalesHist(); // 12-month per-sales history
  if(!state.vgPricing||!(state.vgPricing.v>=9))state.vgPricing=defaultVgPricing(); // Vangarde price list (v9 = + Somfy remote models + Tahoma gateway)
