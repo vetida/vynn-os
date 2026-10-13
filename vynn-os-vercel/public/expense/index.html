@@ -295,6 +295,8 @@ tfoot td{font-weight:600}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;max-width:min(92vw,520px);box-shadow:var(--shadow)}
 #toast.bad{background:var(--bad)} #toast.warn{background:var(--warn)}
 .skel{height:64px;border-radius:var(--r);background:var(--card);border:1px solid var(--line);opacity:.7}
+/* VANGARDE-only, login via VYNN·OS */
+#bsw,.seg.brand,.wordmark{display:none!important}
 </style>
 </head>
 <body>
@@ -469,6 +471,7 @@ t_user_saved:["บันทึกผู้ใช้แล้ว","ບັນທ�
 pin_note:["ส่งรหัสและ PIN นี้ให้ {n} ทางช่องทางส่วนตัว ระบบจะไม่แสดง PIN นี้อีก แนะนำให้เปลี่ยน PIN หลังเข้าระบบครั้งแรก","ສົ່ງລະຫັດ ແລະ PIN ນີ້ໃຫ້ {n} ທາງຊ່ອງທາງສ່ວນຕົວ ລະບົບຈະບໍ່ສະແດງ PIN ນີ້ອີກ ແນະນຳໃຫ້ປ່ຽນ PIN ຫຼັງເຂົ້າລະບົບເທື່ອທຳອິດ","ဤကုဒ်နှင့် PIN ကို {n} ထံ သီးသန့်ပို့ပါ။ PIN ကို နောက်ထပ် မပြတော့ပါ။ ပထမအကြိမ်ဝင်ပြီးနောက် PIN ပြောင်းရန် အကြံပြုသည်"],
 bank_hint2:["เฉพาะคุณ เจ้าของ แอดมิน และบัญชีเท่านั้นที่เห็นข้อมูลบัญชีนี้ ใช้สำหรับโอนเงินเบิกให้คุณ","ສະເພາະທ່ານ ເຈົ້າຂອງ ແອັດມິນ ແລະ ບັນຊີເທົ່ານັ້ນທີ່ເຫັນຂໍ້ມູນນີ້ ໃຊ້ສຳລັບໂອນເງິນເບີກໃຫ້ທ່ານ","သင်၊ ပိုင်ရှင်၊ အက်ဒမင်နှင့် စာရင်းကိုင်သာ ဤအချက်အလက်ကို မြင်ရသည်။ ငွေလွှဲပေးရန် အသုံးပြုသည်"],
 v_dup_srv:["สลิปเลขนี้เคยถูกใช้เบิกแล้ว ถ้าถูกต้องกดส่งอีกครั้งเพื่อยืนยัน","ສະລິບເລກນີ້ເຄີຍຖືກໃຊ້ເບີກແລ້ວ ຖ້າຖືກຕ້ອງກົດສົ່ງອີກຄັ້ງເພື່ອຢືນຢັນ","ဤစလစ်ကို တောင်းခံပြီးဖြစ်သည်။ မှန်ကန်လျှင် အတည်ပြုရန် ထပ်နှိပ်ပါ"],
+vos_note:["ชื่อ รหัสผ่าน และสิทธิ์ ใช้บัญชีเดียวกับ VYNN·OS · เปลี่ยนได้ที่ CEO (หน้ารายชื่อพนักงาน)","ຊື່ ລະຫັດຜ່ານ ແລະ ສິດ ໃຊ້ບັນຊີດຽວກັບ VYNN·OS · ປ່ຽນໄດ້ທີ່ CEO","အမည်၊ စကားဝှက်နှင့် ခွင့်များသည် VYNN·OS အကောင့်နှင့် တူသည် · CEO ထံ ပြောင်းခိုင်းပါ"],vos_login:["ใช้รหัสพนักงานและรหัสผ่านเดียวกับ VYNN·OS","ໃຊ້ລະຫັດພະນັກງານ ແລະ ລະຫັດຜ່ານດຽວກັບ VYNN·OS","VYNN·OS ဝန်ထမ်းကုဒ်နှင့် စကားဝှက်ကို အသုံးပြုပါ"],
 yes:["ใช่","ແມ່ນ","ဟုတ်"],has:["มี","ມີ","ရှိ"],hasnot:["ไม่มี","ບໍ່ມີ","မရှိ"]
 };
 /* default category / department / bank names are stored in Thai; show them in the viewer's language */
@@ -556,7 +559,7 @@ function plabel(k,p){
 const S={me:null,meAvatar:"",isOwner:false,db:null,user:null,assets:null,sample:null,downloads:null,canScan:false,
   cfg:{},people:{},claims:[],names:{},avatars:{},loaded:{cfg:false,people:false,claims:false},
   tab:"home",hm:today().slice(0,7),lf:{q:"",status:"all",mine:false},
-  brand:(()=>{try{const b=localStorage.getItem("vynn_exp_brand");if(b==="vynn"||b==="vangarde"||b==="all")return b}catch(e){}return"all"})(),
+  brand:"vangarde", // VANGARDE only for now
   rp:{period:"month",key:pkey(today(),"month"),basis:"bill",group:"person",status:"valid",dept:"all",doc:"all"},
   sheet:null,form:null,fslip:null,bag:null,live:"connecting",readOnly:false,pendingRender:false,onboarded:false};
 
@@ -899,56 +902,27 @@ const ROLE_KEYS=["owner","admin","finance","staff"];
 function viewSettings(){
   const p=S.people[S.me]||{};
   let h=`<section class="card"><div class="sec-h"><h2>${t("me_h")}</h2><span class="pill acc">${t("role_"+myRole())}</span></div>
-    <p class="muted small">${t("l_code")}: <b class="num">${esc(p.code||"")}</b></p>
     <div class="grid2">
     <div class="field"><label for="p-nick">${t("l_nick")}</label><input id="p-nick" type="text" maxlength="60" value="${esc(p.nick||"")}" placeholder="${esc(t("ph_nick"))}"></div>
     <div class="field"><label for="p-dept">${t("g_dept")}</label><select id="p-dept">${deptOpts(p.dept,"pick_dept")}</select></div></div>
     <h3>${t("bank_h")}</h3><div class="grid2">${bankFields(p,"p")}</div>
     <p class="hint">${t("bank_hint2")}</p>
     <div><button class="btn primary" id="p-save">${t("save")}</button></div></section>
-  <section class="card"><h3>${t("pin_h")}</h3><div class="grid2">
-    <div class="field"><label for="pin-old">${t("l_oldpin")}</label><input id="pin-old" type="password" inputmode="numeric" autocomplete="current-password" maxlength="12"></div>
-    <div class="field"><label for="pin-new">${t("l_newpin")}</label><input id="pin-new" type="password" inputmode="numeric" autocomplete="new-password" maxlength="12"></div></div>
-    <div class="filters"><button class="btn" id="pin-save">${t("b_changepin")}</button><button class="btn bad" id="logout">${t("logout")}</button></div></section>`;
+  <section class="card"><p class="muted small">${t("vos_note")}</p></section>`;
   if(!(myRole()==="owner"||myRole()==="admin"))return h;
-  const ppl=Object.keys(S.people).sort((a,b)=>nm(a).localeCompare(nm(b),"th"));
-  const roleOpts=(v,lock)=>ROLE_KEYS.filter(r=>myRole()==="owner"||(r!=="owner"&&r!=="admin")||r===v).map(r=>`<option value="${r}"${r===v?" selected":""}>${t("role_"+r)}</option>`).join("");
-  h+=`<section class="card"><div class="sec-h"><h2>${t("users_h")}</h2><span class="muted small">${t("people_n",{n:ppl.length})}</span></div>
-  <p class="muted small">${t("users_p")}</p>
-  <div class="people">${ppl.map(u=>{const pp=S.people[u],me=u===S.me,locked=!me&&myRole()!=="owner"&&(pp.role==="owner"||pp.role==="admin");
-    return`<div class="person" data-user="${esc(u)}"><div class="who"><img src="${avatarData(u)}" alt=""><div><b>${esc(nm(u))}${me?t("you"):""}</b><span class="muted small num">${esc(pp.code||"")}${pp.active===false?" · "+t("inactive"):""} · ${(pp.acctNo||pp.promptpay)?t("has_bank"):t("no_bank_short")}</span></div></div>
-    <select data-udept aria-label="${esc(t("dept_of",{n:nm(u)}))}" ${locked?"disabled":""}>${deptOpts(pp.dept,"no_dept_opt")}</select>
-    <div class="roles"><select data-urole aria-label="${esc(t("l_role"))}" ${me||locked?"disabled":""}>${roleOpts(pp.role)}</select>
-      ${me||locked?"":`<button class="btn sm" data-upin>${t("reset_pin")}</button><button class="btn sm ${pp.active===false?"":"bad"}" data-uactive="${pp.active===false?1:0}">${pp.active===false?t("activate"):t("deactivate")}</button>`}</div></div>`}).join("")}</div>
-  <h3>${t("add_user")}</h3>
-  <div class="grid2">
-    <div class="field"><label for="nu-code">${t("l_code")}</label><input id="nu-code" type="text" maxlength="20" placeholder="E101" autocapitalize="characters"></div>
-    <div class="field"><label for="nu-name">${t("l_nick")}</label><input id="nu-name" type="text" maxlength="60" placeholder="${esc(t("ph_nick"))}"></div>
-    <div class="field"><label for="nu-dept">${t("g_dept")}</label><select id="nu-dept">${deptOpts("","pick_dept")}</select></div>
-    <div class="field"><label for="nu-role">${t("l_role")}</label><select id="nu-role">${roleOpts("staff")}</select></div>
-    <div class="field"><label for="nu-pin">${t("l_initpin")}</label><input id="nu-pin" type="text" inputmode="numeric" maxlength="12" placeholder="6–12"></div>
-  </div>
-  <div><button class="btn primary" id="nu-save">${t("b_adduser")}</button></div></section>
-  <section class="card"><h2>${t("co_h")}</h2><div class="grid2">
+  h+=`<section class="card"><h2>${t("co_h")}</h2><div class="grid2">
     <div class="field"><label for="o-depts">${t("l_depts")}</label><textarea id="o-depts" rows="6">${esc(depts().join("\n"))}</textarea></div>
     <div class="field"><label for="o-cats">${t("l_cats")}</label><textarea id="o-cats" rows="6">${esc(cats().join("\n"))}</textarea></div>
     <div class="field"><label for="o-deal">${t("l_deal")}</label><input id="o-deal" type="number" min="1" max="28" value="${dealDay()}"></div></div>
     <div><button class="btn primary" id="o-save">${t("save_cfg")}</button></div></section>`;
   return h;
 }
+// signed out: this page uses the VYNN·OS login
 function viewLogin(){
-  const setup=S.auth==="setup";
-  return`<div class="splash"><div class="wm"><span class="v">VYNN</span><i>|</i><span class="g">VANGARDE</span></div><div class="tl">Shared Finance System</div>
+  return`<div class="splash"><div class="wm"><span class="g">VANGARDE</span></div><div class="tl">Expense</div>
   <div class="lang big" role="group" aria-label="Language">${LANGS.map((l,i)=>`<button data-lang="${l}" lang="${l}" class="${l===LANG?"on":""}">${["ไทย","ລາວ","မြန်မာ"][i]}</button>`).join("")}</div>
-  <form class="card" id="loginf" style="width:min(380px,100%);text-align:left" autocomplete="on">
-    <h2>${setup?t("setup_h"):t("login_h")}</h2>${setup?`<p class="muted small">${t("setup_p")}</p>`:""}
-    <div class="field"><label for="lg-code">${t("l_code")}</label><input id="lg-code" name="username" type="text" autocomplete="username" autocapitalize="characters" maxlength="20" placeholder="A001" required></div>
-    ${setup?`<div class="field"><label for="lg-name">${t("l_nick")}</label><input id="lg-name" type="text" maxlength="60" required></div>`:""}
-    <div class="field"><label for="lg-pin">${setup?t("l_newpin"):t("l_pin")}</label><input id="lg-pin" name="password" type="password" inputmode="numeric" autocomplete="${setup?"new-password":"current-password"}" maxlength="12" required></div>
-    <p class="hint bad" id="lg-err" hidden></p>
-    <button class="btn primary wide" type="submit">${setup?t("b_setup"):t("b_login")}</button>
-    ${setup?"":`<p class="muted small">${t("login_help")}</p>`}
-  </form></div>`;
+  <div class="card" style="width:min(380px,100%);text-align:left"><h2>${t("login_h")}</h2><p class="muted small">${t("vos_login")}</p>
+  <a class="btn primary wide" href="/" target="_top">${t("b_login")}</a></div></div>`;
 }
 
 /* ---------- sheet ---------- */

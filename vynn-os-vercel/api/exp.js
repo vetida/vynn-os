@@ -106,7 +106,7 @@ A.sync = async (req, res, me) => {
   const [claims, users, cfg] = await Promise.all([
     mgr ? pool.query('SELECT id, data FROM exp_claims ORDER BY created_at DESC LIMIT 3000')
         : pool.query('SELECT id, data FROM exp_claims WHERE user_id=$1 ORDER BY created_at DESC', [me.id]),
-    mgr ? pool.query('SELECT * FROM exp_users ORDER BY name') : pool.query('SELECT * FROM exp_users WHERE id=$1', [me.id]),
+    mgr ? pool.query('SELECT * FROM exp_users WHERE id IN (SELECT id FROM vos_users WHERE active) ORDER BY name') : pool.query('SELECT * FROM exp_users WHERE id=$1', [me.id]),
     getCfg(),
   ]);
   return {
@@ -297,6 +297,11 @@ async function sendFile(req, res, me) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.status(200).send(f.bytes);
 }
+
+// Login, PINs and user management now live in VYNN·OS (/api/auth + the CEO's employee directory).
+['setup', 'login', 'changePin', 'saveUser'].forEach(k => { A[k] = async () => { throw new HttpError(410, 'ใช้บัญชี VYNN·OS ในการเข้าสู่ระบบ'); }; });
+A.status = async (req, res, me) => ({ me: me ? X.publicUser(me, me) : null, needsSetup: false });
+A.logout = async () => ({ ok: true });
 
 const PUBLIC = new Set(['status', 'setup', 'login', 'logout']);
 

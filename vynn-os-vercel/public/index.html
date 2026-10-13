@@ -446,6 +446,9 @@
   .ag-cell.today{background:#1C1D21;color:#fff}
   .ag-cell span{font-size:11px;font-weight:700;background:#F7DA7B;color:#1C1D21;border-radius:999px;padding:0 7px}
   .ag-cell span.ok{background:#D6EAD9;color:#2F6B3E}
+  /* เบิก-จ่าย app embedded */
+  .exp-wrap{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+  .exp-frame{width:100%;height:calc(100vh - 130px);min-height:560px;border:0;border-radius:18px;background:var(--surface);box-shadow:var(--shadow)}
   /* brand logo (sidebar + login) */
   .brand-logo{display:block;height:46px;width:auto;max-width:190px;object-fit:contain}
   .login-brand .brand-logo{height:58px;max-width:240px}
@@ -1546,7 +1549,7 @@ const NAV=[
  {grp:'VANGARDE'},
  {id:'overview',label:'Dashboard',icon:'chart'},
  {id:'leads',label:'Lead Intake',icon:'inbox',count:()=>scopedLeads().filter(l=>l.stage==='new').length},
- {id:'expenses',label:'เบิก-จ่าย',icon:'cash',count:()=>expensesVisible().filter(e=>(e.date||'')===todayISO()).length},
+ {id:'expenses',label:'เบิก-จ่าย',icon:'cash'},
  {id:'install',label:'ตารางงาน',icon:'wrench',count:()=>state.installs.filter(i=>i.status==='scheduled').length},
  {id:'survey',label:'Onsite (วัดหน้างาน)',icon:'ruler',count:()=>scopedLeads().filter(l=>l.stage==='assigned').length},
  {id:'crm',label:'CRM ลูกค้า',icon:'user'},
@@ -3158,7 +3161,7 @@ function renderVgPrice(){
   ${perg}${zip}${awn}
   <div class="grid two-col" style="grid-template-columns:1fr 1fr 1fr">${addBlock('Pergola',vg.addons.pergola)}${addBlock('Zip Shade',vg.addons.zipshade)}${addBlock('Awning',vg.addons.awning)}</div>`;
 }
-function renderView(){({kpi:renderMyKPI,home:renderHome,staffdir:renderStaffDir,agenda:renderAgenda,crm:renderCRM,overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,teamkpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
+function renderView(){({expenses:renderExpenseApp,kpi:renderMyKPI,home:renderHome,staffdir:renderStaffDir,agenda:renderAgenda,crm:renderCRM,overview:renderOverview,oldexpenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,teamkpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
 function render(rerenderNav=true){
  if(!canOpen(view))view=firstAllowedView(); // block disallowed / wrong-brand views
  if(currentUser&&!histPopping&&histView!==view){try{history.pushState({vos:'view',v:view},'');}catch(e){}}
@@ -3328,7 +3331,7 @@ function homeStats(){
   {mod:'quote',t:'ใบเสนอรออนุมัติ',v:L.map(l=>quoteOfLead(l.id)).filter(q=>q&&q.status==='pending').length},
   {mod:'overview',t:'ยอดค้างชำระ',v:'฿'+money(outstanding)},
   {mod:'install',t:'งานติดตั้งที่นัดแล้ว',v:state.installs.filter(i=>i.status==='scheduled').length},
-  {mod:'expenses',t:'ค่าใช้จ่ายวันนี้',v:'฿'+money(expensesVisible().filter(e=>(e.date||'')===todayISO()).reduce((a,e)=>a+(+e.amount||0),0))},
+  {mod:'expenses',t:'เบิก-จ่ายรอดำเนินการ',v:(()=>{const c=expClaims();return c?c.filter(x=>x.status==='pending_owner'||x.status==='approved').length+' รายการ':'…';})()},
  ].filter(c=>canOpen(c.mod)).slice(0,2);
  const wk=kpiPct(agPeriod(currentUser.id,'week',todayISO()));
  cand.push({mod:'agenda',t:'KPI สัปดาห์นี้ของฉัน',v:wk===null?'—':wk+'%'});
@@ -3517,6 +3520,33 @@ function openDirEditor(u){
  }
 }
 
+/* ============ เบิก-จ่าย = the VANGARDE expense app (/expense, same login, server-side permissions) ============ */
+let expCache=null,expLoading=false,expLegacy=false;
+async function loadExp(){
+ if(expLoading)return;expLoading=true;
+ try{const r=await fetch('/api/exp',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:'{"a":"sync"}'});if(r.ok){expCache=await r.json();expCache.at=Date.now();}}catch(e){}
+ expLoading=false;if(view==='kpi'||view==='home')render(false);
+}
+// claims this viewer may see (server-scoped: managers all, staff own); null while loading
+function expClaims(){if(!expCache||Date.now()-expCache.at>60000)loadExp();return expCache?expCache.claims.filter(c=>c.brand!=='vynn'||true):null;}
+function expAuto(d){
+ const c=expClaims();if(!c)return '';
+ const pay=d===todayISO()?c.filter(x=>x.status==='approved'):[],cr=c.filter(x=>x.status==='credit'&&x.dueDate===d);
+ const sum=a=>a.reduce((s,x)=>s+(+x.amount||0),0);
+ let h='';
+ if(pay.length)h+=`<div class="auto-h">เบิก-จ่าย รอทำจ่าย</div><button class="tk auto" data-go="expenses"><span class="dot" style="background:#1C1D21"></span><div class="tk-main"><b>฿${money(sum(pay))} · ${pay.length} รายการ</b><span>อนุมัติแล้ว รอโอน</span></div></button>`;
+ if(cr.length)h+=`<div class="auto-h">ครบรอบจ่ายเครดิต</div><button class="tk auto" data-go="expenses"><span class="dot" style="background:#5E7EB5"></span><div class="tk-main"><b>฿${money(sum(cr))} · ${cr.length} รายการ</b><span>วันดีล ${thDate(d)}</span></div></button>`;
+ return h;
+}
+function renderExpenseApp(){
+ const el=document.getElementById('content');
+ if(expLegacy){renderExpenses();el.insertAdjacentHTML('afterbegin','<button class="pill-btn" id="expBack" style="margin-bottom:12px">‹ กลับระบบเบิก-จ่ายใหม่</button>');el.querySelector('#expBack').onclick=()=>{expLegacy=false;render(false);};return;}
+ el.innerHTML=`<div class="exp-wrap"><iframe class="exp-frame" src="/expense/" title="เบิก-จ่าย VANGARDE"></iframe>
+  ${permRole()==='ceo'?'<button class="pill-btn" id="expOld">ดูรายการเบิกแบบเดิม (ข้อมูลเก่าที่เก็บในเครื่องนี้)</button>':''}</div>`;
+ const o=el.querySelector('#expOld');if(o)o.onclick=()=>{expLegacy=true;render(false);};
+ expCache=null; // refresh KPI numbers after using the app
+}
+
 /* ============ KPI = my profile page (Sales · PM · Staff · Admin · CEO), VANGARDE only ============ */
 let kpiMonth=null,kpiTeam=false,payPeriod='month';
 const WON_STAGES=['won','production','installing','done'];
@@ -3581,7 +3611,7 @@ function staffBoxes(uid){
  const att=(state.attendance||[]).filter(a=>hr&&a.empId===hr&&ymOf(a.date)===m);
  const leave=att.filter(a=>/ลา/.test(a.type)).length,late=att.filter(a=>/สาย/.test(a.type)).length,absent=att.filter(a=>/ขาด/.test(a.type)).length;
  const adv=(state.advances||[]).filter(a=>hr&&a.empId===hr&&!a.cleared);
- const exp=expensesVisible().filter(e=>(e.createdBy===uid||e.by===uid)&&ymOf(e.date)===m);
+ const ec=expClaims(),exp=(ec||[]).filter(c=>c.by===uid&&ymOf(c.date)===m&&c.status!=='rejected');
  return `<div class="kpi-sec"><div class="sec-h"><h2>งานติดตั้งของฉัน</h2><span>${team?escH(team):'ยังไม่ได้ระบุทีม'}</span></div>
    <div class="two-col"><div><h3 class="sub">วันนี้ · ${thDate(t0)}</h3>${day(t0).map(card).join('')||'<p class="tk-empty">ไม่มีงานติดตั้ง</p>'}</div>
    <div><h3 class="sub">พรุ่งนี้ · ${thDate(t1)}</h3>${day(t1).map(card).join('')||'<p class="tk-empty">ไม่มีงานติดตั้ง</p>'}</div></div></div>
@@ -3617,7 +3647,7 @@ function ceoAuto(d){
  // items the CEO has to act on that day (shown under the agenda)
  const pend=brandLeads().map(l=>({l,q:quoteOfLead(l.id)})).filter(x=>x.q&&x.q.status==='pending');
  const ins=(state.installs||[]).filter(i=>i.scheduled===d&&(leadById(i.leadId)||{}).brand===brand);
- let h='';
+ let h=expAuto(d);
  if(d===todayISO()&&pend.length)h+=`<div class="auto-h">รออนุมัติใบเสนอราคา</div>`+pend.map(x=>`<button class="tk auto" data-lead="${escH(x.l.id)}"><span class="dot" style="background:#E8A33D"></span><div class="tk-main"><b>${escH(x.q.id)} · ${escH(x.l.name)}</b><span>฿${money(calcQuote(x.q).total)} · เซลล์ ${escH((accountByUid(x.l.assignedTo)||{}).name||'-')}</span></div></button>`).join('');
  if(ins.length)h+=`<div class="auto-h">งานติดตั้งวันนี้</div>`+ins.map(i=>{const l=leadById(i.leadId)||{};return `<button class="tk auto" data-lead="${escH(l.id||'')}"><span class="dot" style="background:#4CAF6A"></span><div class="tk-main"><b>${escH(l.name||'-')}</b><span>${escH(i.team||'')} · ${escH(l.site||'')}</span></div></button>`;}).join('');
  return h;
@@ -3631,7 +3661,7 @@ function ceoBoxes(){
    <div class="pastel" style="--pc:#F7DA7B"><span>ใบเสนอราคารอ approve</span><b>${pend.length}</b><small>฿${money(pend.reduce((a,x)=>a+calcQuote(x.q).total,0))}</small></div>
    <div class="pastel" style="--pc:#CCDCE7"><span>นัดหน้างานกับเซลล์</span><b>${shared.length}</b><small>งานที่ทีมชวนไปด้วย</small></div>
    <div class="pastel" style="--pc:#E5D9EE"><span>งานติดตั้งสัปดาห์นี้</span><b>${wk.length}</b></div>
-   <div class="pastel" style="--pc:#D6EAD9"><span>ยอดทำจ่าย (เบิก-จ่าย)</span><b>—</b><small>เชื่อมกับระบบเบิก-จ่ายใหม่ในขั้นถัดไป</small></div></div></div>
+   <div class="pastel" style="--pc:#D6EAD9"><span>ยอดทำจ่าย (เบิก-จ่าย)</span><b>${(()=>{const c=expClaims();if(!c)return '…';return '฿'+money(c.filter(x=>x.status==='approved').reduce((a,x)=>a+(+x.amount||0),0));})()}</b><small>${(()=>{const c=expClaims();if(!c)return 'กำลังโหลด';const cr=c.filter(x=>x.status==='credit');const nx=cr.map(x=>x.dueDate).sort()[0];return 'รอทำจ่ายตอนนี้ · เครดิต ฿'+money(cr.reduce((a,x)=>a+(+x.amount||0),0))+(nx?' รอบ '+thDate(nx):'');})()}</small></div></div></div>
   <div class="kpi-sec"><div class="sec-h"><h2>ใบเสนอราคาที่รอ approve</h2><span>${pend.length} ใบ</span></div>
    <div class="tbl-soft">${pend.map(x=>`<button class="ts-row" data-lead="${escH(x.l.id)}"><span class="ts-cust">${escH(x.l.name)}</span><span class="mono">${escH(x.q.id)}</span><span>฿${money(calcQuote(x.q).total)}</span><span>${escH((accountByUid(x.l.assignedTo)||{}).name||'-')}</span></button>`).join('')||'<p class="tk-empty" style="padding:14px">ไม่มีใบเสนอราคารออนุมัติ</p>'}</div></div>
   <div class="kpi-sec"><div class="sec-h"><h2>นัดหน้างาน / งานร่วมกับทีม สัปดาห์นี้</h2></div>

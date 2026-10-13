@@ -77,13 +77,19 @@ async function createSession(res, userId) {
   setSessionCookie(res, token, days * 86400);
 }
 
+// The expense app now uses the VYNN·OS login (cookie from /api/auth). exp_users stays as a
+// mirror row per employee that holds their expense profile (bank account, PromptPay, language);
+// its role follows the VYNN·OS role: CEO → owner, Admin → admin, Accounts → finance, everyone else → staff.
+const ROLE_FROM_VOS = { admin: 'owner', sales_support: 'admin', accounting: 'finance' };
 async function currentUser(req) {
-  const tok = parseCookies(req)[COOKIE];
-  if (!tok) return null;
+  const V = require('./vos');
+  const u = await V.sessionUser(req);
+  if (!u) return null;
   const r = await pool.query(
-    `SELECT u.* FROM exp_sessions s JOIN exp_users u ON u.id=s.user_id
-     WHERE s.token_hash=$1 AND s.expires_at>now() AND u.active`, [sha256(tok)]);
-  return r.rows[0] || null;
+    `INSERT INTO exp_users(id,code,name,role,dept,pin_hash) VALUES($1,$2,$3,$4,'','-')
+     ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, role=EXCLUDED.role, active=true
+     RETURNING *`, [u.id, 'vos:' + u.id, u.name, ROLE_FROM_VOS[u.role] || 'staff']);
+  return r.rows[0];
 }
 
 /* what a viewer may see about a user */
