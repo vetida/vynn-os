@@ -446,6 +446,17 @@
   .ag-cell.today{background:#1C1D21;color:#fff}
   .ag-cell span{font-size:11px;font-weight:700;background:#F7DA7B;color:#1C1D21;border-radius:999px;padding:0 7px}
   .ag-cell span.ok{background:#D6EAD9;color:#2F6B3E}
+  /* login: show / hide password */
+  .pw-wrap{position:relative}
+  .pw-wrap input{padding-right:46px!important}
+  .pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;background:transparent;border-radius:10px;color:var(--text-muted);display:grid;place-items:center;cursor:pointer}
+  .pw-eye:hover{color:var(--text);background:var(--surface)}
+  .pw-eye svg{width:20px;height:20px}
+  .pw-eye .eye-off{display:none}
+  .pw-eye[aria-pressed="true"] .eye-off{display:inline}
+  .pw-eye[aria-pressed="true"] .eye-open{display:none}
+  /* back-button logout confirm */
+  .bk-card{max-width:360px}
   /* view-only modules */
   .ro-banner{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-left:4px solid #E0A23A;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:13px}
   .ro-banner .ico{width:18px;height:18px;flex-shrink:0;color:#E0A23A}
@@ -537,7 +548,8 @@
     </div>
     <div class="login-field">
       <label for="loginPw">รหัสผ่าน</label>
-      <input id="loginPw" type="password" placeholder="••••••" autocomplete="current-password">
+      <div class="pw-wrap"><input id="loginPw" type="password" placeholder="••••••" autocomplete="current-password">
+      <button type="button" class="pw-eye" id="pwEye" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดง/ซ่อนรหัสผ่าน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path class="eye-open" d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle class="eye-open" cx="12" cy="12" r="3"/><path class="eye-off" d="M3 3l18 18M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button></div>
     </div>
     <button class="login-btn" type="submit">เข้าสู่ระบบ</button>
     <div class="login-demo" style="text-align:center;color:var(--text-faint);font-size:11.5px">ลืมรหัสผ่าน? ติดต่อแอดมิน</div>
@@ -882,7 +894,7 @@ function logAudit(action,detail){
 const ROLE_LABEL={admin:'CEO',manager:'PM',sales_support:'Admin',sales:'Sales',hr:'Staff',accounting:'Accounts',installer:'Staff'};
 const ROLE_COLOR={admin:'#7A4FB5',manager:'#B77504',sales_support:'#0E7C86',sales:'#0F6E68',hr:'#2C6BB3',accounting:'#0E7C86',installer:'#C0392B'};
 function showLogin(){document.getElementById('loginScreen').style.display='flex';document.querySelector('.app').style.display='none';const e=document.getElementById('loginErr');e.classList.remove('show');document.getElementById('loginForm').reset();document.getElementById('brandPick').style.display='none';document.getElementById('loginForm').style.display='';pendingBrand='Vangarde';document.documentElement.setAttribute('data-brand','Vangarde');document.getElementById('loginBrandName').textContent='Vangarde';}
-function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';brand='Vangarde';view='home';applyBrand(brand);if(!canOpen(view))view=firstAllowedView();renderUserChip();['emptyBtn','resetBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=(currentUser&&currentUser.id==='a1')?'':'none';});render();}
+function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';brand='Vangarde';view='home';try{history.replaceState({vos:'root'},'');history.pushState({vos:'view',v:'home'},'');}catch(e){}histView='home';applyBrand(brand);const pwI=document.getElementById('loginPw'),pwE=document.getElementById('pwEye');if(pwI)pwI.type='password';if(pwE)pwE.setAttribute('aria-pressed','false');if(!canOpen(view))view=firstAllowedView();renderUserChip();['emptyBtn','resetBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=(currentUser&&currentUser.id==='a1')?'':'none';});render();}
 function renderUserChip(){
  const el=document.getElementById('userChip');if(!el||!currentUser)return;
  const col=currentUser.color||ROLE_COLOR[role]||'#7A4FB5';
@@ -3068,6 +3080,8 @@ function renderVgPrice(){
 function renderView(){({home:renderHome,agenda:renderAgenda,crm:renderCRM,overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
 function render(rerenderNav=true){
  if(!canOpen(view))view=firstAllowedView(); // block disallowed / wrong-brand views
+ if(currentUser&&!histPopping&&histView!==view){try{history.pushState({vos:'view',v:view},'');}catch(e){}}
+ histView=view;
  const meta=META[view];
  document.getElementById('pageTitle').textContent=meta.t;
  document.getElementById('pageSub').textContent=meta.s;
@@ -3085,6 +3099,17 @@ function render(rerenderNav=true){
    Modules opened with V permission keep a snapshot of the data; if anything in that view tries to
    save a change, the change is rolled back (audit log excepted) and the viewer is told why. */
 let roSnap=null;
+/* browser Back inside the app: each screen is a history entry; Back from the first screen asks before logging out */
+let histView=null,histPopping=false;
+function askLogoutOnBack(){
+ try{history.pushState({vos:'view',v:view},'');}catch(e){}
+ const m=document.getElementById('modal'),sc=document.getElementById('scrim');
+ m.innerHTML=`<div class="bk-card"><h3 style="margin-bottom:8px">ออกจากระบบ?</h3><p style="margin:0 0 16px;color:var(--text-muted);font-size:13.5px">คุณกดย้อนกลับจากหน้าแรก ต้องการออกจากระบบ VANGARDE ใช่ไหม</p><div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" id="bkStay">อยู่ต่อ</button><button class="btn primary" id="bkOut">ออกจากระบบ</button></div></div>`;
+ const close=()=>{m.classList.remove('open');sc.classList.remove('open');};
+ m.querySelector('#bkStay').onclick=close;
+ m.querySelector('#bkOut').onclick=()=>{close();logout();};
+ m.classList.add('open');sc.classList.add('open');setTimeout(()=>m.querySelector('#bkStay').focus(),30);
+}
 function roStrip(s){const c=Object.assign({},s);delete c.audit;return JSON.stringify(c);}
 function isRO(){return !!currentUser&&view!=='home'&&!canEditView(view);}
 function roBlocked(){
@@ -3358,6 +3383,16 @@ function initChrome(){
   if(r.ok){brand=pendingBrand||brand;showApp();}else{err.textContent=r.msg;err.classList.add('show');}
  };
  document.getElementById('logoutBtn').onclick=()=>logout();
+ // show / hide the password while typing it
+ const eye=document.getElementById('pwEye');
+ if(eye)eye.onclick=()=>{const pw=document.getElementById('loginPw'),show=pw.type==='password';pw.type=show?'text':'password';eye.setAttribute('aria-pressed',String(show));eye.setAttribute('aria-label',show?'ซ่อนรหัสผ่าน':'แสดงรหัสผ่าน');pw.focus();};
+ // browser Back: step back through screens inside the app; from the first screen ask before logging out
+ window.addEventListener('popstate',e=>{
+  if(!currentUser)return;
+  const st=e.state;
+  if(st&&st.vos==='view'){histPopping=true;view=canOpen(st.v)?st.v:'home';document.getElementById('modal').classList.remove('open');document.getElementById('scrim').classList.remove('open');render();histPopping=false;return;}
+  askLogoutOnBack();
+ });
  const tt=document.getElementById('themeToggle');
  function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('vynn_theme',t);document.getElementById('themeLabel').textContent=t==='dark'?'โหมดมืด':'โหมดสว่าง';document.getElementById('themeIcon').innerHTML=svg(t==='dark'?'moon':'sun');const ic=document.querySelector('#themeIcon svg');if(ic)ic.style.width='16px';}
  setTheme(localStorage.getItem('vynn_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
