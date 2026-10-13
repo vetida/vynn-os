@@ -311,6 +311,58 @@
   .role-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:700}
   /* mobile: >=16px inputs prevent iOS zoom-on-focus */
   @media (max-width:760px){input,select,textarea,.field input,.field select,.field textarea,.login-field input,.pt-card input,.pt-card select,.pt-card textarea{font-size:16px !important}}
+  /* ===== VANGARDE launcher (home) · VANGARDE only for now ===== */
+  #brandFilter,#loginBack,#brandPick{display:none!important}
+  .hub{max-width:980px;margin:6px auto 24px;display:flex;flex-direction:column;align-items:stretch}
+  .hub-row{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:18px}
+  .hub-tile{position:relative;border:0;border-radius:20px;padding:20px 16px 16px;background:var(--tc);color:#fff;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;cursor:pointer;box-shadow:0 10px 24px -12px rgba(20,30,45,.55);transition:transform .15s,box-shadow .15s;min-height:168px;font:inherit}
+  .hub-tile:hover{transform:translateY(-3px);box-shadow:0 16px 30px -12px rgba(20,30,45,.6)}
+  .hub-tile:focus-visible{outline:3px solid var(--text);outline-offset:3px}
+  .hub-ic svg{width:38px;height:38px;stroke-width:1.7}
+  .hub-t{font-weight:750;font-size:15px;letter-spacing:.04em;margin-top:4px}
+  .hub-line{width:72%;height:1px;background:rgba(255,255,255,.55)}
+  .hub-s{font-size:12px;line-height:1.45;opacity:.9}
+  .hub-perm{margin-top:auto;font-size:10.5px;letter-spacing:.06em;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.18)}
+  .hub-badge{position:absolute;top:10px;right:10px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:#fff;color:var(--tc);font-size:12px;font-weight:800;display:grid;place-items:center}
+  .hub-link{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:18px;height:46px}
+  .hub-link i{position:relative}
+  .hub-link i::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);background:var(--border)}
+  .hub-link i::after{content:"";position:absolute;left:50%;width:11px;height:11px;border-radius:50%;background:var(--tc);transform:translateX(-50%)}
+  .hub-link.top i::after{top:-4px}
+  .hub-link.bot i::after{bottom:-4px}
+  .hub-core{position:relative;display:flex;justify-content:center;padding:6px 0}
+  .hub-core::before{content:"";position:absolute;left:8%;right:8%;top:0;bottom:0;border:2px solid var(--border);border-radius:999px}
+  .hub-pill{position:relative;background:linear-gradient(135deg,#17A39E,#1B7F86);color:#fff;border-radius:999px;padding:18px 54px;text-align:center;box-shadow:0 12px 26px -12px rgba(23,163,158,.7);display:flex;flex-direction:column;gap:2px;margin:14px 0}
+  .hub-pill b{font-size:30px;letter-spacing:.12em;font-weight:800}
+  .hub-pill span{font-size:13px;opacity:.92}
+  @media (max-width:760px){
+   .hub-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+   .hub-link{display:none}
+   .hub-core{order:-1;margin-bottom:14px}.hub-core::before{display:none}
+   .hub-pill{padding:14px 28px;margin:0;width:100%}.hub-pill b{font-size:24px}
+   .hub-row+.hub-row,.hub-row~.hub-row{margin-top:12px}
+   .hub-tile{min-height:150px;padding:16px 10px 12px}
+  }
+  /* view-only modules */
+  .ro-banner{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-left:4px solid #E0A23A;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:13px}
+  .ro-banner .ico{width:18px;height:18px;flex-shrink:0;color:#E0A23A}
+  body.ro #content .btn.primary,body.ro #topAction{display:none!important}
+  .ro-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#2B3341;color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;z-index:9999;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+  /* CRM */
+  .crm-head{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+  .crm-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .crm-k{padding:12px 14px;display:flex;flex-direction:column;gap:2px}.crm-k span{font-size:12px;color:var(--text-muted)}.crm-k b{font-size:20px}
+  .crm-search{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font:inherit}
+  .crm-list{display:flex;flex-direction:column;overflow:hidden;padding:0}
+  .crm-row{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:0;border-top:1px solid var(--border);background:none;padding:12px 14px;cursor:pointer;color:inherit;font:inherit}
+  .crm-row:first-child{border-top:0}.crm-row:hover{background:rgba(127,127,127,.06)}
+  .crm-av{width:38px;height:38px;border-radius:50%;background:var(--brand,#D8434F);color:#fff;display:grid;place-items:center;font-weight:700;flex-shrink:0}
+  .crm-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .crm-name{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.crm-code{font-size:11.5px;color:var(--text-muted);font-weight:500}
+  .crm-meta{font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .crm-side{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;max-width:45%}
+  .crm-amt{font-weight:700;font-variant-numeric:tabular-nums}
+  @media (max-width:560px){.crm-kpis{grid-template-columns:1fr 1fr}.crm-kpis .crm-k:last-child{grid-column:1/-1}}
 </style>
 
 <div class="app">
@@ -430,7 +482,7 @@ const USERS=[
 ];
 const SALES=[
  {id:'s1',name:'Atikarn',short:'At',color:'#0F6E68',role:'sales',login:'E101',pw:'sale2026'},
- {id:'s2',name:'Chuchart',short:'Ch',color:'#B65C36',role:'sales',login:'E102',pw:'sale2026'},
+ {id:'s2',name:'Chuchart',short:'Ch',color:'#B65C36',role:'sales',inactive:true /* ลาออก 2026-10 · login ปิด, ประวัติยังอยู่ */,login:'E102',pw:'sale2026'},
  {id:'mg',name:'Preechaya',short:'Pr',color:'#B77504',role:'manager',login:'M001',pw:'mgr2026'},
  {id:'mg2',name:'Nichkarn',short:'Ni',color:'#B77504',role:'manager',login:'M002',pw:'mgr2026'},
 ];
@@ -677,27 +729,32 @@ let pendingBrand=null; // brand chosen on the login screen, applied on successfu
 /* ============ AUTH / RBAC ============ */
 const SESS='vynn_os_session';
 const SESSB='vynn_os_brand';
-// which view ids each role may open. 'admin' = full access.
-const ACCESS={
- admin:'*',
- manager:['overview','leads','survey','quote','vgprice','sewing','china','install','service','finance','expenses','saleshist'],
- sales_support:['overview','leads','survey','quote','vgprice','sewing','china','install','service','finance','expenses','settings'],
- sales:['overview','leads','survey','quote','vgprice','install','service','finance','expenses','saleshist'],
- hr:['overview','expenses','hr'],
- accounting:['overview','expenses','hr'],
- installer:['install'],
+// VANGARDE launcher (2026-10): the existing login roles map onto the owner's six departments,
+// and each department gets View (V) or View+Edit (E) per module, from the owner's two access tables.
+const PERM_ROLE={admin:'ceo',sales_support:'admin',manager:'pm',sales:'sales',installer:'staff',hr:'staff',accounting:'accounts'};
+const MODULES=['overview','leads','expenses','install','survey','crm','vgprice','quote','kpi'];
+const PERMS={
+ ceo:     {overview:'E',leads:'E',expenses:'E',install:'E',survey:'E',crm:'E',vgprice:'E',quote:'E',kpi:'E'},
+ admin:   {leads:'E',expenses:'E',install:'E',survey:'V',crm:'E',vgprice:'E',quote:'E'},
+ pm:      {leads:'E',expenses:'E',install:'E',survey:'E',crm:'V',vgprice:'V',kpi:'E'},
+ sales:   {leads:'V',expenses:'E',install:'V',survey:'E',vgprice:'V',quote:'V',kpi:'E'},
+ staff:   {expenses:'E',install:'V',survey:'V'},
+ accounts:{overview:'V',expenses:'E',quote:'V'},
 };
-function canView(v){const a=ACCESS[role];return a==='*'||(a&&a.includes(v));}
+const permRole=()=>PERM_ROLE[role]||'staff';
+function permOf(v){return v==='home'?'V':((PERMS[permRole()]||{})[v]||'');}
+function canView(v){return !!permOf(v);}
+function canEditView(v){return permOf(v)==='E';}
 // a view belongs to the active brand unless it is brand-gated to the other brand (NAV item's b)
 function brandOK(v){const n=(typeof NAV!=='undefined')&&NAV.find(x=>x.id===v);return !n||!n.b||n.b===brand;}
 function canOpen(v){return canView(v)&&brandOK(v);}
-function firstAllowedView(){if(canOpen('overview'))return 'overview';const a=ACCESS[role];if(a==='*')return 'overview';const f=(a||[]).find(canOpen);return f||'overview';}
+function firstAllowedView(){return 'home';}
 // current employee id for sales-scoping (sales sees only own); '' means see all
 function myScopeId(){return currentUser&&currentUser.role==='sales'?currentUser.id:'';}
 function pwOf(uid){return (state&&state.passwords&&state.passwords[uid])||accountByUid(uid).pw;}
 function tryLogin(loginId,pw){
  const u=accountByLogin(loginId);
- if(!u)return{ok:false,msg:'ไม่พบรหัสพนักงานนี้'};
+ if(!u||u.inactive)return{ok:false,msg:'ไม่พบรหัสพนักงานนี้'};
  if(pwOf(u.id)!==pw)return{ok:false,msg:'รหัสผ่านไม่ถูกต้อง'};
  setSession(u.id);
  logAudit('login','เข้าสู่ระบบ');
@@ -719,10 +776,10 @@ function logAudit(action,detail){
  state.audit=state.audit.filter(e=>new Date(e.ts).getTime()>=cut).slice(-600);
  save();
 }
-const ROLE_LABEL={admin:'แอดมิน',manager:'ผู้จัดการ',sales_support:'ซัพพอร์ต',sales:'เซลล์',hr:'ฝ่ายบุคคล',accounting:'ฝ่ายบัญชี',installer:'ช่างติดตั้ง'};
+const ROLE_LABEL={admin:'CEO',manager:'PM',sales_support:'Admin',sales:'Sales',hr:'Staff',accounting:'Accounts',installer:'Staff'};
 const ROLE_COLOR={admin:'#7A4FB5',manager:'#B77504',sales_support:'#0E7C86',sales:'#0F6E68',hr:'#2C6BB3',accounting:'#0E7C86',installer:'#C0392B'};
-function showLogin(){document.getElementById('loginScreen').style.display='flex';document.querySelector('.app').style.display='none';const e=document.getElementById('loginErr');e.classList.remove('show');document.getElementById('loginForm').reset();document.getElementById('brandPick').style.display='';document.getElementById('loginForm').style.display='none';}
-function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';applyBrand(brand);if(!canOpen(view))view=firstAllowedView();renderUserChip();['emptyBtn','resetBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=(currentUser&&currentUser.id==='a1')?'':'none';});render();}
+function showLogin(){document.getElementById('loginScreen').style.display='flex';document.querySelector('.app').style.display='none';const e=document.getElementById('loginErr');e.classList.remove('show');document.getElementById('loginForm').reset();document.getElementById('brandPick').style.display='none';document.getElementById('loginForm').style.display='';pendingBrand='Vangarde';document.documentElement.setAttribute('data-brand','Vangarde');document.getElementById('loginBrandName').textContent='Vangarde';}
+function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';brand='Vangarde';view='home';applyBrand(brand);if(!canOpen(view))view=firstAllowedView();renderUserChip();['emptyBtn','resetBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=(currentUser&&currentUser.id==='a1')?'':'none';});render();}
 function renderUserChip(){
  const el=document.getElementById('userChip');if(!el||!currentUser)return;
  const col=currentUser.color||ROLE_COLOR[role]||'#7A4FB5';
@@ -752,7 +809,7 @@ function migrateState(){
  {const nv=(state.accounts||[]).find(a=>a.id==='acc-novat');if(nv&&!nv.bank){nv.legalName=nv.legalName||'เวทิดา ยิ้มถนอม';nv.bank='ธ.กสิกรไทย เลขที่ 035-320-4475 (เวทิดา ยิ้มถนอม)';}}
 }
 function load(){try{const r=localStorage.getItem(LS);if(r){state=JSON.parse(r);}}catch(e){}if(!state)state=seed();migrateState();}
-function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}if(window.__serverSaveDebounced)window.__serverSaveDebounced();}
+function save(){if(typeof roBlocked==='function'&&roBlocked())return;try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}if(window.__serverSaveDebounced)window.__serverSaveDebounced();}
 function resetData(){state=seed();migrateState();save();render();}
 function emptyState(){const s=seed();s.leads=[];s.surveys=[];s.quotes=[];s.fabricOrders=[];s.sewing=[];s.chinaLots=[];s.installs=[];s.tickets=[];s.payments={};s.monthly=s.monthly.map(m=>({m:m.m,v:0}));s.attendance=[];s.advances=[];s.payroll={};s.travelClaims=[];s.expenses=[];return s;}
 function startEmpty(){state=emptyState();migrateState();save();render();}
@@ -1290,38 +1347,21 @@ function spark(data,color){const w=92,h=38,max=Math.max(...data),min=Math.min(..
 
 /* ============ NAV ============ */
 const NAV=[
- {id:'overview',label:'ภาพรวม',icon:'grid'},
- {grp:'ค่าใช้จ่าย'},
- {id:'expenses',label:'ค่าใช้จ่ายรายวัน',icon:'cash',count:()=>expensesVisible().filter(e=>(e.date||'')===todayISO()).length},
- {grp:'งานขาย'},
+ {id:'home',label:'หน้าแรก',icon:'grid'},
+ {grp:'VANGARDE'},
+ {id:'overview',label:'Dashboard',icon:'chart'},
  {id:'leads',label:'Lead Intake',icon:'inbox',count:()=>scopedLeads().filter(l=>l.stage==='new').length},
- {id:'survey',label:'วัดหน้างาน',icon:'ruler',count:()=>scopedLeads().filter(l=>l.stage==='assigned').length},
- {id:'quote',label:'ใบเสนอราคา',icon:'doc',count:()=>brandLeads().map(l=>quoteOfLead(l.id)).filter(q=>q&&q.status==='pending').length},
- {id:'vgprice',label:'ราคา VG (อ้างอิง)',icon:'box',b:'Vangarde'},
- {grp:'ผลิต & จัดหา'},
- {id:'sewing',label:'คิวตัดเย็บ',icon:'scissors',b:'VYNN',count:()=>state.sewing.filter(s=>s.status!=='done').length},
- {id:'china',label:'สั่งจีน (นำเข้า)',icon:'truck',b:'Vangarde',count:()=>state.chinaLots.filter(l=>!l.closed).length},
- {id:'purchase',label:'สั่งสินค้า (สรุป)',icon:'cart',count:()=>state.quotes.filter(q=>{const l=leadById(q.leadId);if(!l)return false;if(brand!=='all'&&l.brand!==brand)return false;const pi=payInfo(q.id);return pi&&pi.sched[0]&&pi.sched[0].st==='paid';}).length},
- {grp:'ส่งมอบ & การเงิน'},
- {id:'service',label:'งานเก็บ & ประกัน',icon:'shield',count:()=>(state.tickets||[]).filter(t=>t.status!=='resolved').length},
- {id:'finance',label:'การเงิน / งวด',icon:'cash'},
- {grp:'ผลงานการขาย'},
- {id:'saleshist',label:'ยอดขายสะสม (12ด.)',icon:'trend'},
- {grp:'รายงาน & ตั้งค่า'},
- {id:'forecast',label:'ยอดขาย & Forecast',icon:'trend'},
- {id:'kpi',label:'KPI Dashboard',icon:'chart'},
- {id:'stats',label:'สถิติสินค้า',icon:'box'},
- {id:'pnl',label:'กำไร-ขาดทุน',icon:'trend'},
- {id:'settings',label:'ตั้งค่าราคา',icon:'gear'},
- {grp:'ส่วนกลาง · ใช้ร่วมทุกแบรนด์',shared:true},
- {id:'install',label:'ตารางงานช่าง (ทุกแบรนด์)',icon:'wrench',shared:true,count:()=>state.installs.filter(i=>i.status==='scheduled').length},
- {grp:'ผู้ดูแลระบบ',adminOnly:true},
- {id:'users',label:'พนักงาน / ผู้ใช้',icon:'user',adminOnly:true},
- {id:'audit',label:'บันทึกการใช้งาน',icon:'shield',adminOnly:true},
- {grp:'บุคคล (HR)',hrOnly:true},
- {id:'hr',label:'เงินเดือน / HR',icon:'user',hrOnly:true},
+ {id:'expenses',label:'เบิก-จ่าย',icon:'cash',count:()=>expensesVisible().filter(e=>(e.date||'')===todayISO()).length},
+ {id:'install',label:'ตารางงาน',icon:'wrench',count:()=>state.installs.filter(i=>i.status==='scheduled').length},
+ {id:'survey',label:'Onsite (วัดหน้างาน)',icon:'ruler',count:()=>scopedLeads().filter(l=>l.stage==='assigned').length},
+ {id:'crm',label:'CRM ลูกค้า',icon:'user'},
+ {id:'vgprice',label:'Pricelists',icon:'box',b:'Vangarde'},
+ {id:'quote',label:'Quotation',icon:'doc',count:()=>brandLeads().map(l=>quoteOfLead(l.id)).filter(q=>q&&q.status==='pending').length},
+ {id:'kpi',label:'KPI',icon:'trend'},
 ];
 const META={
+ home:{t:'VANGARDE',s:'เลือกหัวข้อที่ต้องการ',act:false},
+ crm:{t:'CRM ลูกค้า',s:'ข้อมูลลูกค้า VANGARDE · ใบเสนอราคา · ยอดชำระ · งานเก็บ/ประกัน ในที่เดียว',act:false},
  overview:{t:'ภาพรวมบริษัท',s:'สรุปทุกโมดูลแบบเรียลไทม์',act:true},
  expenses:{t:'ค่าใช้จ่ายรายวัน',s:'พนักงานพิมพ์ยอด+หมวด (เช่น "ค่าน้ำมัน 500") แนบรูปบิล → บันทึกทันที เข้าฐานข้อมูลเดียวกับทั้งระบบ',act:false},
  leads:{t:'Lead Intake',s:'รับลูกค้า 4 ช่องทาง (LINE / ออกบูธ / ลูกค้าเก่า / อินทีเรีย) แล้วมอบหมายเซลล์',act:true},
@@ -2685,7 +2725,7 @@ function openLead(id){
  const steps=[];
  steps.push({done:true,ico:'inbox',color:'var(--info)',title:'รับลีดเข้าระบบ',meta:`${SOURCE[l.source].l} · ${fmtDate(l.created)}`,
   card:`<div class="kv"><dt>เบอร์</dt><dd>${l.phone}</dd>${l.desiredInstall?`<dt>วันติดตั้งที่ต้องการ</dt><dd>${fmtDate(l.desiredInstall)}</dd>`:''}${l.source==='interior'?`<dt>ผู้แนะนำ</dt><dd>${l.referrer||'—'} · ค่าแนะนำ ${l.referralPct||0}%</dd>`:''}</div>${l.note?`<div class="mini-note" style="margin-top:8px">📝 ${l.note}</div>`:''}`});
- steps.push({done:!!l.assignedTo,ico:'user',color:'var(--accent)',title:l.assignedTo?'มอบหมายให้เซลล์':'รอมอบหมายเซลล์',meta:l.assignedTo?personById(l.assignedTo).name:'ยังไม่มอบหมาย',card:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="assignSel" style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px">${SALES.map(s=>`<option value="${s.id}" ${((l.assignedTo||SALES[0].id)===s.id)?'selected':''}>${s.name}</option>`).join('')}</select><button class="btn primary" id="assignBtn">${l.assignedTo?'เปลี่ยนผู้รับผิดชอบ':'＋ มอบหมาย'}</button></div>`});
+ steps.push({done:!!l.assignedTo,ico:'user',color:'var(--accent)',title:l.assignedTo?'มอบหมายให้เซลล์':'รอมอบหมายเซลล์',meta:l.assignedTo?personById(l.assignedTo).name:'ยังไม่มอบหมาย',card:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="assignSel" style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px">${SALES.filter(s=>!s.inactive||s.id===l.assignedTo).map(s=>`<option value="${s.id}" ${((l.assignedTo||SALES[0].id)===s.id)?'selected':''}>${s.name}</option>`).join('')}</select><button class="btn primary" id="assignBtn">${l.assignedTo?'เปลี่ยนผู้รับผิดชอบ':'＋ มอบหมาย'}</button></div>`});
  const svPhotos=sv?sv.points.reduce((a,p)=>a+(p.photos||[]).length,0):0;
  steps.push({done:!!sv,ico:'ruler',color:'var(--warn)',title:sv?`วัดหน้างานแล้ว · ${sv.points.length} จุด`:'รอวัดหน้างาน',meta:sv?`${fmtDate(sv.date)} · โดย ${personById(sv.by).short} · ${svPhotos} รูป`:'—',
   card:sv?`${sv.points.map((pt,pi)=>surveyPointSummary(pt,pi)).join('')}<button class="btn sm" id="editSurveyBtn" style="margin-top:6px">${svg('ruler','ico')} ดู / แก้ไขการวัดแบบละเอียด</button>`:(l.assignedTo&&l.stage==='assigned'?`<button class="btn primary" id="surveyBtn">${svg('ruler','ico')} บันทึกการวัดหน้างาน</button>`:'')});
@@ -2799,7 +2839,7 @@ function openAddLead(){
    <div class="field-row"><div class="field"><label>เบอร์</label><input id="f-phone" placeholder="08x-xxx-xxxx"></div><div class="field"><label>แบรนด์</label><select id="f-brand"><option${brand==='VYNN'?' selected':''}>VYNN</option><option${brand==='Vangarde'?' selected':''}>Vangarde</option></select></div></div>
    <div class="field-row"><div class="field"><label>ช่องทาง</label><select id="f-src">${Object.entries(SOURCE).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('')}</select></div><div class="field"><label>วันติดตั้งที่ต้องการ</label><input id="f-install" type="date"></div></div>
    <div id="referralWrap" style="display:none"><div class="field-row"><div class="field"><label>ผู้แนะนำ (อินทีเรีย)</label><input id="f-ref" placeholder="ชื่อดีไซน์เนอร์/สตูดิโอ"></div><div class="field"><label>ค่าแนะนำ (%)</label><input id="f-refpct" type="number" value="10"></div></div></div>
-   <div class="field"><label>มอบหมายเซลล์</label><select id="f-sales"><option value="">— รอมอบหมาย —</option>${SALES.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+   <div class="field"><label>มอบหมายเซลล์</label><select id="f-sales"><option value="">— รอมอบหมาย —</option>${SALES.filter(s=>!s.inactive).map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
    <div class="field"><label>บันทึก</label><textarea id="f-note" rows="2" placeholder="รายละเอียดความต้องการ"></textarea></div>
    <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" id="mCancel">ยกเลิก</button><button class="btn primary" id="mSave">＋ บันทึกลีด</button></div>
   </div>`;
@@ -2918,16 +2958,93 @@ function renderVgPrice(){
   ${perg}${zip}${awn}
   <div class="grid two-col" style="grid-template-columns:1fr 1fr 1fr">${addBlock('Pergola',vg.addons.pergola)}${addBlock('Zip Shade',vg.addons.zipshade)}${addBlock('Awning',vg.addons.awning)}</div>`;
 }
-function renderView(){({overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
+function renderView(){({home:renderHome,crm:renderCRM,overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
 function render(rerenderNav=true){
  if(!canOpen(view))view=firstAllowedView(); // block disallowed / wrong-brand views
  const meta=META[view];
  document.getElementById('pageTitle').textContent=meta.t;
  document.getElementById('pageSub').textContent=meta.s;
  const tb=document.getElementById('topAction');
- if(meta.act){tb.style.display='inline-flex';tb.onclick=openAddLead;}else tb.style.display='none';
+ if(meta.act&&canEditView('leads')){tb.style.display='inline-flex';tb.onclick=openAddLead;}else tb.style.display='none';
  if(rerenderNav)renderNav();
+ const ro=isRO();
+ document.body.classList.toggle('ro',ro);
+ roSnap=ro?roStrip(state):null;
  renderView();
+ if(ro)document.getElementById('content').insertAdjacentHTML('afterbegin',`<div class="ro-banner">${svg('shield','ico')}<span><b>ดูได้อย่างเดียว</b> · สิทธิ์ ${ROLE_LABEL[role]||role} แก้ไขหัวข้อนี้ไม่ได้ ถ้ากดแก้ ระบบจะไม่บันทึก</span></div>`);
+}
+
+/* ============ VIEW-ONLY GUARD ============
+   Modules opened with V permission keep a snapshot of the data; if anything in that view tries to
+   save a change, the change is rolled back (audit log excepted) and the viewer is told why. */
+let roSnap=null;
+function roStrip(s){const c=Object.assign({},s);delete c.audit;return JSON.stringify(c);}
+function isRO(){return !!currentUser&&view!=='home'&&!canEditView(view);}
+function roBlocked(){
+ if(roSnap===null||!isRO())return false;
+ if(roStrip(state)===roSnap)return false;
+ const audit=state.audit;state=JSON.parse(roSnap);state.audit=audit;
+ const t=document.createElement('div');t.className='ro-toast';t.textContent='⛔ ดูได้อย่างเดียว · ไม่ได้บันทึกการแก้ไข';document.body.appendChild(t);setTimeout(()=>t.remove(),2600);
+ setTimeout(()=>{document.querySelectorAll('.modal-card.open,.drawer.open,.scrim.open').forEach(e=>e.classList.remove('open'));render();},0);
+ return true;
+}
+
+/* ============ HOME (launcher) ============ */
+const MOD_INFO={
+ overview:{t:'Dashboard',s:'ภาพรวมยอดขาย งานค้าง และเงินเข้า',ic:'chart'},
+ leads:{t:'Lead Intake',s:'รับลูกค้าใหม่ และมอบหมายเซลล์',ic:'inbox'},
+ expenses:{t:'เบิก-จ่าย',s:'บันทึกค่าใช้จ่าย แนบบิล',ic:'cash'},
+ install:{t:'ตารางงาน',s:'คิวช่างติดตั้ง และนัดหมาย',ic:'wrench'},
+ survey:{t:'Onsite',s:'วัดหน้างาน ขนาด และรูปถ่าย',ic:'ruler'},
+ crm:{t:'CRM',s:'ข้อมูลลูกค้า และประวัติการซื้อ',ic:'user'},
+ vgprice:{t:'Pricelists',s:'Pergola · Zip Shade · Awning',ic:'box'},
+ quote:{t:'Quotation',s:'ใบเสนอราคา และการอนุมัติ',ic:'doc'},
+ kpi:{t:'KPI',s:'ผลงานเซลล์ และทีม',ic:'trend'},
+};
+const TILE_COL={overview:'#17A39E',leads:'#1C88A6',expenses:'#22607F',install:'#5E7EB5',survey:'#45567A',crm:'#2B3341',vgprice:'#1A7D84',quote:'#356E9C',kpi:'#33415A'};
+function renderHome(){
+ const el=document.getElementById('content');
+ const mods=MODULES.filter(canOpen);
+ const half=Math.ceil(mods.length/2),top=mods.slice(0,half),bot=mods.slice(half);
+ const tile=v=>{const n=NAV.find(x=>x.id===v),c=n&&n.count?n.count():0,m=MOD_INFO[v];
+  return `<button class="hub-tile" data-go="${v}" style="--tc:${TILE_COL[v]}">${c?`<span class="hub-badge">${c}</span>`:''}<span class="hub-ic">${svg(m.ic)}</span><span class="hub-t">${m.t}</span><span class="hub-line"></span><span class="hub-s">${m.s}</span><span class="hub-perm">${permOf(v)==='E'?'ดู + แก้ไข':'ดูอย่างเดียว'}</span></button>`;};
+ const row=(list,pos)=>list.length?`<div class="hub-row" style="--n:${list.length}">${list.map(tile).join('')}</div><div class="hub-link ${pos}" style="--n:${list.length}">${list.map(v=>`<i style="--tc:${TILE_COL[v]}"></i>`).join('')}</div>`:'';
+ const botHtml=bot.length?`<div class="hub-link bot" style="--n:${bot.length}">${bot.map(v=>`<i style="--tc:${TILE_COL[v]}"></i>`).join('')}</div><div class="hub-row" style="--n:${bot.length}">${bot.map(tile).join('')}</div>`:'';
+ el.innerHTML=`<div class="hub">${row(top,'top')}<div class="hub-core"><div class="hub-pill"><b>VANGARDE</b><span>สวัสดี ${currentUser?currentUser.name:''} · ${ROLE_LABEL[role]||role}</span></div></div>${botHtml}</div>`;
+ el.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{view=b.dataset.go;search='';render();window.scrollTo(0,0);});
+}
+
+/* ============ CRM ============ */
+function escH(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+let crmQ='';
+function crmRows(){
+ const q=crmQ.trim().toLowerCase();
+ const L=brandLeads().filter(l=>!q||[l.name,l.phone,l.custCode,(accountByUid(l.assignedTo)||{}).name].join(' ').toLowerCase().includes(q))
+  .sort((a,b)=>String(b.created||'').localeCompare(String(a.created||'')));
+ if(!L.length)return `<div class="card" style="padding:28px;text-align:center;color:var(--text-muted)">${brandLeads().length?'ไม่พบลูกค้าที่ค้นหา':'ยังไม่มีลูกค้า VANGARDE · เพิ่มจาก Lead Intake'}</div>`;
+ return `<div class="card crm-list">${L.map(l=>{
+  const q=quoteOfLead(l.id),pi=q?payInfo(q.id):null,tot=dealTotal(l.id)||0;
+  const tk=(state.tickets||[]).filter(t=>t.leadId===l.id&&t.status!=='resolved').length;
+  const sa=accountByUid(l.assignedTo);
+  return `<button class="crm-row" data-lead="${escH(l.id)}">
+   <span class="crm-av">${escH(String(l.name||'?').trim().slice(0,1))}</span>
+   <span class="crm-main"><span class="crm-name">${escH(l.name||'-')} <span class="mono crm-code">${escH(l.custCode||l.id)}</span></span>
+    <span class="crm-meta">${l.phone?escH(l.phone)+' · ':''}${escH((SOURCE[l.source]||{}).l||'')}${sa?' · เซลล์ '+escH(sa.name):''}${l.created?' · '+escH(String(l.created).slice(0,10)):''}</span></span>
+   <span class="crm-side">${stagePill(l.stage)}<span class="crm-amt">${tot?'฿'+money(tot):'—'}</span>
+    <span class="crm-meta">${pi?'ชำระ ฿'+money(pi.paid)+' / '+money(pi.total):(q?'ยังไม่ชำระ':'ยังไม่มีใบเสนอ')}${tk?' · งานเก็บ '+tk:''}</span></span></button>`;}).join('')}</div>`;
+}
+function renderCRM(){
+ const el=document.getElementById('content');
+ const L=brandLeads(),won=L.filter(l=>['won','production','installing','done'].includes(l.stage));
+ el.innerHTML=`<div class="crm-head"><div class="crm-kpis">
+   <div class="card crm-k"><span>ลูกค้าทั้งหมด</span><b>${L.length}</b></div>
+   <div class="card crm-k"><span>ปิดการขายแล้ว</span><b>${won.length}</b></div>
+   <div class="card crm-k"><span>ยอดขายรวม</span><b>฿${money(won.reduce((a,l)=>a+(dealTotal(l.id)||0),0))}</b></div></div>
+   <input id="crmSearch" class="crm-search" type="search" placeholder="ค้นหาชื่อ เบอร์โทร รหัสลูกค้า หรือเซลล์" value="${escH(crmQ)}"></div>
+  <div id="crmList">${crmRows()}</div>`;
+ const bind=()=>document.querySelectorAll('#crmList [data-lead]').forEach(b=>b.onclick=()=>openLead(b.dataset.lead));
+ document.getElementById('crmSearch').oninput=e=>{crmQ=e.target.value;document.getElementById('crmList').innerHTML=crmRows();bind();};
+ bind();
 }
 
 /* ============ WIRING ============ */
