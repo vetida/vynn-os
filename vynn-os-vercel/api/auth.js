@@ -7,7 +7,7 @@ const { pool } = V;
 const ROLES = ['admin', 'sales_support', 'manager', 'sales', 'installer', 'hr', 'accounting'];
 const DOC_KINDS = ['idcard', 'house', 'other'];
 const DOC_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-const PROFILE_FIELDS = ['birth', 'phone', 'email', 'address', 'facebook', 'instagram', 'startDate', 'salary', 'benefits', 'note'];
+const PROFILE_FIELDS = ['birth', 'phone', 'email', 'address', 'facebook', 'instagram', 'startDate', 'salary', 'benefits', 'note', 'team', 'hrId'];
 
 class HttpError extends Error { constructor(code, msg) { super(msg); this.code = code; } }
 const need = (c, code, msg) => { if (!c) throw new HttpError(code, msg); };

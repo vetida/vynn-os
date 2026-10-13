@@ -446,6 +446,32 @@
   .ag-cell.today{background:#1C1D21;color:#fff}
   .ag-cell span{font-size:11px;font-weight:700;background:#F7DA7B;color:#1C1D21;border-radius:999px;padding:0 7px}
   .ag-cell span.ok{background:#D6EAD9;color:#2F6B3E}
+  /* KPI profile pages */
+  .kpi-sec{display:flex;flex-direction:column;gap:10px}
+  .pastels.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .pastels.four .pastel b{font-size:22px}
+  @media (max-width:900px){.pastels.four{grid-template-columns:1fr 1fr}}
+  .pill-sel{border:1px solid var(--border-strong);background:var(--surface);color:var(--text);border-radius:999px;padding:6px 12px;font:inherit;font-size:12.5px;font-weight:600}
+  .wip{display:inline-block;font-size:11.5px;font-weight:650;padding:3px 10px;border-radius:999px;background:var(--wc);color:#1C1D21;white-space:nowrap}
+  .mute{color:var(--text-muted);font-weight:500}
+  .alert-box{background:#FFF6DA;border-radius:18px;padding:14px}
+  :root[data-theme="dark"] .alert-box{background:#3A3216}
+  .alert-box .cnt{background:#1C1D21;color:#fff;border-radius:999px;padding:1px 9px;font-weight:700;font-size:12px}
+  .mini-row{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;border:0;background:var(--surface);border-radius:14px;padding:10px 12px;margin-bottom:6px;font:inherit;color:inherit;cursor:pointer;box-shadow:var(--shadow)}
+  .mini-row b{font-size:13.5px}.mini-row span{font-size:12px;color:var(--text-muted)}
+  .cust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+  .cust-grid .mini-row{margin:0}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:700px){.two-col{grid-template-columns:1fr}}
+  h3.sub{font-size:13px;font-weight:650;color:var(--text-muted);margin:4px 0 8px}
+  .auto-h{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--text-muted);margin-top:4px}
+  .tk.auto{border:0;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;align-items:center}
+  .tk.auto .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .tk.shared{background:#F4F1FA}
+  :root[data-theme="dark"] .tk.shared{background:var(--surface-2)}
+  .tk-with{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 10px;max-height:150px;overflow:auto;padding:6px;border:1px solid var(--border);border-radius:10px}
+  .tk-with label{display:flex;gap:6px;align-items:center;font-size:12.5px;font-weight:500;color:var(--text)}
+  .tk-with small{color:var(--text-faint)}
   /* employee directory (CEO) */
   .dir{display:flex;flex-direction:column;gap:14px;max-width:1200px}
   .dir-top{display:flex;gap:10px;align-items:center}
@@ -878,10 +904,10 @@ const PERM_ROLE={admin:'ceo',sales_support:'admin',manager:'pm',sales:'sales',in
 const MODULES=['overview','leads','expenses','install','survey','crm','vgprice','quote','kpi','staffdir'];
 const PERMS={
  ceo:     {overview:'E',leads:'E',expenses:'E',install:'E',survey:'E',crm:'E',vgprice:'E',quote:'E',kpi:'E',staffdir:'E'},
- admin:   {leads:'E',expenses:'E',install:'E',survey:'V',crm:'E',vgprice:'E',quote:'E'},
+ admin:   {leads:'E',expenses:'E',install:'E',survey:'V',crm:'E',vgprice:'E',quote:'E',kpi:'E'},
  pm:      {leads:'E',expenses:'E',install:'E',survey:'E',crm:'V',vgprice:'V',kpi:'E'},
  sales:   {leads:'V',expenses:'E',install:'V',survey:'E',vgprice:'V',quote:'V',kpi:'E'},
- staff:   {expenses:'E',install:'V',survey:'V'},
+ staff:   {expenses:'E',install:'V',survey:'V',kpi:'E'},
  accounts:{overview:'V',expenses:'E',quote:'V'},
 };
 const permRole=()=>PERM_ROLE[role]||'staff';
@@ -904,7 +930,7 @@ async function vosApi(a,body){
 }
 // the account list now comes from the server; refill the shared arrays in place so every existing reference sees it
 function applyUsers(list){
- const map=u=>({id:u.id,name:u.name,short:u.short||String(u.name||'?').slice(0,2),color:u.color||ROLE_COLOR[u.role]||'#73767D',role:u.role,login:u.login,inactive:u.active===false});
+ const map=u=>({team:u.team||'',hrId:u.hrId||'',id:u.id,name:u.name,short:u.short||String(u.name||'?').slice(0,2),color:u.color||ROLE_COLOR[u.role]||'#73767D',role:u.role,login:u.login,inactive:u.active===false});
  const all=list.map(map);
  USERS.length=0;SALES.length=0;INSTALLERS.length=0;ACCOUNTS.length=0;
  all.forEach(u=>{(u.role==='sales'||u.role==='manager'?SALES:u.role==='installer'?INSTALLERS:USERS).push(u);});
@@ -916,7 +942,7 @@ async function tryLogin(loginId,pw){
 }
 async function vosVerify(pw){try{return (await vosApi('verify',{password:pw})).ok===true;}catch(e){return false;}}
 function setSession(uid){currentUser=accountByUid(uid);role=currentUser.role;try{localStorage.setItem(SESS,uid);}catch(e){}}
-function logout(){if(state&&window.__vosStateReady)logAudit('logout','ออกจากระบบ');vosApi('logout').catch(()=>{});currentUser=null;window.__vosStateReady=false;try{localStorage.removeItem(SESS);}catch(e){}pendingBrand=null;showLogin();}
+function logout(){if(state&&window.__vosStateReady){autoPresence('offline');logAudit('logout','ออกจากระบบ');}vosApi('logout').catch(()=>{});currentUser=null;window.__vosStateReady=false;try{localStorage.removeItem(SESS);}catch(e){}pendingBrand=null;showLogin();}
 async function restoreSession(){try{const r=await vosApi('me');applyUsers(r.users);setSession(r.me.id);return true;}catch(e){return false;}}
 // apply the active brand: scope + theme + sidebar/topbar labels
 function applyBrand(b){brand=b;try{localStorage.setItem(SESSB,b);}catch(e){}document.documentElement.setAttribute('data-brand',b);const nm=document.getElementById('sideBrandName');if(nm)nm.textContent=(b==='Vangarde'?'Vangarde':'VYNN');const sub=document.getElementById('sideBrandSub');if(sub)sub.textContent=(b==='Vangarde'?'Outdoor Shading':'Window Collection');document.querySelectorAll('#brandFilter button').forEach(x=>x.classList.toggle('active',x.dataset.b===b));}
@@ -2887,7 +2913,8 @@ function openLead(id){
  const steps=[];
  steps.push({done:true,ico:'inbox',color:'var(--info)',title:'รับลีดเข้าระบบ',meta:`${SOURCE[l.source].l} · ${fmtDate(l.created)}`,
   card:`<div class="kv"><dt>เบอร์</dt><dd>${l.phone}</dd>${l.desiredInstall?`<dt>วันติดตั้งที่ต้องการ</dt><dd>${fmtDate(l.desiredInstall)}</dd>`:''}${l.source==='interior'?`<dt>ผู้แนะนำ</dt><dd>${l.referrer||'—'} · ค่าแนะนำ ${l.referralPct||0}%</dd>`:''}</div>${l.note?`<div class="mini-note" style="margin-top:8px">📝 ${l.note}</div>`:''}`});
- steps.push({done:!!l.assignedTo,ico:'user',color:'var(--accent)',title:l.assignedTo?'มอบหมายให้เซลล์':'รอมอบหมายเซลล์',meta:l.assignedTo?personById(l.assignedTo).name:'ยังไม่มอบหมาย',card:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="assignSel" style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px">${SALES.filter(s=>!s.inactive||s.id===l.assignedTo).map(s=>`<option value="${s.id}" ${((l.assignedTo||SALES[0].id)===s.id)?'selected':''}>${s.name}</option>`).join('')}</select><button class="btn primary" id="assignBtn">${l.assignedTo?'เปลี่ยนผู้รับผิดชอบ':'＋ มอบหมาย'}</button></div>`});
+ steps.push({done:!!l.assignedTo,ico:'user',color:'var(--accent)',title:l.assignedTo?'มอบหมายให้เซลล์':'รอมอบหมายเซลล์',meta:l.assignedTo?personById(l.assignedTo).name:'ยังไม่มอบหมาย',card:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="assignSel" style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px">${SALES.filter(s=>!s.inactive||s.id===l.assignedTo).map(s=>`<option value="${s.id}" ${((l.assignedTo||SALES[0].id)===s.id)?'selected':''}>${s.name}</option>`).join('')}</select><button class="btn primary" id="assignBtn">${l.assignedTo?'เปลี่ยนผู้รับผิดชอบ':'＋ มอบหมาย'}</button></div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><label for="pmSel" style="font-size:12.5px;color:var(--text-muted)">PM ผู้ดูแล</label><select id="pmSel" data-lead="${l.id}" ${canEditView(view)?'':'disabled'} style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px"><option value="">— ยังไม่กำหนด —</option>${ACCOUNTS.filter(a=>a.role==='manager'&&(!a.inactive||a.id===l.pmId)).map(a=>`<option value="${a.id}" ${l.pmId===a.id?'selected':''}>${a.name}</option>`).join('')}</select></div>`});
  const svPhotos=sv?sv.points.reduce((a,p)=>a+(p.photos||[]).length,0):0;
  steps.push({done:!!sv,ico:'ruler',color:'var(--warn)',title:sv?`วัดหน้างานแล้ว · ${sv.points.length} จุด`:'รอวัดหน้างาน',meta:sv?`${fmtDate(sv.date)} · โดย ${personById(sv.by).short} · ${svPhotos} รูป`:'—',
   card:sv?`${sv.points.map((pt,pi)=>surveyPointSummary(pt,pi)).join('')}<button class="btn sm" id="editSurveyBtn" style="margin-top:6px">${svg('ruler','ico')} ดู / แก้ไขการวัดแบบละเอียด</button>`:(l.assignedTo&&l.stage==='assigned'?`<button class="btn primary" id="surveyBtn">${svg('ruler','ico')} บันทึกการวัดหน้างาน</button>`:'')});
@@ -3120,7 +3147,7 @@ function renderVgPrice(){
   ${perg}${zip}${awn}
   <div class="grid two-col" style="grid-template-columns:1fr 1fr 1fr">${addBlock('Pergola',vg.addons.pergola)}${addBlock('Zip Shade',vg.addons.zipshade)}${addBlock('Awning',vg.addons.awning)}</div>`;
 }
-function renderView(){({home:renderHome,staffdir:renderStaffDir,agenda:renderAgenda,crm:renderCRM,overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,kpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
+function renderView(){({kpi:renderMyKPI,home:renderHome,staffdir:renderStaffDir,agenda:renderAgenda,crm:renderCRM,overview:renderOverview,expenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,teamkpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
 function render(rerenderNav=true){
  if(!canOpen(view))view=firstAllowedView(); // block disallowed / wrong-brand views
  if(currentUser&&!histPopping&&histView!==view){try{history.pushState({vos:'view',v:view},'');}catch(e){}}
@@ -3174,13 +3201,14 @@ const MOD_INFO={
  crm:{t:'CRM',s:'ข้อมูลลูกค้า และประวัติการซื้อ',ic:'user'},
  vgprice:{t:'Pricelists',s:'Pergola · Zip Shade · Awning',ic:'box'},
  quote:{t:'Quotation',s:'ใบเสนอราคา และการอนุมัติ',ic:'doc'},
- kpi:{t:'KPI',s:'ผลงานเซลล์ และทีม',ic:'trend'},
+ kpi:{t:'KPI · โปรไฟล์ของฉัน',s:'ตารางงาน ยอดขาย งานที่ดูแล และสถานะของฉัน',ic:'trend'},
  staffdir:{t:'รายชื่อพนักงาน',s:'ข้อมูล เอกสาร เงินเดือน และ username (เฉพาะ CEO)',ic:'user'},
 };
 const PASTEL=['#F7DA7B','#CCDCE7','#E5D9EE','#D6EAD9'];
 const TH_DOW=['จ','อ','พ','พฤ','ศ','ส','อา'];
 const TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-const STATUS_OPT={available:{t:'พร้อมทำงาน',c:'#4CAF6A'},busy:{t:'ติดงาน',c:'#E8A33D'},off:{t:'ลา / ไม่อยู่',c:'#9AA0A6'}};
+const STATUS_OPT={online:{t:'ออนไลน์',c:'#4CAF6A'},leave:{t:'ลาหยุด',c:'#E8A33D'},offline:{t:'ออฟไลน์',c:'#9AA0A6'}};
+const statusKey=p=>({available:'online',busy:'online',off:'leave'})[p.status]||(STATUS_OPT[p.status]?p.status:'offline');
 const pad2=n=>String(n).padStart(2,'0');
 const ymdOf=d=>d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
 const dOf=s=>{const[y,m,d]=String(s).slice(0,10).split('-').map(Number);return new Date(y,m-1,d);};
@@ -3211,12 +3239,14 @@ function pickPhoto(uid){
  };
  inp.click();
 }
+// online on login / offline on logout, unless the person set themselves on leave
+function autoPresence(s){if(!currentUser||!window.__vosStateReady)return;const p=profileOf(currentUser.id);if(statusKey(p)==='leave'||p.status===s)return;state.profiles[currentUser.id]=Object.assign({},p,{status:s});save();if(s==='online'&&view==='home')render(false);}
 function setStatus(uid,s){if(!state.profiles)state.profiles={};state.profiles[uid]=Object.assign({},state.profiles[uid],{status:s});save();render();}
 
 /* ---- agenda / personal KPI (state.agenda, synced to the server) ---- */
 let agSel=null,agTab='day',agUser=null;
 const agAll=()=>state.agenda||(state.agenda=[]);
-const agOf=uid=>agAll().filter(a=>a.uid===uid);
+const agOf=uid=>agAll().filter(a=>a.uid===uid||(a.with||[]).includes(uid)); // own tasks + tasks a colleague shared with me
 const agDay=(uid,d)=>agOf(uid).filter(a=>a.scope==='day'&&a.date===d).sort((a,b)=>String(a.start||'99').localeCompare(String(b.start||'99')));
 const agWeekGoals=(uid,mon)=>agOf(uid).filter(a=>a.scope==='week'&&a.date===mon);
 const agMonthGoals=(uid,ym)=>agOf(uid).filter(a=>a.scope==='month'&&a.date.slice(0,7)===ym);
@@ -3246,6 +3276,7 @@ function openTaskModal(uid,date,editId){
   <div class="field-row"><div class="field"><label>ประเภท</label><select id="tk-scope"><option value="day">รายวัน</option><option value="week">เป้ารายสัปดาห์</option><option value="month">เป้ารายเดือน</option></select></div>
    <div class="field"><label id="tk-dlabel">วันที่</label><input id="tk-date" type="date" value="${d0}"></div></div>
   <div class="field-row" id="tk-times"><div class="field"><label>เริ่ม</label><input id="tk-start" type="time" value="${ed&&ed.start||''}"></div><div class="field"><label>ถึง</label><input id="tk-end" type="time" value="${ed&&ed.end||''}"></div></div>
+  <div class="field"><label>ไปพร้อมกับ / แจ้งให้เห็นด้วย (ไม่บังคับ)</label><div class="tk-with">${ACCOUNTS.filter(a=>!a.inactive&&a.id!==uid).map(a=>`<label><input type="checkbox" value="${a.id}" ${ed&&(ed.with||[]).includes(a.id)?'checked':''}> ${escH(a.name)} <small>${ROLE_LABEL[a.role]||''}</small></label>`).join('')}</div></div>
   <div class="field"><label>หมายเหตุ</label><textarea id="tk-note" rows="2">${ed?escH(ed.note||''):''}</textarea></div>
   <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px"><button class="btn" id="tk-cancel">ยกเลิก</button><button class="btn primary" id="tk-save">บันทึก</button></div>`;
  const scopeSel=m.querySelector('#tk-scope');scopeSel.value=sc0;
@@ -3257,17 +3288,19 @@ function openTaskModal(uid,date,editId){
   const title=m.querySelector('#tk-title').value.trim();if(!title){m.querySelector('#tk-title').focus();return;}
   const scope=scopeSel.value;let date=m.querySelector('#tk-date').value||todayISO();
   if(scope==='week')date=mondayOf(date);if(scope==='month')date=date.slice(0,7)+'-01';
-  const rec={title,scope,date,start:scope==='day'?m.querySelector('#tk-start').value:'',end:scope==='day'?m.querySelector('#tk-end').value:'',note:m.querySelector('#tk-note').value.trim()};
+  const rec={title,scope,date,start:scope==='day'?m.querySelector('#tk-start').value:'',end:scope==='day'?m.querySelector('#tk-end').value:'',note:m.querySelector('#tk-note').value.trim(),with:[...m.querySelectorAll('.tk-with input:checked')].map(c=>c.value)};
   if(ed)Object.assign(ed,rec);else agAll().push(Object.assign({id:'ag'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),uid,done:false,createdAt:new Date().toISOString()},rec));
   close();save();render();
  };
  m.classList.add('open');sc.classList.add('open');setTimeout(()=>m.querySelector('#tk-title').focus(),30);
 }
-function taskCard(a,showDate){
+function taskCard(a,showDate,viewer){
  const ed=canEditAgendaOf(a.uid);
  const when=a.scope==='day'?((a.start?a.start+(a.end?'–'+a.end:''):'ทั้งวัน')+(showDate?' · '+thDate(a.date):'')):(a.scope==='week'?'เป้าสัปดาห์ '+thDate(a.date):'เป้าเดือน '+thMonth(a.date.slice(0,7)));
- return `<div class="tk${a.done?' done':''}"><button class="tk-check" ${ed?`data-tk-toggle="${a.id}"`:'disabled'} aria-label="${a.done?'ยกเลิกเสร็จ':'ทำเสร็จแล้ว'}">${a.done?'✓':''}</button>
-  <div class="tk-main"><b>${escH(a.title)}</b><span>${when}</span>${a.note?`<em>${escH(a.note)}</em>`:''}</div>
+ const v=viewer||(currentUser&&currentUser.id),nameOf=id=>(accountByUid(id)||{}).name||'?';
+ const who=a.uid!==v?`จาก ${nameOf(a.uid)}`:(a.with||[]).length?`กับ ${(a.with||[]).map(nameOf).join(', ')}`:'';
+ return `<div class="tk${a.done?' done':''}${a.uid!==v?' shared':''}"><button class="tk-check" ${ed?`data-tk-toggle="${a.id}"`:'disabled'} aria-label="${a.done?'ยกเลิกเสร็จ':'ทำเสร็จแล้ว'}">${a.done?'✓':''}</button>
+  <div class="tk-main"><b>${escH(a.title)}</b><span>${when}${who?' · '+escH(who):''}</span>${a.note?`<em>${escH(a.note)}</em>`:''}</div>
   ${ed?`<button class="tk-more" data-tk-edit="${a.id}" aria-label="แก้ไข">✎</button><button class="tk-more" data-tk-del="${a.id}" aria-label="ลบ">✕</button>`:''}</div>`;
 }
 function bindTasks(root){
@@ -3292,7 +3325,7 @@ function homeStats(){
  return cand.slice(0,3);
 }
 function renderHome(){
- const el=document.getElementById('content'),me=currentUser,uid=me.id,p=profileOf(uid),st=STATUS_OPT[p.status||'available'];
+ const el=document.getElementById('content'),me=currentUser,uid=me.id,p=profileOf(uid),st=STATUS_OPT[statusKey(p)];
  if(!agSel)agSel=todayISO();
  const mon=mondayOf(agSel);
  const mods=MODULES.filter(canOpen);
@@ -3308,26 +3341,39 @@ function renderHome(){
   <div class="tbl-soft"><div class="ts-head"><span>ลูกค้า</span><span>วันที่</span><span>ช่องทาง</span><span>สถานะ</span></div>
    ${recent.map(l=>`<button class="ts-row" data-lead="${escH(l.id)}"><span class="ts-cust"><span class="av" style="width:30px;height:30px;--avc:var(--brand);font-size:12px"><span>${escH(String(l.name||'?').trim().slice(0,1))}</span></span>${escH(l.name||'-')}</span><span>${l.created?thDate(String(l.created).slice(0,10)):'-'}</span><span>${escH((SOURCE[l.source]||{}).l||'')}</span><span>${stagePill(l.stage)}</span></button>`).join('')}</div>`:''}
  </div>
- <aside class="home-side">
-  <div class="prof">
-   <button class="prof-av" id="profPhoto" title="เปลี่ยนรูปโปรไฟล์">${avatarHTML(uid,96)}<i style="background:${st.c}"></i><span class="prof-cam">${svg('camera')}</span></button>
-   <b>${escH(me.name)}</b><span>${ROLE_LABEL[role]||role}</span>
-   <label class="status-chip"><i style="background:${st.c}"></i><select id="profStatus">${Object.entries(STATUS_OPT).map(([k,o])=>`<option value="${k}"${(p.status||'available')===k?' selected':''}>${o.t}</option>`).join('')}</select></label>
-  </div>
-  <div class="ag-h"><h2>แผนงานของฉัน</h2><button class="pill-btn" data-go="agenda">ดูทั้งหมด</button></div>
-  <div class="week">${[0,1,2,3,4,5,6].map(i=>{const d=addDays(mon,i),n=agDay(uid,d).length;return `<button class="wd${d===agSel?' on':''}${d===todayISO()?' today':''}" data-ag-day="${d}"><span>${TH_DOW[i]}</span><b>${dOf(d).getDate()}</b>${n?'<i></i>':''}</button>`;}).join('')}</div>
-  <div class="ag-nav"><button data-ag-shift="-7" aria-label="สัปดาห์ก่อน">‹</button><span>${thDate(agSel)}</span><button data-ag-shift="7" aria-label="สัปดาห์ถัดไป">›</button></div>
-  <div class="tk-list">${agDay(uid,agSel).map(a=>taskCard(a)).join('')||'<p class="tk-empty">ยังไม่มีงานในวันนี้</p>'}
-   ${agWeekGoals(uid,mon).map(a=>taskCard(a)).join('')}</div>
-  <button class="pill-btn wide" id="agAdd">＋ เพิ่มงาน</button>
- </aside></div>`;
+ ${sidePanel(uid)}</div>`;
  el.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{view=b.dataset.go;search='';render();window.scrollTo(0,0);});
  el.querySelectorAll('[data-lead]').forEach(b=>b.onclick=()=>openLead(b.dataset.lead));
+ bindSide(el,uid);
+}
+/* profile card + weekly strip + day tasks — shared by Home and every KPI profile page */
+function sidePanel(uid,extra){
+ const me=accountByUid(uid)||currentUser,p=profileOf(uid),st=STATUS_OPT[statusKey(p)];
+ if(!agSel)agSel=todayISO();
+ const mon=mondayOf(agSel),own=uid===currentUser.id;
+ const auto=(extra&&extra(agSel))||'';
+ return `<aside class="home-side">
+  <div class="prof">
+   <button class="prof-av" id="profPhoto" title="เปลี่ยนรูปโปรไฟล์" ${own?'':'disabled'}>${avatarHTML(uid,96)}<i style="background:${st.c}"></i>${own?`<span class="prof-cam">${svg('camera')}</span>`:''}</button>
+   <b>${escH(me.name)}</b><span>${ROLE_LABEL[me.role]||me.role}</span>
+   <label class="status-chip"><i style="background:${st.c}"></i><select id="profStatus" ${own?'':'disabled'}>${Object.entries(STATUS_OPT).map(([k,o])=>`<option value="${k}"${statusKey(p)===k?' selected':''}>${o.t}</option>`).join('')}</select></label>
+  </div>
+  <div class="ag-h"><h2>ตารางงาน</h2><button class="pill-btn" data-go="agenda">ดูทั้งหมด</button></div>
+  <div class="week">${[0,1,2,3,4,5,6].map(i=>{const d=addDays(mon,i),n=agDay(uid,d).length;return `<button class="wd${d===agSel?' on':''}${d===todayISO()?' today':''}" data-ag-day="${d}"><span>${TH_DOW[i]}</span><b>${dOf(d).getDate()}</b>${n?'<i></i>':''}</button>`;}).join('')}</div>
+  <div class="ag-nav"><button data-ag-shift="-7" aria-label="สัปดาห์ก่อน">‹</button><span>${thDate(agSel)}</span><button data-ag-shift="7" aria-label="สัปดาห์ถัดไป">›</button></div>
+  <div class="tk-list">${agDay(uid,agSel).map(a=>taskCard(a,false,uid)).join('')||'<p class="tk-empty">ยังไม่มีงานในวันนี้</p>'}
+   ${agWeekGoals(uid,mon).map(a=>taskCard(a,false,uid)).join('')}${auto}</div>
+  ${own?'<button class="pill-btn wide" id="agAdd">＋ เพิ่มงาน</button>':''}
+ </aside>`;
+}
+function bindSide(el,uid){
+ el.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{view=b.dataset.go;search='';render();window.scrollTo(0,0);});
  el.querySelectorAll('[data-ag-day]').forEach(b=>b.onclick=()=>{agSel=b.dataset.agDay;render(false);});
  el.querySelectorAll('[data-ag-shift]').forEach(b=>b.onclick=()=>{agSel=addDays(agSel,+b.dataset.agShift);render(false);});
- el.querySelector('#profPhoto').onclick=()=>pickPhoto(uid);
- el.querySelector('#profStatus').onchange=e=>setStatus(uid,e.target.value);
- el.querySelector('#agAdd').onclick=()=>openTaskModal(uid,agSel);
+ el.querySelectorAll('[data-lead]').forEach(b=>b.onclick=()=>openLead(b.dataset.lead));
+ const ph=el.querySelector('#profPhoto');if(ph&&!ph.disabled)ph.onclick=()=>pickPhoto(uid);
+ const ps=el.querySelector('#profStatus');if(ps)ps.onchange=e=>setStatus(uid,e.target.value);
+ const add=el.querySelector('#agAdd');if(add)add.onclick=()=>openTaskModal(uid,agSel);
  bindTasks(el);
 }
 
@@ -3420,6 +3466,8 @@ function openDirEditor(u){
   <div class="field-row">${f('d-fb','Facebook',p.facebook,'text','ชื่อหรือลิงก์')}${f('d-ig','Instagram',p.instagram,'text','@username')}</div>
   <h3>การจ้างงาน</h3>
   <div class="field-row">${f('d-start','วันเริ่มทำงาน',p.startDate,'date')}${f('d-salary','ฐานเงินเดือน (บาท)',p.salary,'number')}</div>
+  <div class="field-row"><div class="field"><label for="d-team">ทีมช่าง (เฉพาะ Staff)</label><input id="d-team" list="d-teams" value="${escH(p.team||'')}" placeholder="เช่น ทีมช่าง A"><datalist id="d-teams">${[...new Set((state.installs||[]).map(i=>i.team).filter(t=>t&&t.length>1))].map(t=>`<option value="${escH(t)}"></option>`).join('')}</datalist></div>
+   <div class="field"><label for="d-hr">ผูกกับข้อมูล HR (ลา / สาย / เบิกล่วงหน้า)</label><select id="d-hr"><option value="">— ไม่ผูก —</option>${(state.employees||[]).map(e=>`<option value="${escH(e.id)}"${p.hrId===e.id?' selected':''}>${escH(e.id)} · ${escH(e.name||e.nick||'')}</option>`).join('')}</select></div></div>
   <div class="field"><label for="d-benefits">สวัสดิการ</label><textarea id="d-benefits" rows="3" placeholder="เช่น ประกันสังคม · ค่าโทรศัพท์ 500 · ค่าน้ำมันตามจริง">${escH(p.benefits||'')}</textarea></div>
   ${isNew?'<p class="dir-note">บันทึกพนักงานก่อน แล้วค่อยอัปโหลดรูปและเอกสาร</p>':`<h3>รูปภาพประจำตัว และเอกสาร</h3>
   <div class="dir-upl"><button class="pill-btn" id="d-photo">${svg('camera')} เปลี่ยนรูปประจำตัว</button></div>
@@ -3437,7 +3485,7 @@ function openDirEditor(u){
   err.hidden=true;e.currentTarget.disabled=true;
   try{
    const r=await vosApi('saveUser',{id:u.id||undefined,login:v('d-login'),password:body.querySelector('#d-pw').value,name:v('d-name'),short:v('d-short'),role:v('d-role'),active:v('d-active')==='1',
-    profile:{birth:v('d-birth'),phone:v('d-phone'),email:v('d-email'),address:v('d-address'),facebook:v('d-fb'),instagram:v('d-ig'),startDate:v('d-start'),salary:v('d-salary'),benefits:v('d-benefits')}});
+    profile:{birth:v('d-birth'),phone:v('d-phone'),email:v('d-email'),address:v('d-address'),facebook:v('d-fb'),instagram:v('d-ig'),startDate:v('d-start'),salary:v('d-salary'),benefits:v('d-benefits'),team:v('d-team'),hrId:v('d-hr')}});
    await loadDir();applyUsers(dirData.map(x=>x));
    if(isNew){openDirEditor(dirData.find(x=>x.id===r.id));}else close();
    renderStaffDir();
@@ -3456,6 +3504,150 @@ function openDirEditor(u){
    try{await vosApi('deleteDoc',{id:b.dataset.deldoc});await loadDir();openDirEditor(dirData.find(x=>x.id===u.id));renderStaffDir();}catch(x){fail(x.message||'ลบไม่สำเร็จ');}
   });
  }
+}
+
+/* ============ KPI = my profile page (Sales · PM · Staff · Admin · CEO), VANGARDE only ============ */
+let kpiMonth=null,kpiTeam=false,payPeriod='month';
+const WON_STAGES=['won','production','installing','done'];
+const WIP={quoted:{t:'ส่งใบเสนอราคาแล้ว',c:'#E5D9EE'},deposit:{t:'รับมัดจำงวดแรกแล้ว รอติดตั้ง',c:'#CCDCE7'},fix:{t:'รอแก้ไขงาน',c:'#F6C9C2'},collect:{t:'ติดตั้งสำเร็จ รอเก็บเงิน',c:'#F7DA7B'},complete:{t:'Work complete',c:'#D6EAD9'}};
+const ymOf=d=>String(d||'').slice(0,7);
+const qOf=d=>{const m=+String(d).slice(5,7);return String(d).slice(0,4)+'-Q'+(Math.floor((m-1)/3)+1);};
+const qLabel=q=>{const[y,n]=q.split('-Q');return 'Q'+n+'/'+(+y+543);};
+function last12(){const out=[],d=dOf(todayISO());d.setDate(1);for(let i=0;i<12;i++){out.push(ymdOf(d).slice(0,7));d.setMonth(d.getMonth()-1);}return out;}
+// a won deal counts on the day the first deposit came in (else the quote date)
+function dealDate(l){const q=quoteOfLead(l.id);if(!q)return '';const pi=payInfo(q.id),first=pi&&pi.sched&&pi.sched.find(s=>s.st==='paid'&&s.d);return first?first.d:(q.date||l.created||'');}
+const isWon=l=>{const q=quoteOfLead(l.id);return WON_STAGES.includes(l.stage)||(q&&q.status==='accepted');};
+function wipOf(l){
+ if(l.stage==='lost')return null;
+ const q=quoteOfLead(l.id);if(!q)return null;
+ const pi=payInfo(q.id)||{total:0,paid:0,sched:[]};
+ const ins=(state.installs||[]).find(i=>i.leadId===l.id);
+ const installed=(ins&&ins.status==='done')||l.stage==='done';
+ const fully=pi.total>0&&pi.paid>=pi.total-1;
+ const ticket=(state.tickets||[]).some(t=>t.leadId===l.id&&t.status!=='resolved');
+ const lastPaid=(pi.sched||[]).filter(s=>s.st==='paid'&&s.d).map(s=>s.d).sort().pop()||'';
+ let k=installed&&fully?'complete':ticket?'fix':installed?'collect':(pi.sched||[]).some(s=>s.st==='paid')?'deposit':'quoted';
+ return {k,q,pi,ins,lastPaid};
+}
+const myLeads=uid=>brandLeads().filter(l=>l.assignedTo===uid);
+const pmLeads=uid=>brandLeads().filter(l=>l.assignedTo===uid||l.pmId===uid);
+function salesBoxes(uid){
+ const m=kpiMonth,mine=myLeads(uid);
+ const qs=mine.map(l=>({l,q:quoteOfLead(l.id)})).filter(x=>x.q&&ymOf(x.q.date)===m);
+ const won=mine.filter(isWon),sumBy=f=>won.filter(l=>f(dealDate(l))).reduce((a,l)=>a+(dealTotal(l.id)||0),0);
+ const monthSales=sumBy(d=>ymOf(d)===m),q=qOf(m+'-01'),qSales=sumBy(d=>d&&qOf(d)===q);
+ return `<div class="kpi-sec"><div class="sec-h"><h2>ยอดขายของฉัน</h2><select id="kpiMonth" class="pill-sel" aria-label="เลือกเดือน">${last12().map(x=>`<option value="${x}"${x===m?' selected':''}>${thMonth(x)}</option>`).join('')}</select></div>
+  <div class="pastels four">
+   <div class="pastel" style="--pc:#F7DA7B"><span>ใบเสนอราคาเดือนนี้</span><b>${qs.length} ใบ</b><small>รวม ฿${money(qs.reduce((a,x)=>a+calcQuote(x.q).total,0))}</small></div>
+   <div class="pastel" style="--pc:#CCDCE7"><span>ยอดขาย ${thMonth(m)}</span><b>฿${money(monthSales)}</b><small>นับจากวันที่รับมัดจำ</small></div>
+   <div class="pastel" style="--pc:#E5D9EE"><span>ยอดขาย ${qLabel(q)}</span><b>฿${money(qSales)}</b><small>ไตรมาสของเดือนที่เลือก</small></div>
+   <div class="pastel" style="--pc:#D6EAD9"><span>Commission ${thMonth(m)}</span><b>—</b><small>รอกำหนดอัตรา · ฐาน ฿${money(monthSales)}</small></div>
+  </div></div>`;
+}
+function wipBox(leads,title){
+ const ms=todayISO().slice(0,7);
+ const rows=leads.map(l=>({l,w:wipOf(l)})).filter(x=>x.w&&(x.w.k!=='complete'||ymOf(x.w.lastPaid)===ms))
+  .sort((a,b)=>Object.keys(WIP).indexOf(a.w.k)-Object.keys(WIP).indexOf(b.w.k));
+ return `<div class="kpi-sec"><div class="sec-h"><h2>${title||'Work on Process'}</h2><span>${rows.length} งาน</span></div>
+  <div class="tbl-soft">${rows.length?`<div class="ts-head"><span>ลูกค้า</span><span>Quotation</span><span>ยอด</span><span>สถานะ</span></div>${rows.map(({l,w})=>`<button class="ts-row" data-lead="${escH(l.id)}"><span class="ts-cust">${escH(l.name||'-')}${l.pmId&&l.assignedTo!==currentUser.id?` <small class="mute">· ${escH((accountByUid(l.assignedTo)||{}).name||'')}</small>`:''}</span><span class="mono">${escH(w.q.id)}</span><span>฿${money(w.pi.total)}</span><span><span class="wip" style="--wc:${WIP[w.k].c}">${WIP[w.k].t}</span></span></button>`).join('')}`:'<p class="tk-empty" style="padding:16px">ยังไม่มีงานที่กำลังดำเนินการ</p>'}</div></div>`;
+}
+function newLeadBox(leads){
+ const L=leads.filter(l=>l.stage==='assigned'||l.stage==='new');
+ return `<div class="kpi-sec alert-box"><div class="sec-h"><h2>Lead ใหม่ รอติดต่อนัดหมาย</h2><span class="cnt">${L.length}</span></div>
+  ${L.length?L.map(l=>`<button class="mini-row" data-lead="${escH(l.id)}"><b>${escH(l.name)}</b><span>${escH(l.phone||'')} · ${escH((SOURCE[l.source]||{}).l||'')} · รับเมื่อ ${l.created?thDate(l.created):'-'}</span></button>`).join(''):'<p class="tk-empty">ไม่มี lead ค้าง 👍</p>'}</div>`;
+}
+function customerBox(leads){
+ const L=leads.filter(l=>l.stage!=='lost');
+ return `<div class="kpi-sec"><div class="sec-h"><h2>ลูกค้าสะสมทั้งหมด</h2><span>${L.length} ราย</span></div>
+  <div class="cust-grid">${L.map(l=>`<button class="mini-row" data-lead="${escH(l.id)}"><b>${escH(l.name)}</b><span>${escH(l.custCode||l.id)} · ${stagePill(l.stage)}</span></button>`).join('')||'<p class="tk-empty">ยังไม่มีลูกค้า</p>'}</div></div>`;
+}
+function staffBoxes(uid){
+ const me=accountByUid(uid)||{},team=(me.team||'').trim(),t0=todayISO(),t1=addDays(t0,1);
+ const mine=(state.installs||[]).filter(i=>(i.crew||[]).includes(uid)||(team&&i.team===team));
+ const day=d=>mine.filter(i=>i.scheduled===d);
+ const card=i=>{const l=leadById(i.leadId)||{};return `<button class="mini-row" data-lead="${escH(l.id||'')}"><b>${escH(l.name||'-')}</b><span>${escH(l.site||'')} · ${escH(i.team||'')} · ${i.status==='done'?'เสร็จแล้ว':'นัดแล้ว'}</span></button>`;};
+ const m=t0.slice(0,7),hr=me.hrId||'';
+ const att=(state.attendance||[]).filter(a=>hr&&a.empId===hr&&ymOf(a.date)===m);
+ const leave=att.filter(a=>/ลา/.test(a.type)).length,late=att.filter(a=>/สาย/.test(a.type)).length,absent=att.filter(a=>/ขาด/.test(a.type)).length;
+ const adv=(state.advances||[]).filter(a=>hr&&a.empId===hr&&!a.cleared);
+ const exp=expensesVisible().filter(e=>(e.createdBy===uid||e.by===uid)&&ymOf(e.date)===m);
+ return `<div class="kpi-sec"><div class="sec-h"><h2>งานติดตั้งของฉัน</h2><span>${team?escH(team):'ยังไม่ได้ระบุทีม'}</span></div>
+   <div class="two-col"><div><h3 class="sub">วันนี้ · ${thDate(t0)}</h3>${day(t0).map(card).join('')||'<p class="tk-empty">ไม่มีงานติดตั้ง</p>'}</div>
+   <div><h3 class="sub">พรุ่งนี้ · ${thDate(t1)}</h3>${day(t1).map(card).join('')||'<p class="tk-empty">ไม่มีงานติดตั้ง</p>'}</div></div></div>
+  <div class="kpi-sec"><div class="sec-h"><h2>สถานะ เบิก · ลา · สาย</h2><span>${thMonth(m)}</span></div>
+   <div class="pastels four">
+    <div class="pastel" style="--pc:#F7DA7B"><span>เบิกค่าใช้จ่าย</span><b>${exp.length} รายการ</b><small>฿${money(exp.reduce((a,e)=>a+(+e.amount||0),0))}</small></div>
+    <div class="pastel" style="--pc:#CCDCE7"><span>เบิกล่วงหน้า (ค้าง)</span><b>฿${money(adv.reduce((a,x)=>a+(+x.amount||0),0))}</b><small>${adv.length} รายการ</small></div>
+    <div class="pastel" style="--pc:#E5D9EE"><span>ลา</span><b>${leave} วัน</b><small>ขาด ${absent} วัน</small></div>
+    <div class="pastel" style="--pc:#F6C9C2"><span>มาสาย</span><b>${late} ครั้ง</b><small>${hr?'':'ยังไม่ผูกรหัส HR'}</small></div>
+   </div></div>`;
+}
+function adminBoxes(){
+ const L=brandLeads(),t=todayISO(),mon=mondayOf(t),m=t.slice(0,7),q=qOf(t);
+ const c=f=>L.filter(l=>l.created&&f(l.created)).length;
+ const pays=[];brandLeads().forEach(l=>{const qq=quoteOfLead(l.id);if(!qq)return;const pi=payInfo(qq.id);if(!pi)return;pi.sched.forEach((s,i)=>pays.push({l,q:qq,s,i,amt:pi.total*s.pct/100}));});
+ const inP=d=>d&&(payPeriod==='day'?d===t:payPeriod==='week'?d>=mon&&d<=addDays(mon,6):payPeriod==='month'?ymOf(d)===m:qOf(d)===q);
+ const got=pays.filter(p=>p.s.st==='paid'&&inP(p.s.d)),due=pays.filter(p=>p.s.st!=='paid');
+ const canPayEdit=canEditView('kpi')&&['ceo','admin'].includes(permRole());
+ return `<div class="kpi-sec"><div class="sec-h"><h2>Lead intake</h2><span>VANGARDE</span></div>
+  <div class="pastels four">
+   <div class="pastel" style="--pc:#F7DA7B"><span>วันนี้</span><b>${c(d=>d===t)}</b></div>
+   <div class="pastel" style="--pc:#CCDCE7"><span>สัปดาห์นี้</span><b>${c(d=>d>=mon&&d<=addDays(mon,6))}</b></div>
+   <div class="pastel" style="--pc:#E5D9EE"><span>${thMonth(m)}</span><b>${c(d=>ymOf(d)===m)}</b></div>
+   <div class="pastel" style="--pc:#D6EAD9"><span>${qLabel(q)}</span><b>${c(d=>qOf(d)===q)}</b></div></div></div>
+  <div class="kpi-sec"><div class="sec-h"><h2>เก็บยอดชำระลูกค้า</h2><div class="seg-soft">${[['day','วันนี้'],['week','สัปดาห์'],['month','เดือน'],['q','ไตรมาส']].map(([k,l])=>`<button data-pay-p="${k}" class="${payPeriod===k?'on':''}">${l}</button>`).join('')}</div></div>
+   <div class="pastels"><div class="pastel" style="--pc:#D6EAD9"><span>เก็บได้แล้ว</span><b>฿${money(got.reduce((a,p)=>a+p.amt,0))}</b><small>${got.length} งวด</small></div>
+    <div class="pastel" style="--pc:#F7DA7B"><span>ยังค้างชำระ (ทั้งหมด)</span><b>฿${money(due.reduce((a,p)=>a+p.amt,0))}</b><small>${due.length} งวด</small></div></div>
+   <div class="tbl-soft">${got.map(p=>`<button class="ts-row" data-lead="${escH(p.l.id)}"><span class="ts-cust">${escH(p.l.name)}</span><span class="mono">${escH(p.q.id)} · งวด ${p.s.n||p.i+1}</span><span>฿${money(p.amt)}</span><span class="wip" style="--wc:#D6EAD9">รับแล้ว ${thDate(p.s.d)}</span></button>`).join('')||'<p class="tk-empty" style="padding:14px">ยังไม่มีการรับชำระในช่วงนี้</p>'}</div>
+   <h3 class="sub">งวดที่รอเก็บ</h3>
+   <div class="tbl-soft">${due.map(p=>`<div class="ts-row"><span class="ts-cust">${escH(p.l.name)}</span><span class="mono">${escH(p.q.id)} · งวด ${p.s.n||p.i+1}</span><span>฿${money(p.amt)}</span><span>${canPayEdit?`<button class="pill-btn" data-paid="${escH(p.q.id)}|${p.i}">บันทึกรับชำระ</button>`:'<span class="wip" style="--wc:#F7DA7B">รอชำระ</span>'}</span></div>`).join('')||'<p class="tk-empty" style="padding:14px">ไม่มียอดค้าง</p>'}</div></div>`;
+}
+function ceoAuto(d){
+ // items the CEO has to act on that day (shown under the agenda)
+ const pend=brandLeads().map(l=>({l,q:quoteOfLead(l.id)})).filter(x=>x.q&&x.q.status==='pending');
+ const ins=(state.installs||[]).filter(i=>i.scheduled===d&&(leadById(i.leadId)||{}).brand===brand);
+ let h='';
+ if(d===todayISO()&&pend.length)h+=`<div class="auto-h">รออนุมัติใบเสนอราคา</div>`+pend.map(x=>`<button class="tk auto" data-lead="${escH(x.l.id)}"><span class="dot" style="background:#E8A33D"></span><div class="tk-main"><b>${escH(x.q.id)} · ${escH(x.l.name)}</b><span>฿${money(calcQuote(x.q).total)} · เซลล์ ${escH((accountByUid(x.l.assignedTo)||{}).name||'-')}</span></div></button>`).join('');
+ if(ins.length)h+=`<div class="auto-h">งานติดตั้งวันนี้</div>`+ins.map(i=>{const l=leadById(i.leadId)||{};return `<button class="tk auto" data-lead="${escH(l.id||'')}"><span class="dot" style="background:#4CAF6A"></span><div class="tk-main"><b>${escH(l.name||'-')}</b><span>${escH(i.team||'')} · ${escH(l.site||'')}</span></div></button>`;}).join('');
+ return h;
+}
+function ceoBoxes(){
+ const pend=brandLeads().map(l=>({l,q:quoteOfLead(l.id)})).filter(x=>x.q&&x.q.status==='pending');
+ const mon=mondayOf(todayISO()),wk=(state.installs||[]).filter(i=>i.scheduled>=mon&&i.scheduled<=addDays(mon,6)&&(leadById(i.leadId)||{}).brand===brand);
+ const shared=agAll().filter(a=>(a.with||[]).includes(currentUser.id)&&a.date>=mon&&a.date<=addDays(mon,6));
+ return `<div class="kpi-sec"><div class="sec-h"><h2>สัปดาห์นี้ของฉัน</h2><button class="pill-btn" id="kpiTeamBtn">ดู KPI ทีมขายทั้งหมด</button></div>
+  <div class="pastels four">
+   <div class="pastel" style="--pc:#F7DA7B"><span>ใบเสนอราคารอ approve</span><b>${pend.length}</b><small>฿${money(pend.reduce((a,x)=>a+calcQuote(x.q).total,0))}</small></div>
+   <div class="pastel" style="--pc:#CCDCE7"><span>นัดหน้างานกับเซลล์</span><b>${shared.length}</b><small>งานที่ทีมชวนไปด้วย</small></div>
+   <div class="pastel" style="--pc:#E5D9EE"><span>งานติดตั้งสัปดาห์นี้</span><b>${wk.length}</b></div>
+   <div class="pastel" style="--pc:#D6EAD9"><span>ยอดทำจ่าย (เบิก-จ่าย)</span><b>—</b><small>เชื่อมกับระบบเบิก-จ่ายใหม่ในขั้นถัดไป</small></div></div></div>
+  <div class="kpi-sec"><div class="sec-h"><h2>ใบเสนอราคาที่รอ approve</h2><span>${pend.length} ใบ</span></div>
+   <div class="tbl-soft">${pend.map(x=>`<button class="ts-row" data-lead="${escH(x.l.id)}"><span class="ts-cust">${escH(x.l.name)}</span><span class="mono">${escH(x.q.id)}</span><span>฿${money(calcQuote(x.q).total)}</span><span>${escH((accountByUid(x.l.assignedTo)||{}).name||'-')}</span></button>`).join('')||'<p class="tk-empty" style="padding:14px">ไม่มีใบเสนอราคารออนุมัติ</p>'}</div></div>
+  <div class="kpi-sec"><div class="sec-h"><h2>นัดหน้างาน / งานร่วมกับทีม สัปดาห์นี้</h2></div>
+   <div class="ag-col">${shared.sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)).map(a=>taskCard(a,true)).join('')||'<p class="tk-empty">ยังไม่มีนัดที่ทีมชวนไปด้วย · ให้เซลล์กด "+ เพิ่มงาน" แล้วติ๊กชื่อ CEO ในช่อง "ไปพร้อมกับ"</p>'}</div></div>`;
+}
+function renderMyKPI(){
+ const el=document.getElementById('content');
+ if(kpiTeam&&permRole()==='ceo'){renderKPI();el.insertAdjacentHTML('afterbegin','<button class="pill-btn" id="kpiBack" style="margin-bottom:14px">‹ กลับหน้า KPI ของฉัน</button>');el.querySelector('#kpiBack').onclick=()=>{kpiTeam=false;render(false);};return;}
+ if(!kpiMonth)kpiMonth=todayISO().slice(0,7);
+ const uid=currentUser.id,pr=permRole();
+ let main='';
+ if(pr==='sales')main=salesBoxes(uid)+newLeadBox(myLeads(uid))+wipBox(myLeads(uid))+customerBox(myLeads(uid));
+ else if(pr==='pm')main=salesBoxes(uid)+newLeadBox(pmLeads(uid))+wipBox(pmLeads(uid),'Work on Process · ของฉันและงานที่ดูแล')+customerBox(pmLeads(uid));
+ else if(pr==='staff')main=staffBoxes(uid);
+ else if(pr==='admin')main=adminBoxes();
+ else if(pr==='ceo')main=ceoBoxes()+adminBoxes();
+ else main='<div class="card" style="padding:20px">ยังไม่มีหน้า KPI สำหรับบทบาทนี้</div>';
+ el.innerHTML=`<div class="home"><div class="home-main"><div class="hello"><h1>KPI ของ ${escH(currentUser.name)}</h1><p>${ROLE_LABEL[role]||role} · VANGARDE · ข้อมูลเฉพาะของคุณ</p></div>${main}</div>${sidePanel(uid,pr==='ceo'?ceoAuto:null)}</div>`;
+ bindSide(el,uid);
+ const ms=el.querySelector('#kpiMonth');if(ms)ms.onchange=e=>{kpiMonth=e.target.value;render(false);};
+ el.querySelectorAll('[data-pay-p]').forEach(b=>b.onclick=()=>{payPeriod=b.dataset.payP;render(false);});
+ el.querySelectorAll('[data-paid]').forEach(b=>b.onclick=()=>{
+  const[qid,i]=b.dataset.paid.split('|'),q=quoteById(qid),l=q&&leadById(q.leadId);if(!q)return;
+  if(!state.payments[qid])state.payments[qid]=structuredClone(defSched(l&&l.brand));
+  const seg=state.payments[qid][+i];if(!seg||!confirm(`บันทึกว่าได้รับชำระ ${qid} งวด ${seg.n||+i+1} วันนี้?`))return;
+  seg.st='paid';seg.d=todayISO();logAudit('payment','รับชำระ '+qid+' งวด '+(seg.n||+i+1));save();render(false);});
+ const tb=el.querySelector('#kpiTeamBtn');if(tb)tb.onclick=()=>{kpiTeam=true;render(false);window.scrollTo(0,0);};
 }
 
 /* ============ CRM ============ */
@@ -3508,7 +3700,7 @@ function initChrome(){
   const r=await tryLogin(id,pw);
   if(r.ok){
    try{await window.__vosLoadState();}catch(x){}
-   logAudit('login','เข้าสู่ระบบ');brand=pendingBrand||brand;showApp();
+   logAudit('login','เข้าสู่ระบบ');brand=pendingBrand||brand;showApp();autoPresence('online');
   }else{err.textContent=r.msg;err.classList.add('show');}
   btn.disabled=false;
  };
@@ -3676,7 +3868,7 @@ function initChrome(){
     initChrome();
     restoreSession().then(function (ok) {
       if (!ok) { showLogin(); return; }
-      return window.__vosLoadState().then(function () { showApp(); });
+      return window.__vosLoadState().then(function () { showApp(); autoPresence('online'); });
     });
     // auto-retry the sync when the connection returns, and periodically
     window.addEventListener('online', function () { tryFlush(); });
