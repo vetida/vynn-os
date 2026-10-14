@@ -509,6 +509,15 @@
   .dir-card{display:flex;align-items:center;gap:12px;text-align:left;border:0;background:var(--surface);border-radius:18px;padding:14px;box-shadow:var(--shadow);cursor:pointer;font:inherit;color:inherit}
   .dir-card:hover{box-shadow:0 10px 26px rgba(16,24,40,.09)}
   .dir-card.off{opacity:.55}
+  .dir-item{display:flex;flex-direction:column;background:var(--surface);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+  .dir-item .dir-card{box-shadow:none;border-radius:0;flex:1}
+  .dir-acts{display:flex;border-top:1px solid var(--border)}
+  .dir-acts button{flex:1;border:0;background:none;padding:9px;font:inherit;font-size:13px;color:var(--text-muted);cursor:pointer}
+  .dir-acts button+button{border-left:1px solid var(--border)}
+  .dir-acts button:hover{background:var(--surface-2,rgba(0,0,0,.04));color:var(--text)}
+  .dir-acts .danger:hover{color:var(--bad,#c33)}
+  .btn.danger-btn{background:#C2412D;color:#fff;border-color:#C2412D}
+  .btn.danger-btn:disabled{opacity:.45;cursor:not-allowed}
   .dir-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
   .dir-main b{font-size:14.5px}
   .dir-main span{font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -3575,14 +3584,37 @@ function renderStaffDir(){
  if(!dirData){el.innerHTML='<div class="card" style="padding:24px;color:var(--text-muted)">กำลังโหลดรายชื่อพนักงาน…</div>';loadDir().then(()=>{if(view==='staffdir')renderStaffDir();});return;}
  if(dirData.error){el.innerHTML=`<div class="card" style="padding:24px">${escH(dirData.error)} <button class="pill-btn" id="dirRetry">ลองใหม่</button></div>`;el.querySelector('#dirRetry').onclick=()=>{dirData=null;renderStaffDir();};return;}
  const q=dirQ.trim().toLowerCase();
- const list=dirData.filter(u=>!q||[u.name,u.login,(u.profile||{}).phone,(u.profile||{}).email].join(' ').toLowerCase().includes(q));
+const list=dirData.filter(u=>!(u.profile||{}).deleted).filter(u=>!q||[u.name,u.login,(u.profile||{}).phone,(u.profile||{}).email].join(' ').toLowerCase().includes(q));
  el.innerHTML=`<div class="dir">
   <div class="dir-top"><input id="dirSearch" class="crm-search" type="search" placeholder="ค้นหาชื่อ username เบอร์ หรืออีเมล" value="${escH(dirQ)}"><button class="btn primary" id="dirAdd">＋ เพิ่มพนักงาน</button></div>
   <p class="dir-note">${svg('shield','ico')} ข้อมูลหน้านี้ (เอกสาร เงินเดือน รหัสผ่าน) เก็บบนเซิร์ฟเวอร์ และเปิดได้เฉพาะ CEO</p>
-  <div class="dir-grid">${list.map(u=>{const p=u.profile||{};return `<button class="dir-card${u.active?'':' off'}" data-uid="${escH(u.id)}">${avatarHTML(u.id,52)}<span class="dir-main"><b>${escH(u.name)}</b><span>${escH(ROLE_LABEL[u.role]||u.role)} · <code>${escH(u.login)}</code></span><span>${escH(p.phone||'ยังไม่มีเบอร์')}${u.active?'':' · ปิดใช้งาน'}</span></span><span class="dir-docs">${['idcard','house'].map(k=>`<i class="${(u.docs||[]).some(d=>d.kind===k)?'ok':''}" title="${DOC_LABEL[k]}">${k==='idcard'?'บัตร':'ทบ.'}</i>`).join('')}</span></button>`;}).join('')||'<p style="color:var(--text-muted)">ไม่พบพนักงาน</p>'}</div></div>`;
+  <div class="dir-grid">${list.map(u=>{const p=u.profile||{};return `<div class="dir-item"><button class="dir-card${u.active?'':' off'}" data-uid="${escH(u.id)}">${avatarHTML(u.id,52)}<span class="dir-main"><b>${escH(u.name)}</b><span>${escH(ROLE_LABEL[u.role]||u.role)} · <code>${escH(u.login)}</code></span><span>${escH(p.phone||'ยังไม่มีเบอร์')}${u.active?'':' · ปิดใช้งาน'}</span></span><span class="dir-docs">${['idcard','house'].map(k=>`<i class="${(u.docs||[]).some(d=>d.kind===k)?'ok':''}" title="${DOC_LABEL[k]}">${k==='idcard'?'บัตร':'ทบ.'}</i>`).join('')}</span></button><div class="dir-acts"><button data-dedit="${escH(u.id)}">✎ แก้ไข</button>${u.id===(viewAs?viewAs.user:currentUser).id?'':`<button class="danger" data-ddel="${escH(u.id)}">🗑 ลบ</button>`}</div></div>`;}).join('')||'<p style="color:var(--text-muted)">ไม่พบพนักงาน</p>'}</div></div>`;
  el.querySelector('#dirSearch').oninput=e=>{dirQ=e.target.value;const pos=e.target.selectionStart;renderStaffDir();const s=document.getElementById('dirSearch');s.focus();s.setSelectionRange(pos,pos);};
  el.querySelector('#dirAdd').onclick=()=>openDirEditor(null);
  el.querySelectorAll('[data-uid]').forEach(b=>b.onclick=()=>openDirEditor(dirData.find(u=>u.id===b.dataset.uid)));
+ el.querySelectorAll('[data-dedit]').forEach(b=>b.onclick=()=>openDirEditor(dirData.find(u=>u.id===b.dataset.dedit)));
+ el.querySelectorAll('[data-ddel]').forEach(b=>b.onclick=()=>confirmDeleteUser(dirData.find(u=>u.id===b.dataset.ddel)));
+}
+function confirmDeleteUser(u){
+ if(!u)return;
+ const m=document.getElementById('modal'),sc=document.getElementById('scrim');
+ m.innerHTML=`<div class="bk-card"><h3 style="margin-bottom:8px">ลบ ${escH(u.name)} ออกจากรายชื่อ?</h3>
+  <p style="margin:0 0 10px;color:var(--text-muted);font-size:13.5px;line-height:1.6">ระบบจะลบ username รหัสผ่าน ข้อมูลส่วนตัว เงินเดือน เอกสาร (บัตรประชาชน / ทะเบียนบ้าน) และลายเซ็นของคนนี้ทั้งหมด และล็อกอินไม่ได้อีก<br>ชื่อจะยังแสดงในประวัติงานเก่า (ลีด ใบเสนอราคา) เพื่อให้รู้ว่าใครเป็นคนทำ</p>
+  <p style="margin:0 0 14px;font-size:13px;color:var(--bad,#c33)"><b>ลบแล้วกู้คืนไม่ได้</b> — ถ้าแค่ลาออกชั่วคราว ให้ใช้ "ปิดใช้งาน" ในหน้าแก้ไขแทน</p>
+  <div class="field"><label for="delConfirm">พิมพ์ชื่อ <b>${escH(u.name)}</b> เพื่อยืนยัน</label><input id="delConfirm" autocomplete="off"></div>
+  <p class="dir-err" id="delErr" hidden></p>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px"><button class="btn" id="delNo">ยกเลิก</button><button class="btn danger-btn" id="delYes" disabled>ลบถาวร</button></div></div>`;
+ const close=()=>{m.classList.remove('open');sc.classList.remove('open');};
+ const inp=m.querySelector('#delConfirm'),yes=m.querySelector('#delYes'),er=m.querySelector('#delErr');
+ inp.oninput=()=>{yes.disabled=inp.value.trim()!==u.name.trim();};
+ m.querySelector('#delNo').onclick=close;
+ yes.onclick=async()=>{
+  yes.disabled=true;er.hidden=true;
+  try{await vosApi('deleteUser',{id:u.id});logAudit('deleteUser','ลบพนักงาน '+u.name+' ออกจากรายชื่อ');await loadDir();applyUsers(dirData.map(x=>x));close();
+   document.getElementById('drawer').classList.remove('open');renderStaffDir();}
+  catch(x){er.textContent=x.message||'ลบไม่สำเร็จ';er.hidden=false;yes.disabled=false;}
+ };
+ m.classList.add('open');sc.classList.add('open');setTimeout(()=>inp.focus(),30);
 }
 function openDirEditor(u){
  const isNew=!u;u=u||{id:'',login:'',name:'',short:'',role:'installer',active:true,profile:{},docs:[]};
@@ -3609,13 +3641,14 @@ function openDirEditor(u){
   <div class="dir-upl"><button class="pill-btn" id="d-photo">${svg('camera')} เปลี่ยนรูปประจำตัว</button></div>
   ${['idcard','house','other'].map(k=>`<div class="dir-doc"><b>${DOC_LABEL[k]}</b><div>${(u.docs||[]).filter(d=>d.kind===k).map(d=>`<span class="doc-chip"><a href="/api/auth?a=doc&id=${encodeURIComponent(d.id)}" target="_blank" rel="noopener">${escH(d.name||DOC_LABEL[k])}</a><button data-deldoc="${escH(d.id)}" aria-label="ลบเอกสาร">✕</button></span>`).join('')||'<span class="doc-none">ยังไม่มี</span>'}</div><label class="pill-btn">＋ อัปโหลด<input type="file" accept="image/*,application/pdf" data-updoc="${k}" hidden></label></div>`).join('')}`}
   <p class="dir-err" id="d-err" hidden></p>
-  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px"><button class="btn" id="d-cancel">ปิด</button><button class="btn primary" id="d-save">บันทึก</button></div></div>`;
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">${isNew||u.id===(viewAs?viewAs.user:currentUser).id?"":`<button class="btn danger-btn" id="d-del" style="margin-right:auto">🗑 ลบพนักงาน</button>`}<button class="btn" id="d-cancel">ปิด</button><button class="btn primary" id="d-save">บันทึก</button></div></div>`;
  const dr=document.getElementById('drawer'),sc=document.getElementById('scrim');
  const close=()=>{dr.classList.remove('open');sc.classList.remove('open');};
  dr.classList.add('open');sc.classList.add('open');
  const v=id=>body.querySelector('#'+id).value.trim(),err=body.querySelector('#d-err');
  const fail=m=>{err.textContent=m;err.hidden=false;};
  head.querySelector('#dirClose').onclick=close;body.querySelector('#d-cancel').onclick=close;
+ const dl=body.querySelector('#d-del');if(dl)dl.onclick=()=>confirmDeleteUser(u);
  body.querySelector('#d-pw-eye').onclick=e=>{const i=body.querySelector('#d-pw'),s=i.type==='password';i.type=s?'text':'password';e.currentTarget.setAttribute('aria-pressed',String(s));};
  body.querySelector('#d-save').onclick=async e=>{
   err.hidden=true;e.currentTarget.disabled=true;

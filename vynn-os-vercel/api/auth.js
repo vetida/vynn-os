@@ -82,7 +82,7 @@ A.saveUser = async (req, res, me, b) => {
     return { ok: true, id };
   }
   const u = (await pool.query('SELECT * FROM vos_users WHERE id=$1', [String(b.id)])).rows[0];
-  need(u, 404, 'ไม่พบพนักงาน');
+  need(u && !(u.profile || {}).deleted, 404, 'ไม่พบพนักงาน');
   const active = b.active === undefined ? u.active : !!b.active;
   need(!(u.id === me.id && (!active || role !== 'admin')), 400, 'ปิดใช้งานหรือลดสิทธิ์บัญชีตัวเองไม่ได้');
   await pool.query('UPDATE vos_users SET login=$2,name=$3,short=$4,color=$5,role=$6,active=$7,profile=$8,updated_at=now() WHERE id=$1',
@@ -108,6 +108,24 @@ A.uploadDoc = async (req, res, me, b) => {
 A.deleteDoc = async (req, res, me, b) => {
   need(V.isCEO(me), 403, 'เฉพาะ CEO');
   await pool.query("DELETE FROM vos_docs WHERE id=$1 AND kind<>'signature'", [String(b.id || '')]);
+  return { ok: true };
+};
+
+// "delete" an employee: the row stays only as a name so old leads / quotes / audit still show who did what;
+// login is freed, every personal field, document, signature and session is erased, and the account can never log in again.
+A.deleteUser = async (req, res, me, b) => {
+  need(V.isCEO(me), 403, 'เฉพาะ CEO');
+  const u = (await pool.query('SELECT * FROM vos_users WHERE id=$1', [String(b.id || '')])).rows[0];
+  need(u && !(u.profile || {}).deleted, 404, 'ไม่พบพนักงาน');
+  need(u.id !== me.id, 400, 'ลบบัญชีของตัวเองไม่ได้');
+  if (u.role === 'admin') {
+    const n = (await pool.query("SELECT count(*)::int n FROM vos_users WHERE role='admin' AND active AND id<>$1", [u.id])).rows[0].n;
+    need(n > 0, 400, 'ต้องมี CEO ที่ใช้งานได้อย่างน้อย 1 คน');
+  }
+  await pool.query('DELETE FROM vos_sessions WHERE user_id=$1', [u.id]);
+  await pool.query('DELETE FROM vos_docs WHERE user_id=$1', [u.id]);
+  await pool.query("UPDATE vos_users SET login=$2, active=false, pw_hash='!', profile=$3, fail_count=0, locked_until=NULL, updated_at=now() WHERE id=$1",
+    [u.id, 'deleted.' + u.id, { deleted: true, deletedAt: new Date().toISOString(), deletedBy: me.id }]);
   return { ok: true };
 };
 

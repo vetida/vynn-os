@@ -96,6 +96,6 @@ async function sessionUser(req) {
 }
 const isCEO = u => !!u && u.role === 'admin';
 // what every logged-in user may know about a colleague (names for lists, colours, roles)
-const lite = u => ({ id: u.id, login: u.login, name: u.name, short: u.short || '', color: u.color || '', role: u.role, active: u.active, team: (u.profile || {}).team || '', hrId: (u.profile || {}).hrId || '', sig: (u.profile || {}).sigAt || '' });
+const lite = u => ({ id: u.id, login: u.login, name: u.name, short: u.short || '', color: u.color || '', role: u.role, active: u.active, team: (u.profile || {}).team || '', hrId: (u.profile || {}).hrId || '', sig: (u.profile || {}).sigAt || '', deleted: !!(u.profile || {}).deleted });
 
 module.exports = { pool, ensureVos, hashPassword, checkPassword, sha256, cookies, setCookie, createSession, sessionUser, isCEO, lite, COOKIE };
