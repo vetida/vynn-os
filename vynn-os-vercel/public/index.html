@@ -560,6 +560,17 @@
   #viewAsBar{position:fixed;top:0;left:0;right:0;z-index:9000;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:7px 14px;background:#F7DA7B;color:#2B2B2B;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
   #viewAsBar button{background:#111;color:#fff;border:0;border-radius:999px;padding:5px 14px;font:inherit;font-size:12.5px;cursor:pointer}
   body.viewas{padding-top:40px}
+  .kit-box{border:1px solid var(--border);border-radius:12px;padding:6px 12px;background:var(--surface)}
+  .kit-row{display:grid;grid-template-columns:minmax(0,1fr) auto 64px 74px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--border);font-size:13px}
+  .kit-row .kn{min-width:0}
+  .kit-row .kn select{width:100%}
+  .kit-row .kp{text-align:right;white-space:nowrap;color:var(--text-muted)}
+  .kit-row .kq{width:64px;padding:6px}
+  .kq-fix{text-align:center;color:var(--text-muted)}
+  .kb{display:inline-block;text-align:center;border-radius:999px;padding:3px 8px;font-size:11.5px;background:#5B6B82;color:#fff;white-space:nowrap}
+  .kb.on{background:#E8526B}
+  .kit-sum{padding:8px 0 4px;text-align:right;font-size:13px}
+  @media (max-width:560px){.kit-row{grid-template-columns:minmax(0,1fr) 56px 70px}.kit-row .kp{grid-column:1;text-align:left;font-size:12px}.kit-row .kn{grid-column:1/-1}}
   .cam-src{display:none !important}
   .cam-row{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 4px}
   .cam-row .btn{flex:1;min-width:120px;justify-content:center}
@@ -1318,6 +1329,7 @@ function matPrice(mat,wM,extM){
 function curtainFam(t){t=t||'';const fold=t.includes('พับ');const pleat=t.includes('จีบ');
  return {fold,pleat,tolP:fold?0.35:(pleat?0.35:0.25),tolQ:fold?0.20:(pleat?0.35:0.25)};}
 function calcPoint(pt,mode){
+ if(pt.kind==='vangarde'&&pt.kit&&!pt._kitDone)return applyKit(pt,calcPoint(stripKit(pt),mode));
  const p=P();
  if(pt.amt!=null){const o=pt.aOpaque||0,s=pt.aSheer||0,t=pt.aTrack||0;const sum=o+s+t;const sell=sum||pt.amt;return {kind:pt.kind||'curtain',imported:true,sell,cost:pt.cost||0,inst:0,meters:0,widths:0,layers:[],sellOpaque:sum?o:sell,sellSheer:s,sellTrack:t,code1:pt.code1||'',code2:pt.code2||'',order:[{t:pt.prodLabel||'รายการนำเข้า',code:pt.code1||'',q:pt.qty+' '+(pt.kind==='curtain'?'ชุด':'รายการ')}]};}
  if(pt.kind==='curtain'){
@@ -1575,8 +1587,8 @@ function addQuoteOption(leadId){
  state.payments[nid]=defSched((leadById(leadId)||{}).brand);
  save();openReviseModal(nid);
 }
-function newPoint(kind){const p=P();return kind==='vangarde'?{kind:'vangarde',room:'',w:0,h:0,d:0,vgExtend:150,vgGrade:'poly',vgPriceSqm:0,vgDisc:{install:true,motor:true,sensor:true},detail:'',vgProduct:'',vgSeries:'',frameColor:'',fabricCode:'',systems:{},accessories:{},install:{},track:'normal',qty:1,note:'',photos:[]}:kind==='blind'?{kind:'blind',room:'',w:0,h:0,blindType:p.blinds[0].type,track:'normal',motorModel:p.motors[0].model,openSide:'',slanted:false,slantNote:'',qty:1,note:'',photos:[]}:{kind:'curtain',room:'',w:0,h:0,curtainType:CURTAIN_TYPES[0],fabrics:[{layer:'ทึบ',code:'',w:140,price:0,cost:0,priceSqm:0,costSqm:0},{layer:'โปร่ง',code:'',w:150,price:0,cost:0,priceSqm:0,costSqm:0},{layer:'ซับใน',code:'',w:150,price:0,cost:0,priceSqm:0,costSqm:0}],track:'normal',hooks:'ตะขอมาตรฐาน',motorModel:p.motors[0].model,motorSide:'ขวา',openSide:'',mountType:'ชิดฝ้า',mountAboveCm:0,sideAllowCm:2,slanted:false,slantNote:'',qty:1,note:'',photos:[]};}
-function migratePoint(pt){if(typeof pt.photos==='number')pt.photos=ph(pt.photos);pt.photos=pt.photos||[];pt.note=pt.note||'';pt.qty=pt.qty||1;pt.track=pt.track||'normal';if(pt.kind==='vangarde'){pt.vgProduct=VANGARDE_PRODUCTS.includes(pt.vgProduct)?pt.vgProduct:'';if(pt.d===undefined)pt.d=0;if(pt.vgExtend===undefined)pt.vgExtend=150;if(pt.vgGrade===undefined)pt.vgGrade='poly';if(pt.vgPriceSqm===undefined)pt.vgPriceSqm=0;if(!pt.vgDisc)pt.vgDisc={install:true,motor:true,sensor:true};if(pt.frameColor===undefined)pt.frameColor=pt.frameCode?({'FR-BK':'ดำด้าน','FR-WH':'ขาว','FR-GY':'เทา','FR-BR':'น้ำตาลไม้','FR-CH':'แชมเปญ'}[pt.frameCode]||''):'';pt.fabricCode=pt.fabricCode||'';pt.detail=pt.detail||'';pt.systems=pt.systems||{};pt.accessories=pt.accessories||{};pt.install=pt.install||{};pt.track=vgHasMotor(pt)?'motor':(pt.track||'normal');}if(pt.kind==='blind'){pt.openSide=pt.openSide||'';pt.slanted=pt.slanted||false;pt.slantNote=pt.slantNote||'';}if(pt.kind==='curtain'){pt.openSide=pt.openSide||'';pt.slantNote=pt.slantNote||'';if(pt.fabricBlackout===undefined&&!pt.fabrics){const code=pt.fabricCode||'';if(code){if(isSheer(code)){pt.fabricSheer=code;pt.fabricBlackout='';}else{pt.fabricBlackout=code;pt.fabricSheer='';}}else{pt.fabricBlackout='';pt.fabricSheer='';}pt.fabricLining='';}if(!pt.fabrics){const mk=(layer,code)=>{const f=code?findFabric(code):null;return {layer,code:code||'',w:f?f.widthCm:140,price:f?f.price:0,cost:f?f.cost:0,priceSqm:0,costSqm:0};};pt.fabrics=[mk('ทึบ',pt.fabricBlackout),mk('โปร่ง',pt.fabricSheer),mk('ซับใน',pt.fabricLining)];}(pt.fabrics||[]).forEach(fl=>{if(fl.priceSqm===undefined)fl.priceSqm=0;if(fl.costSqm===undefined)fl.costSqm=0;});pt.curtainType=(pt.curtainType&&CURTAIN_TYPES.includes(pt.curtainType))?pt.curtainType:CURTAIN_TYPES[1];pt.motorModel=pt.motorModel||pt.motor||P().motors[0].model;pt.motorSide=pt.motorSide||'ขวา';pt.mountType=pt.mountType||'ชิดฝ้า';if(pt.mountAboveCm===undefined)pt.mountAboveCm=0;if(pt.sideAllowCm===undefined)pt.sideAllowCm=2;pt.slanted=pt.slanted||false;pt.hooks=pt.hooks||'ตะขอมาตรฐาน';}}
+function newPoint(kind){const p=P();return kind==='vangarde'?{kind:'vangarde',room:'',w:0,h:0,d:0,vgExtend:150,vgGrade:'poly',vgPriceSqm:0,vgDisc:{install:true,motor:true,sensor:true},detail:'',vgProduct:'',vgSeries:'',frameColor:'',fabricCode:'',systems:{},accessories:{},install:{},kit:{brand:''},track:'normal',qty:1,note:'',photos:[]}:kind==='blind'?{kind:'blind',room:'',w:0,h:0,blindType:p.blinds[0].type,track:'normal',motorModel:p.motors[0].model,openSide:'',slanted:false,slantNote:'',qty:1,note:'',photos:[]}:{kind:'curtain',room:'',w:0,h:0,curtainType:CURTAIN_TYPES[0],fabrics:[{layer:'ทึบ',code:'',w:140,price:0,cost:0,priceSqm:0,costSqm:0},{layer:'โปร่ง',code:'',w:150,price:0,cost:0,priceSqm:0,costSqm:0},{layer:'ซับใน',code:'',w:150,price:0,cost:0,priceSqm:0,costSqm:0}],track:'normal',hooks:'ตะขอมาตรฐาน',motorModel:p.motors[0].model,motorSide:'ขวา',openSide:'',mountType:'ชิดฝ้า',mountAboveCm:0,sideAllowCm:2,slanted:false,slantNote:'',qty:1,note:'',photos:[]};}
+function migratePoint(pt){if(typeof pt.photos==='number')pt.photos=ph(pt.photos);pt.photos=pt.photos||[];pt.note=pt.note||'';pt.qty=pt.qty||1;pt.track=pt.track||'normal';if(pt.kind==='vangarde'){pt.vgProduct=VANGARDE_PRODUCTS.includes(pt.vgProduct)?pt.vgProduct:'';if(!pt.kit)pt.kit=kitFromLegacy(pt);if(pt.d===undefined)pt.d=0;if(pt.vgExtend===undefined)pt.vgExtend=150;if(pt.vgGrade===undefined)pt.vgGrade='poly';if(pt.vgPriceSqm===undefined)pt.vgPriceSqm=0;if(!pt.vgDisc)pt.vgDisc={install:true,motor:true,sensor:true};if(pt.frameColor===undefined)pt.frameColor=pt.frameCode?({'FR-BK':'ดำด้าน','FR-WH':'ขาว','FR-GY':'เทา','FR-BR':'น้ำตาลไม้','FR-CH':'แชมเปญ'}[pt.frameCode]||''):'';pt.fabricCode=pt.fabricCode||'';pt.detail=pt.detail||'';pt.systems=pt.systems||{};pt.accessories=pt.accessories||{};pt.install=pt.install||{};pt.track=vgHasMotor(pt)?'motor':(pt.track||'normal');}if(pt.kind==='blind'){pt.openSide=pt.openSide||'';pt.slanted=pt.slanted||false;pt.slantNote=pt.slantNote||'';}if(pt.kind==='curtain'){pt.openSide=pt.openSide||'';pt.slantNote=pt.slantNote||'';if(pt.fabricBlackout===undefined&&!pt.fabrics){const code=pt.fabricCode||'';if(code){if(isSheer(code)){pt.fabricSheer=code;pt.fabricBlackout='';}else{pt.fabricBlackout=code;pt.fabricSheer='';}}else{pt.fabricBlackout='';pt.fabricSheer='';}pt.fabricLining='';}if(!pt.fabrics){const mk=(layer,code)=>{const f=code?findFabric(code):null;return {layer,code:code||'',w:f?f.widthCm:140,price:f?f.price:0,cost:f?f.cost:0,priceSqm:0,costSqm:0};};pt.fabrics=[mk('ทึบ',pt.fabricBlackout),mk('โปร่ง',pt.fabricSheer),mk('ซับใน',pt.fabricLining)];}(pt.fabrics||[]).forEach(fl=>{if(fl.priceSqm===undefined)fl.priceSqm=0;if(fl.costSqm===undefined)fl.costSqm=0;});pt.curtainType=(pt.curtainType&&CURTAIN_TYPES.includes(pt.curtainType))?pt.curtainType:CURTAIN_TYPES[1];pt.motorModel=pt.motorModel||pt.motor||P().motors[0].model;pt.motorSide=pt.motorSide||'ขวา';pt.mountType=pt.mountType||'ชิดฝ้า';if(pt.mountAboveCm===undefined)pt.mountAboveCm=0;if(pt.sideAllowCm===undefined)pt.sideAllowCm=2;pt.slanted=pt.slanted||false;pt.hooks=pt.hooks||'ตะขอมาตรฐาน';}}
 
 /* ============ PAYMENTS ============ */
 // งวดชำระเริ่มต้น: Vangarde = 70/30 (2 งวด), VYNN = 50/30/20 (3 งวด)
@@ -2181,11 +2193,13 @@ function renderSurveyEditor(){
  const bB=ov.querySelector('#addBlind');if(bB)bB.onclick=()=>{pts.push(newPoint('blind'));renderSurveyEditor();};
  const bV=ov.querySelector('#addVg');if(bV)bV.onclick=()=>{pts.push(newPoint('vangarde'));renderSurveyEditor();};
  ov.querySelectorAll('[data-f]').forEach(el=>{const i=+el.dataset.i,f=el.dataset.f;el.onchange=()=>{const v=el.type==='checkbox'?el.checked:(el.type==='number'?+el.value:el.value);pts[i][f]=v;
+   if(pts[i].kind==='vangarde'&&f==='vgProduct'&&pts[i].kit&&pts[i].kit.brand&&!kitBrands(v).some(([b])=>b===pts[i].kit.brand)){pts[i].kit.brand='vangarde';pts[i].kit.remote='v1';syncKit(pts[i]);}
    // VG: auto-suggest the right series when size or product changes
    if(pts[i].kind==='vangarde'&&(f==='w'||f==='h'||f==='d'||f==='vgProduct')&&(pts[i].vgProduct==='Pergola'||pts[i].vgProduct==='Zip Shade')){const s=vgSuggestSeries(pts[i].vgProduct,(pts[i].w||0)/100,(pts[i].d||0)/100,(pts[i].h||0)/100);if(s)pts[i].vgSeries=s;}
    // Zip Shade: เปลี่ยนรุ่น (หรือขนาด/สินค้าที่ทำให้รุ่นเปลี่ยน) → เติมราคา/ตร.ม. ตามราคารุ่นที่เลือกอัตโนมัติ
    if(pts[i].kind==='vangarde'&&pts[i].vgProduct==='Zip Shade'&&(f==='vgSeries'||f==='w'||f==='h'||f==='d'||f==='vgProduct')){const zr=((state.vgPricing||defaultVgPricing()).zipshade||[]).find(x=>x.series===pts[i].vgSeries);if(zr)pts[i].vgPriceSqm=zr.priceSqm;}
    if(f==='track'||f==='mountType'||f==='curtainType'||f==='vgProduct'||f==='vgSeries'||f==='vgExtend'||f==='vgGrade'||f==='somfyRemote'||f==='w'||f==='h'||f==='d'||f==='qty')renderSurveyEditor();};});
+ ov.querySelectorAll('[data-kit]').forEach(el=>{const i=+el.dataset.i,k=el.dataset.kit;el.onchange=()=>{const pt=pts[i];pt.kit=pt.kit||{};const v=el.type==='checkbox'?el.checked:el.type==='number'?Math.max(0,+el.value||0):el.value;pt.kit[k]=v;if(k==='brand'){pt.kit.remote=v?VG_KIT[v].remotes[0].c:'';delete pt.kit.remoteQty;if(v==='somfy')pt.kit.sensor=0;}syncKit(pt);renderSurveyEditor();};});
  ov.querySelectorAll('[data-fg]').forEach(el=>{const i=+el.dataset.i,fg=el.dataset.fg,fk=el.dataset.fk;el.onchange=()=>{pts[i][fg]=pts[i][fg]||{};pts[i][fg][fk]=el.checked;if(fg==='systems')pts[i].track=vgHasMotor(pts[i])?'motor':'normal';renderSurveyEditor();};});
  ov.querySelectorAll('[data-fl]').forEach(el=>{const i=+el.dataset.i,li=+el.dataset.fl,f=el.dataset.flf;el.onchange=()=>{if(pts[i].fabrics&&pts[i].fabrics[li])pts[i].fabrics[li][f]=el.type==='number'?+el.value:el.value;if(f==='code'||f==='w'||f==='price')renderSurveyEditor();};});
  // per-point fabric options (alt): label + curtainType
@@ -2264,12 +2278,11 @@ function ptCard(pt,i,fabOpt,sel){
    <div class="field col2"><label>รายละเอียดเพิ่มเติม</label><input data-i="${i}" data-f="detail" value="${pt.detail||''}" placeholder="เช่น ขวา10 cm / ติดซ้าย10 ขวา10"></div>
    ${frameSel}
    ${fabSel}
-   <div class="pt-sec">Systems (ระบบ + มอเตอร์)</div>
-   <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('systems',VG_SYSTEMS,pt.systems,cfg.systems)}</div></div>
-   ${(pt.systems&&pt.systems.somfy)?`<div class="field col2"><label>รีโมท Somfy (RTS)</label><select data-i="${i}" data-f="somfyRemote"><option value="">— เลือกรุ่นรีโมท —</option>${(vgp.somfyRemotes||[]).map(r=>`<option value="${r.code}" ${pt.somfyRemote===r.code?'selected':''}>${r.label} — ${THB(r.price)}</option>`).join('')}</select></div>
-   <div class="field col2"><label>Gateway (Somfy)</label><label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;margin-top:8px"><input type="checkbox" data-i="${i}" data-fg="accessories" data-fk="tahoma" ${pt.accessories&&pt.accessories.tahoma?'checked':''}> Tahoma Beacon — ${THB((vgp.zip&&vgp.zip.tahoma)||10700)}</label></div>`:''}
-   <div class="pt-sec">Accessories</div>
-   <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('accessories',VG_ACCESSORIES,pt.accessories,cfg.accessories)}</div></div>
+   ${kitPanelHTML(pt,i)}
+   <div class="pt-sec">ระบบ / ฝั่งมอเตอร์</div>
+   <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('systems',VG_SYSTEMS,pt.systems,cfg.systems.filter(k=>!['somfy','vangardeMotor','remote1ch','remote15ch','handcrankHybrid'].includes(k)))}</div></div>
+   <div class="pt-sec">อุปกรณ์อื่น (LED / ฉากกันน้ำ)</div>
+   <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('accessories',VG_ACCESSORIES,pt.accessories,cfg.accessories.filter(k=>!['rainSensor','shakeSensor','handcrankHybrid'].includes(k)))}</div></div>
    <div class="pt-sec">การติดตั้ง</div>
    <div class="field col4"><div style="display:flex;flex-wrap:wrap">${cbGroup('install',VG_INSTALL,pt.install,cfg.install)}</div></div>
    <div class="field col4"><label>หมายเหตุ</label><input data-i="${i}" data-f="note" value="${pt.note||''}"></div>
@@ -4006,6 +4019,89 @@ function enhancePhotoInputs(root){
  });
 }
 new MutationObserver(()=>enhancePhotoInputs()).observe(document.documentElement,{childList:true,subtree:true});
+
+/* ============ VANGARDE MOTOR KIT (owner's promotion chart, Oct 2026) ============
+   Pick a motor → only the remotes / sensors / gateways that belong to that motor + product show up.
+   pt.kit = {brand:''|'vangarde'|'hybrid'|'somfy', remote, remoteQty, sensor, gateway, vib}
+   Motor + remote + vibration sensor count per unit (× จำนวนจุด); sensors / gateways are counted per point. */
+const VG_KIT={
+ somfy:{motor:{n:'มอเตอร์ Somfy Altus 50 10/32 RTS',price:19800,disc:50},
+  remotes:[{c:'s1',n:'รีโมท Somfy 1 ช่อง',price:2900},{c:'s2',n:'รีโมท Somfy 2 ช่อง',price:3700},{c:'s5',n:'รีโมท Somfy 5 ช่อง',price:5800},{c:'s15',n:'รีโมท Somfy 15 ช่อง',price:11500}],remoteDisc:50,
+  gateway:{n:'กล่อง TaHoma by Somfy (WiFi 2.4 GHz)',price:13800,disc:0}},
+ vangarde:{motor:{n:'มอเตอร์ Vangarde',price:9900,disc:100},
+  remotes:[{c:'v1',n:'รีโมท Vangarde 1 ช่อง',price:1200},{c:'v15',n:'รีโมท Vangarde 15 ช่อง',price:1200}],remoteDisc:100},
+ hybrid:{motor:{n:'มอเตอร์ Vangarde Hybrid (ไม่ใช้ไฟ ≤4×3 ม.)',price:14000,disc:100},
+  remotes:[{c:'v1',n:'รีโมท Vangarde 1 ช่อง',price:1200},{c:'v15',n:'รีโมท Vangarde 15 ช่อง',price:1200}],remoteDisc:100},
+};
+// product → accessory group from the chart
+function vgGroup(prod){return prod==='Zip Shade'||prod==='Outdoor Roller'?'zip':prod==='Pergola'?'pergola':(prod==='Awning'||prod==='Retractable')?'arm':'roof';}
+function kitBrands(prod){const g=vgGroup(prod),b=[['vangarde','Vangarde']];if(prod==='Zip Shade')b.push(['hybrid','Vangarde Hybrid'],['somfy','Somfy']);return b;}
+function kitSensor(g){return {n:g==='roof'||g==='arm'?'Rain Sensor / Wind Sensor':'Rain Sensor',price:6000,disc:0};}
+function kitGateway(brand,g){return brand==='somfy'?VG_KIT.somfy.gateway:g==='zip'?{n:'กล่อง Tuya Module',price:2000,disc:0}:{n:'กล่อง Tuya RF Gateway',price:4000,disc:0};}
+function kitLines(pt){
+ const k=pt.kit||{},B=VG_KIT[k.brand];if(!B||!pt.vgProduct)return [];
+ const g=vgGroup(pt.vgProduct),q=pt.qty||1,promo=!pt.vgDisc||pt.vgDisc.motor!==false,L=[];
+ const rem=B.remotes.find(r=>r.c===k.remote)||B.remotes[0];
+ L.push({n:B.motor.n,u:B.motor.price,qty:q,d:promo?B.motor.disc:0,kind:'motor'});
+ const rq=k.remoteQty===undefined||k.remoteQty===''?q:+k.remoteQty;
+ if(rq>0)L.push({n:rem.n,u:rem.price,qty:rq,d:promo?B.remoteDisc:0,kind:'remote'});
+ if(k.brand!=='somfy'&&+k.sensor>0){const s=kitSensor(g);L.push({n:s.n,u:s.price,qty:+k.sensor,d:0,kind:'sensor'});}
+ if(+k.gateway>0){const gw=kitGateway(k.brand,g);L.push({n:gw.n,u:gw.price,qty:+k.gateway,d:0,kind:'gateway'});}
+ if(k.brand!=='somfy'&&g==='arm'&&k.vib!==false)L.push({n:'Vibration Sensor ระบบกันสั่น',u:3000,qty:q,d:100,kind:'vib'});
+ return L;
+}
+function kitTotals(pt){const L=kitLines(pt);const list=L.reduce((a,x)=>a+x.u*x.qty,0),disc=L.reduce((a,x)=>a+Math.round(x.u*x.qty*x.d/100),0);return {L,list,disc,net:list-disc};}
+// keep the old system/accessory flags in step so work orders & sheets still show motor / sensors
+function syncKit(pt){
+ const k=pt.kit||{};pt.systems=pt.systems||{};pt.accessories=pt.accessories||{};
+ pt.systems.somfy=k.brand==='somfy';pt.systems.vangardeMotor=k.brand==='vangarde'||k.brand==='hybrid';pt.accessories.handcrankHybrid=k.brand==='hybrid';
+ pt.systems.remote1ch=!!k.brand&&/1$/.test(k.remote||'v1');pt.systems.remote15ch=!!k.brand&&/15$/.test(k.remote||'');
+ pt.accessories.rainSensor=!!k.brand&&+k.sensor>0;pt.accessories.tahoma=k.brand==='somfy'&&+k.gateway>0;
+ pt.accessories.shakeSensor=!!k.brand&&k.brand!=='somfy'&&vgGroup(pt.vgProduct)==='arm'&&k.vib!==false;
+ pt.track=k.brand?'motor':'normal';
+}
+function kitFromLegacy(pt){
+ const s=pt.systems||{},a=pt.accessories||{};
+ const brand=s.somfy?'somfy':a.handcrankHybrid?'hybrid':s.vangardeMotor?'vangarde':'';
+ const sm={situo1:'s1',situo2:'s2',situo5:'s5',situo16:'s15'};
+ return {brand,remote:brand==='somfy'?(sm[pt.somfyRemote]||'s1'):(s.remote15ch?'v15':'v1'),remoteQty:(s.remote1ch||s.remote15ch||pt.somfyRemote||!brand)?undefined:0,
+  sensor:a.rainSensor?1:0,gateway:a.tahoma?1:0,vib:a.shakeSensor!==false};
+}
+// price the point without the old motor/sensor flags, then add the kit lines on top
+function stripKit(pt){const s=Object.assign({},pt.systems||{}),a=Object.assign({},pt.accessories||{});['somfy','vangardeMotor','remote1ch','remote15ch'].forEach(x=>delete s[x]);['rainSensor','shakeSensor','tahoma','handcrankHybrid'].forEach(x=>delete a[x]);return Object.assign({},pt,{systems:s,accessories:a,somfyRemote:'',_kitDone:true});}
+function applyKit(pt,r){
+ const t=kitTotals(pt);if(!t.L.length)return r;
+ const vg=state.vgPricing||defaultVgPricing(),tier=(vg.tiers&&vg.tiers.dealer)||0.7;
+ const out=Object.assign({},r);
+ out.sell=(r.sell||0)+t.net;out.cost=(r.cost||0)+Math.round(t.list*tier);
+ out.listTotal=(r.listTotal||r.sell||0)+t.list;out.discTotal=(r.discTotal||0)+t.disc;
+ out.sellTrack=(r.sellTrack||0)+t.list;
+ out.breakdown=[...t.L.map(x=>[x.n+(x.qty>1?' × '+x.qty:''),x.u*x.qty]),...(r.breakdown||[])];
+ const dl=(r.discountLines||[]).slice(),grp={};
+ t.L.filter(x=>x.d).forEach(x=>{const key=x.kind==='vib'?'แถมฟรี Vibration Sensor':x.d===100?'ส่วนลดมอเตอร์+รีโมท ฟรี 100%':'ส่วนลดมอเตอร์+รีโมท '+x.d+'%';grp[key]=(grp[key]||0)+Math.round(x.u*x.qty*x.d/100);});
+ Object.entries(grp).forEach(([k,v])=>dl.push([k,v]));out.discountLines=dl;
+ out.order=[...(r.order||[]),...t.L.map(x=>({t:x.n,code:'',q:x.qty+(x.kind==='motor'?' ชุด':' ตัว')}))];
+ return out;
+}
+function kitPanelHTML(pt,i){
+ const k=pt.kit||{},g=vgGroup(pt.vgProduct),B=VG_KIT[k.brand],badge=d=>d===100?'<span class="kb on">ลด 100%</span>':d?`<span class="kb on">ลด ${d}%</span>`:'<span class="kb">ไม่ลด</span>';
+ const promo=!pt.vgDisc||pt.vgDisc.motor!==false;
+ const brandSel=`<div class="field col2"><label>มอเตอร์</label><select data-i="${i}" data-kit="brand"><option value="">— ไม่ใช้มอเตอร์ (มือหมุน / สปริง) —</option>${kitBrands(pt.vgProduct).map(([v,l])=>`<option value="${v}" ${k.brand===v?'selected':''}>${l} — ${THB(VG_KIT[v].motor.price)}</option>`).join('')}</select></div>`;
+ if(!B)return `<div class="pt-sec">มอเตอร์ & อุปกรณ์เสริม</div>${brandSel}<div class="field col2"><div class="mini-note" style="margin-top:26px">เลือกมอเตอร์แล้ว รีโมท เซนเซอร์ และกล่องควบคุมที่ใช้กับรุ่นนั้นจะขึ้นให้เลือก</div></div>`;
+ const t=kitTotals(pt),q=pt.qty||1,rq=k.remoteQty===undefined||k.remoteQty===''?q:k.remoteQty;
+ const row=(name,price,ctl,d)=>`<div class="kit-row"><span class="kn">${name}</span><span class="kp">${THB(price)}</span>${ctl}${badge(promo?d:0)}</div>`;
+ const num=(key,val,min)=>`<input type="number" min="${min||0}" class="kq" data-i="${i}" data-kit="${key}" value="${val}" aria-label="จำนวน">`;
+ const sens=kitSensor(g),gw=kitGateway(k.brand,g);
+ return `<div class="pt-sec">มอเตอร์ & อุปกรณ์เสริม</div>${brandSel}
+  <div class="field col4"><div class="kit-box">
+   ${row(B.motor.n,B.motor.price,`<span class="kq-fix">× ${q}</span>`,B.motor.disc)}
+   <div class="kit-row"><span class="kn"><select data-i="${i}" data-kit="remote">${B.remotes.map(r=>`<option value="${r.c}" ${(k.remote||B.remotes[0].c)===r.c?'selected':''}>${r.n} — ${THB(r.price)}</option>`).join('')}</select></span><span class="kp"></span>${num('remoteQty',rq)}${badge(promo?B.remoteDisc:0)}</div>
+   ${k.brand!=='somfy'?row(sens.n+' <small>/ตัว</small>',sens.price,num('sensor',+k.sensor||0),0):''}
+   ${row(gw.n+' <small>/ตัว</small>',gw.price,num('gateway',+k.gateway||0),0)}
+   ${k.brand!=='somfy'&&g==='arm'?`<div class="kit-row"><label class="kn"><input type="checkbox" data-i="${i}" data-kit="vib" ${k.vib!==false?'checked':''}> Vibration Sensor ระบบกันสั่น</label><span class="kp">${THB(3000)}</span><span class="kq-fix">× ${q}</span><span class="kb on">แถมฟรี</span></div>`:''}
+   <div class="kit-sum">ราคาเต็ม ${THB(t.list)} · ส่วนลด ${THB(t.disc)} · <b>สุทธิ ${THB(t.net)}</b></div>
+  </div></div>`;
+}
 
 /* ============ QUOTE REVISIONS: mark the FINAL one the customer agreed to ============ */
 document.addEventListener('change',e=>{
