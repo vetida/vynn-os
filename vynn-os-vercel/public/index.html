@@ -542,6 +542,11 @@
   .ro-banner{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-left:4px solid #E0A23A;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:13px}
   .ro-banner .ico{width:18px;height:18px;flex-shrink:0;color:#E0A23A}
   body.ro #content .btn.primary,body.ro #topAction{display:none!important}
+  .va-pick{display:flex;flex-direction:column;gap:4px;margin:8px 0 2px;font-size:11px;color:var(--text-faint)}
+  .va-pick select{width:100%;padding:7px 9px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit;font-size:13px}
+  #viewAsBar{position:fixed;top:0;left:0;right:0;z-index:9000;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:7px 14px;background:#F7DA7B;color:#2B2B2B;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  #viewAsBar button{background:#111;color:#fff;border:0;border-radius:999px;padding:5px 14px;font:inherit;font-size:12.5px;cursor:pointer}
+  body.viewas{padding-top:40px}
   .ro-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#2B3341;color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;z-index:9999;box-shadow:0 10px 24px rgba(0,0,0,.25)}
   /* CRM */
   .crm-head{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
@@ -570,6 +575,7 @@
     <nav class="nav" id="nav"></nav>
     <div class="side-foot">
       <div id="userChip"></div>
+      <div id="viewAsBox"></div>
       <button class="logout-btn" id="logoutBtn">ออกจากระบบ</button>
       <button class="theme-toggle" id="themeToggle"><span id="themeLabel">โหมดสว่าง</span><span id="themeIcon"></span></button>
       <div id="dataTools" style="display:flex;flex-direction:column;gap:5px;margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
@@ -949,6 +955,7 @@ function firstAllowedView(){return 'home';}
 function myScopeId(){return currentUser&&currentUser.role==='sales'?currentUser.id:'';}
 /* ---- server login (2026-10): passwords are checked and stored only on the server (/api/auth) ---- */
 async function vosApi(a,body){
+ if(typeof viewAs!=='undefined'&&viewAs&&!['me','verify','dir'].includes(a))throw{code:'viewas',message:'อยู่ในโหมดดูแทน (View as) — กด "กลับเป็น CEO" ก่อน'};
  let r;try{r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(Object.assign({a},body||{}))});}
  catch(e){throw{code:'offline',message:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่'};}
  const j=await r.json().catch(()=>({}));
@@ -969,7 +976,7 @@ async function tryLogin(loginId,pw){
 }
 async function vosVerify(pw){try{return (await vosApi('verify',{password:pw})).ok===true;}catch(e){return false;}}
 function setSession(uid){currentUser=accountByUid(uid);role=currentUser.role;try{localStorage.setItem(SESS,uid);}catch(e){}}
-function logout(){if(state&&window.__vosStateReady){autoPresence('offline');logAudit('logout','ออกจากระบบ');}vosApi('logout').catch(()=>{});currentUser=null;window.__vosStateReady=false;try{localStorage.removeItem(SESS);}catch(e){}pendingBrand=null;showLogin();}
+function logout(){if(viewAs)stopViewAs();if(state&&window.__vosStateReady){autoPresence('offline');logAudit('logout','ออกจากระบบ');}vosApi('logout').catch(()=>{});currentUser=null;window.__vosStateReady=false;try{localStorage.removeItem(SESS);}catch(e){}pendingBrand=null;showLogin();}
 async function restoreSession(){try{const r=await vosApi('me');applyUsers(r.users);setSession(r.me.id);return true;}catch(e){return false;}}
 // apply the active brand: scope + theme + sidebar/topbar labels
 // brand logo image (Settings → company logo; falls back to the built-in VANGARDE logo)
@@ -1021,7 +1028,7 @@ function migrateState(){
  {const nv=(state.accounts||[]).find(a=>a.id==='acc-novat');if(nv&&!nv.bank){nv.legalName=nv.legalName||'เวทิดา ยิ้มถนอม';nv.bank='ธ.กสิกรไทย เลขที่ 035-320-4475 (เวทิดา ยิ้มถนอม)';}}
 }
 function load(){try{const r=localStorage.getItem(LS);if(r){state=JSON.parse(r);}}catch(e){}if(!state)state=seed();migrateState();}
-function save(){if(typeof roBlocked==='function'&&roBlocked())return;try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}if(window.__serverSaveDebounced)window.__serverSaveDebounced();}
+function save(){if(typeof viewAsBlocked==='function'&&viewAsBlocked())return;if(typeof roBlocked==='function'&&roBlocked())return;try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}if(window.__serverSaveDebounced)window.__serverSaveDebounced();}
 function resetData(){state=seed();migrateState();save();render();}
 function emptyState(){const s=seed();s.leads=[];s.surveys=[];s.quotes=[];s.fabricOrders=[];s.sewing=[];s.chinaLots=[];s.installs=[];s.tickets=[];s.payments={};s.monthly=s.monthly.map(m=>({m:m.m,v:0}));s.attendance=[];s.advances=[];s.payroll={};s.travelClaims=[];s.expenses=[];return s;}
 function startEmpty(){state=emptyState();migrateState();save();render();}
@@ -3216,7 +3223,8 @@ function render(rerenderNav=true){
  if(meta.act&&canEditView('leads')){tb.style.display='inline-flex';tb.onclick=openAddLead;}else tb.style.display='none';
  if(rerenderNav)renderNav();
  const ro=isRO();
- const dt=document.getElementById('dataTools');if(dt)dt.style.display=permRole()==='ceo'?'flex':'none'; // backup / restore / reset: CEO only
+const vb=document.getElementById('viewAsBox');if(vb){vb.innerHTML=viewAsPicker();const vs=vb.querySelector('#viewAsSel');if(vs)vs.onchange=e=>startViewAs(e.target.value);}viewAsBanner();
+ const dt=document.getElementById('dataTools');if(dt)dt.style.display=(permRole()==='ceo'&&!viewAs)?'flex':'none'; // backup / restore / reset: CEO only
  document.body.classList.toggle('ro',ro);
  roSnap=ro?roStrip(state):null;
  renderView();
@@ -3249,6 +3257,48 @@ function roBlocked(){
  return true;
 }
 
+
+/* ============ VIEW AS (CEO only) ============
+   The CEO can open the app exactly as any employee sees it (menu, permissions, KPI page, home).
+   Nothing is saved while viewing: every save() is rolled back to the snapshot taken on entry,
+   and server actions (signature, password…) are refused so nothing happens under the CEO's session. */
+let viewAs=null; // {user, role, snap, view} = the real CEO session while previewing someone else
+const DEPT_ORDER=[['admin','CEO'],['sales_support','Admin'],['manager','PM'],['sales','Sales'],['installer','Staff · ทีมช่าง'],['hr','Staff'],['accounting','Accounts']];
+function realIsCEO(){return viewAs?true:!!currentUser&&role==='admin';}
+function startViewAs(uid){
+ const who=accountByUid(uid);if(!who||!realIsCEO())return;
+ if(!viewAs)viewAs={user:currentUser,role,snap:JSON.stringify(state),view};
+ else state=JSON.parse(viewAs.snap);
+ if(who.id===viewAs.user.id){stopViewAs();return;}
+ currentUser=who;role=who.role;view='home';search='';
+ render();window.scrollTo(0,0);
+}
+function stopViewAs(){
+ if(!viewAs)return;
+ state=JSON.parse(viewAs.snap);currentUser=viewAs.user;role=viewAs.role;const v=viewAs.view;viewAs=null;
+ view=v||'home';render();window.scrollTo(0,0);
+}
+function viewAsBlocked(){
+ if(!viewAs)return false;
+ state=JSON.parse(viewAs.snap);
+ const t=document.createElement('div');t.className='ro-toast';t.textContent='👁 โหมดดูแทน · ไม่ได้บันทึกการแก้ไข';document.body.appendChild(t);setTimeout(()=>t.remove(),2600);
+ setTimeout(()=>{document.querySelectorAll('.modal-card.open,.drawer.open,.scrim.open,#modal.open').forEach(e=>e.classList.remove('open'));render(false);},0);
+ return true;
+}
+function viewAsPicker(){
+ if(!realIsCEO())return '';
+ const ppl=ACCOUNTS.filter(a=>!a.inactive);
+ const groups=DEPT_ORDER.map(([r,t])=>{const l=ppl.filter(a=>a.role===r);return l.length?`<optgroup label="${t}">${l.map(a=>`<option value="${a.id}"${currentUser&&currentUser.id===a.id?' selected':''}>${escH(a.name)}${viewAs&&a.id===viewAs.user.id?' (ตัวเอง)':''}</option>`).join('')}</optgroup>`:'';}).join('');
+ return `<label class="va-pick"><span>👁 ดูมุมมองเป็น</span><select id="viewAsSel">${groups}</select></label>`;
+}
+function viewAsBanner(){
+ let b=document.getElementById('viewAsBar');
+ if(!viewAs){if(b)b.remove();document.body.classList.remove('viewas');return;}
+ if(!b){b=document.createElement('div');b.id='viewAsBar';document.body.appendChild(b);}
+ document.body.classList.add('viewas');
+ b.innerHTML=`<span>👁 กำลังดูในมุมมองของ <b>${escH(currentUser.name)}</b> · ${ROLE_LABEL[role]||role} — ทดลองกดได้ แต่ระบบไม่บันทึก</span><button id="viewAsExit">กลับเป็น CEO</button>`;
+ b.querySelector('#viewAsExit').onclick=stopViewAs;
+}
 /* ============ HOME (Mindease-style dashboard) ============ */
 const MOD_INFO={
  overview:{t:'Dashboard',s:'ภาพรวมยอดขาย งานค้าง และเงินเข้า',ic:'chart'},
@@ -3612,6 +3662,7 @@ function expAuto(d){
 }
 function renderExpenseApp(){
  const el=document.getElementById('content');
+ if(viewAs){el.innerHTML=`<div class="card" style="padding:22px;max-width:620px"><h3 style="margin:0 0 8px">เบิก-จ่าย · โหมดดูแทน</h3><p style="margin:0;color:var(--text-muted);line-height:1.6">หน้าเบิก-จ่ายเชื่อมกับบัญชีที่ล็อกอินจริงบนเซิร์ฟเวอร์ จึงแสดงแทนคนอื่นไม่ได้<br>สิ่งที่ <b>${escH(currentUser.name)}</b> เห็นคือ ${['admin','sales_support','accounting'].includes(role)?'รายการเบิกของทุกคน พร้อมอนุมัติ / เครดิต / ปฏิเสธ และทำจ่าย':'เฉพาะรายการเบิกของตัวเอง กรอกเบิกใหม่ และเช็กว่าทำจ่ายแล้วหรือยัง'}</p></div>`;return;}
  if(expLegacy){renderExpenses();el.insertAdjacentHTML('afterbegin','<button class="pill-btn" id="expBack" style="margin-bottom:12px">‹ กลับระบบเบิก-จ่ายใหม่</button>');el.querySelector('#expBack').onclick=()=>{expLegacy=false;render(false);};return;}
  el.innerHTML=`<div class="exp-wrap"><iframe class="exp-frame" src="/expense/" title="เบิก-จ่าย VANGARDE"></iframe>
   ${permRole()==='ceo'?'<button class="pill-btn" id="expOld">ดูรายการเบิกแบบเดิม (ข้อมูลเก่าที่เก็บในเครื่องนี้)</button>':''}</div>`;
