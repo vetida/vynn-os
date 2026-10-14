@@ -4,7 +4,7 @@
 const V = require('../lib/vos');
 const { pool } = V;
 
-const ROLES = ['admin', 'sales_support', 'manager', 'sales', 'installer', 'hr', 'accounting'];
+const ROLES = ['admin', 'sales_support', 'manager', 'sales', 'online_sales', 'installer', 'hr', 'accounting'];
 const DOC_KINDS = ['idcard', 'house', 'other'];
 const DOC_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 const PROFILE_FIELDS = ['birth', 'phone', 'email', 'address', 'facebook', 'instagram', 'startDate', 'salary', 'benefits', 'note', 'team', 'hrId'];

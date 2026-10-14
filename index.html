@@ -556,6 +556,15 @@
   #viewAsBar{position:fixed;top:0;left:0;right:0;z-index:9000;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:7px 14px;background:#F7DA7B;color:#2B2B2B;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
   #viewAsBar button{background:#111;color:#fff;border:0;border-radius:999px;padding:5px 14px;font:inherit;font-size:12.5px;cursor:pointer}
   body.viewas{padding-top:40px}
+  .jr{display:flex;gap:3px;margin-top:6px}
+  .jr i{flex:1;height:6px;border-radius:3px;background:var(--border,#ddd)}
+  .jr i.on{background:#3E8E5A}
+  .jr.big i{height:10px}
+  .jr-t{display:block;margin-top:4px;font-size:11.5px;color:var(--text-muted)}
+  .jr-list{display:grid;gap:8px}
+  .jr-list .mini-row{display:block;text-align:left}
+  .ch-bars{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .ch-bars span{background:var(--surface);border-radius:999px;padding:5px 11px;font-size:12.5px;box-shadow:var(--shadow)}
   .ro-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#2B3341;color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;z-index:9999;box-shadow:0 10px 24px rgba(0,0,0,.25)}
   /* CRM */
   .crm-head{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
@@ -719,7 +728,10 @@ const STAGES=['new','assigned','surveyed','quoted','approved','won','production'
 const SL={new:'ลีดใหม่',assigned:'มอบหมายแล้ว',surveyed:'วัดหน้างานแล้ว',quoted:'เสนอราคาแล้ว',approved:'อนุมัติแล้ว',won:'ปิดการขาย',production:'กำลังผลิต',installing:'รอ/นัดติดตั้ง',done:'จบงาน',lost:'เสียโอกาส'};
 const SP={new:'info',assigned:'accent',surveyed:'warn',quoted:'warn',approved:'accent',won:'good',production:'info',installing:'accent',done:'good',lost:'crit'};
 const isActiveStage=s=>!['done','lost'].includes(s);
-const TK_TYPE={punch:{l:'งานเก็บ',c:'warn',i:'wrench'},warranty:{l:'เคลมประกัน',c:'info',i:'shield'}};
+const TK_TYPE={punch:{l:'งานเก็บ',c:'warn',i:'wrench'},warranty:{l:'เคลมสินค้า / ประกัน',c:'info',i:'shield'},complaint:{l:'ร้องเรียน',c:'crit',i:'shield'},inquiry:{l:'สอบถามข้อมูล',c:'neutral',i:'msg'}};
+const TK_CH={line:'LINE OA',fb:'Facebook',ig:'Instagram',tiktok:'TikTok',phone:'โทรศัพท์',walkin:'หน้าร้าน / หน้างาน',other:'อื่นๆ'};
+// staff (ทีมช่าง) only see tickets sent to them; everyone else with access sees all
+function serviceTickets(){return (state.tickets||[]).filter(t=>{const l=leadById(t.leadId);if(brand!=='all'&&!(l&&l.brand===brand))return false;return permRole()!=='staff'||t.assignee===(currentUser&&currentUser.id);});}
 const TK_STATUS={open:{l:'เปิด (รอดำเนินการ)',c:'crit'},progress:{l:'กำลังแก้ไข',c:'warn'},scheduled:{l:'นัดเข้าเก็บงาน',c:'info'},resolved:{l:'ปิดงานแล้ว',c:'good'}};
 const TK_ISSUE={site:'หน้างานมีปัญหา',product:'สินค้ามีปัญหา',other:'อื่นๆ'};
 const CURTAIN_TYPES=['ม่านลอน','ม่านจีบใต้ราง','ม่านจีบบังราง','ม่านตาไก่','ม่านลอนรางโซ่','ม่านพับ'];
@@ -946,14 +958,15 @@ const SESS='vynn_os_session';
 const SESSB='vynn_os_brand';
 // VANGARDE launcher (2026-10): the existing login roles map onto the owner's six departments,
 // and each department gets View (V) or View+Edit (E) per module, from the owner's two access tables.
-const PERM_ROLE={admin:'ceo',sales_support:'admin',manager:'pm',sales:'sales',installer:'staff',hr:'staff',accounting:'accounts'};
-const MODULES=['overview','leads','expenses','install','survey','crm','vgprice','quote','kpi','staffdir'];
+const PERM_ROLE={admin:'ceo',sales_support:'admin',manager:'pm',sales:'sales',online_sales:'online',installer:'staff',hr:'staff',accounting:'accounts'};
+const MODULES=['overview','leads','expenses','install','survey','crm','vgprice','quote','service','kpi','staffdir'];
 const PERMS={
- ceo:     {overview:'E',leads:'E',expenses:'E',install:'E',survey:'E',crm:'E',vgprice:'E',quote:'E',kpi:'E',staffdir:'E'},
- admin:   {leads:'E',expenses:'E',install:'E',survey:'V',crm:'E',vgprice:'E',quote:'E',kpi:'E'},
- pm:      {leads:'E',expenses:'E',install:'E',survey:'E',crm:'V',vgprice:'V',kpi:'E'},
+ ceo:     {overview:'E',leads:'E',expenses:'E',install:'E',survey:'E',crm:'E',vgprice:'E',quote:'E',service:'E',kpi:'E',staffdir:'E'},
+ admin:   {leads:'E',expenses:'E',install:'E',survey:'V',crm:'E',vgprice:'E',quote:'E',service:'E',kpi:'E'},
+ pm:      {leads:'E',expenses:'E',install:'E',survey:'E',crm:'V',vgprice:'V',service:'E',kpi:'E'},
+ online:  {leads:'E',expenses:'E',install:'V',survey:'V',crm:'V',vgprice:'V',quote:'E',service:'E',kpi:'E'},  // เซลล์ออนไลน์: quotes/money only for own leads (onlineBy)
  sales:   {leads:'V',expenses:'E',install:'V',survey:'E',vgprice:'V',quote:'V',kpi:'E'},
- staff:   {expenses:'E',install:'V',survey:'V',kpi:'E'},
+ staff:   {expenses:'E',install:'V',survey:'V',service:'V',kpi:'E'},
  accounts:{overview:'V',expenses:'E',quote:'V'},
 };
 const permRole=()=>PERM_ROLE[role]||'staff';
@@ -1006,8 +1019,8 @@ function logAudit(action,detail){
  state.audit=state.audit.filter(e=>new Date(e.ts).getTime()>=cut).slice(-600);
  save();
 }
-const ROLE_LABEL={admin:'CEO',manager:'PM',sales_support:'Admin',sales:'Sales',hr:'Staff',accounting:'Accounts',installer:'Staff'};
-const ROLE_COLOR={admin:'#7A4FB5',manager:'#B77504',sales_support:'#0E7C86',sales:'#0F6E68',hr:'#2C6BB3',accounting:'#0E7C86',installer:'#C0392B'};
+const ROLE_LABEL={admin:'CEO',manager:'PM',sales_support:'Admin',sales:'Sales',online_sales:'เซลล์ออนไลน์',hr:'Staff',accounting:'Accounts',installer:'Staff'};
+const ROLE_COLOR={online_sales:'#C13584',admin:'#7A4FB5',manager:'#B77504',sales_support:'#0E7C86',sales:'#0F6E68',hr:'#2C6BB3',accounting:'#0E7C86',installer:'#C0392B'};
 function showLogin(){document.getElementById('loginScreen').style.display='flex';document.querySelector('.app').style.display='none';const e=document.getElementById('loginErr');e.classList.remove('show');document.getElementById('loginForm').reset();document.getElementById('brandPick').style.display='none';document.getElementById('loginForm').style.display='';pendingBrand='Vangarde';document.documentElement.setAttribute('data-brand','Vangarde');document.getElementById('loginBrandName').innerHTML=brandLogoHTML('Vangarde');}
 function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';brand='Vangarde';view='home';try{history.replaceState({vos:'root'},'');history.pushState({vos:'view',v:'home'},'');}catch(e){}histView='home';applyBrand(brand);const pwI=document.getElementById('loginPw'),pwE=document.getElementById('pwEye');if(pwI)pwI.type='password';if(pwE)pwE.setAttribute('aria-pressed','false');if(!canOpen(view))view=firstAllowedView();renderUserChip();['emptyBtn','resetBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=(currentUser&&currentUser.id==='a1')?'':'none';});render();}
 function renderUserChip(){
@@ -1080,6 +1093,7 @@ function scopedLeads(){
  let L=state.leads;
  const mine=myScopeId();
  if(mine){ L=L.filter(l=>l.assignedTo===mine); }
+ if(currentUser&&currentUser.role==='online_sales')L=L.filter(l=>l.onlineBy===currentUser.id);
  if(brand!=='all') L=L.filter(l=>l.brand===brand);
  return L;
 }
@@ -1589,7 +1603,8 @@ const NAV=[
  {id:'survey',label:'Onsite (วัดหน้างาน)',icon:'ruler',count:()=>scopedLeads().filter(l=>l.stage==='assigned').length},
  {id:'crm',label:'CRM ลูกค้า',icon:'user'},
  {id:'vgprice',label:'Pricelists',icon:'box',b:'Vangarde'},
- {id:'quote',label:'Quotation',icon:'doc',count:()=>brandLeads().map(l=>quoteOfLead(l.id)).filter(q=>q&&q.status==='pending').length},
+ {id:'quote',label:'Quotation',icon:'doc',count:()=>(role==='online_sales'?scopedLeads():brandLeads()).map(l=>quoteOfLead(l.id)).filter(q=>q&&q.status==='pending').length},
+ {id:'service',label:'เคลม & ร้องเรียน',icon:'shield',count:()=>serviceTickets().filter(t=>t.status!=='resolved').length},
  {id:'kpi',label:'KPI',icon:'trend'},
  {grp:'เฉพาะ CEO'},
  {id:'staffdir',label:'รายชื่อพนักงาน',icon:'user'},
@@ -1608,7 +1623,7 @@ const META={
  china:{t:'สั่งซื้อจีน (Vangarde)',s:'รวมออเดอร์เป็นล็อตเพื่อเฉลี่ยค่าส่ง (~฿8,000/ออเดอร์) · 30–60 วัน',act:false},
  purchase:{t:'สั่งสินค้า (สรุป)',s:'เฉพาะงานที่ลูกค้ามัดจำงวดแรกแล้ว · แยกหมวดตามซัพพลายเออร์ · คอลัมน์แรก = เลขใบเสนอราคา (แอดมินเท่านั้น)',act:false},
  install:{t:'ติดตั้ง',s:'ทีมช่าง in-house · จัดคิวแบบ First-come-first-serve · รับประกัน 1 ปี',act:false},
- service:{t:'งานเก็บ & เคลมประกัน',s:'ติดตามงานที่ยังไม่จบ (งานเก็บ) และเคลมประกันหลังติดตั้งในระยะ 1 ปี — กันลืม ปิดให้ครบ',act:false},
+ service:{t:'เคลม & ร้องเรียน',s:'รับเรื่องจากทุกช่องทาง: เคลมสินค้า ร้องเรียน สอบถาม และงานเก็บหลังติดตั้ง จนปิดเรื่อง',act:false},
  finance:{t:'การเงิน / งวดชำระ',s:'เก็บเงิน 3 งวด 50 / 30 / 20 บนยอดรวม VAT',act:false},
  forecast:{t:'ยอดขาย & Forecast',s:'ยอดขายจริงทั้งหมด + แยกตามบัญชี (มี VAT / ไม่มี VAT) และประมาณการยอดขายล่วงหน้า',act:false},
  kpi:{t:'KPI Dashboard',s:'ผลงานเซลล์รายบุคคล แผนก และภาพรวมบริษัท',act:false},
@@ -1751,7 +1766,7 @@ function renderSurvey(){
 /* ============ QUOTE ============ */
 function renderQuote(){
  const ready=scopedLeads().filter(l=>l.stage==='surveyed'&&!quoteOfLead(l.id));
- const Q=state.quotes.filter(q=>{const l=leadById(q.leadId);return brand==='all'||l.brand===brand;});
+ const Q=state.quotes.filter(q=>{const l=leadById(q.leadId);return (brand==='all'||l.brand===brand)&&(role!=='online_sales'||(l&&l.onlineBy===currentUser.id));});
  const stMap={draft:{l:'ร่าง',c:'neutral'},pending:{l:'รออนุมัติ',c:'warn'},approved:{l:'อนุมัติแล้ว',c:'accent'},sent:{l:'ส่งลูกค้าแล้ว',c:'info'},accepted:{l:'ลูกค้ายอมรับ',c:'good'},rejected:{l:'ปฏิเสธ',c:'crit'}};
  const showCost=canSeeCost()&&brand!=='Vangarde';   // VG: ต้นทุน/กำไร ไม่โชว์ในหน้าใบเสนอราคา (ไปดูที่หน้าสั่งสินค้า แอดมินเท่านั้น)
  const c=document.getElementById('content');
@@ -2017,7 +2032,8 @@ function initSigPad(canvas){
 /* ============ SERVICE (punch list & warranty) ============ */
 function renderService(){
  const c=document.getElementById('content');
- const T=(state.tickets||[]).filter(t=>{const l=leadById(t.leadId);return brand==='all'||(l&&l.brand===brand);});
+ const T=serviceTickets();
+ const talk=T.filter(t=>(t.type==='complaint'||t.type==='inquiry')&&t.status!=='resolved');
  const punch=T.filter(t=>t.type==='punch'&&t.status!=='resolved');
  const warranty=T.filter(t=>t.type==='warranty'&&t.status!=='resolved');
  const resolved=T.filter(t=>t.status==='resolved');
@@ -2025,13 +2041,15 @@ function renderService(){
    <tr class="clickable" data-ticket="${t.id}"><td class="mono" style="font-size:12px">${t.id}</td>
    <td style="font-weight:600">${bn(l)}<div class="mini-note">${l?l.site:''}</div></td>
    <td><span class="pill ${ty.c}">${svg(ty.i,'')} ${ty.l}</span></td>
-   <td style="max-width:280px;white-space:normal">${TK_ISSUE[t.issue]}<div class="mini-note" style="white-space:normal">${t.desc}</div>${np||nl?`<div class="mini-note" style="margin-top:3px">📷 ${np} รูป · 🕘 เข้าแก้ ${nl} ครั้ง</div>`:''}</td>
+   <td style="max-width:280px;white-space:normal">${TK_ISSUE[t.issue]||''}<div class="mini-note" style="white-space:normal">${escH(t.desc)}</div>${t.channel||t.assignee?`<div class="mini-note">${t.channel?'ช่องทาง '+escH(TK_CH[t.channel]||t.channel):''}${t.assignee?' · ส่งต่อ '+escH((accountByUid(t.assignee)||{}).name||''):''}</div>`:''}${np||nl?`<div class="mini-note" style="margin-top:3px">📷 ${np} รูป · 🕘 เข้าแก้ ${nl} ครั้ง</div>`:''}</td>
    <td>${fmtDate(t.status==='resolved'?t.resolved:t.opened)}${t.due&&t.status!=='resolved'?`<div class="mini-note">กำหนด ${fmtDate(t.due)}</div>`:''}</td>
    <td><span class="pill ${st.c}">${st.l}</span></td>
-   <td style="text-align:right">${t.status!=='resolved'?`<button class="btn sm" data-resolve="${t.id}">✓ ปิดงาน</button>`:'—'}</td></tr>`;};
+   <td style="text-align:right">${t.status!=='resolved'&&canEditView('service')?`<button class="btn sm" data-resolve="${t.id}">✓ ปิดเรื่อง</button>`:'—'}</td></tr>`;};
  c.innerHTML=`
   <div class="banner-info">${svg('shield')}ติดตามงานที่ยังไม่จบ (งานเก็บ) และเคลมประกันหลังติดตั้ง — กันลืม ทุกงานต้องปิดให้ครบสมบูรณ์</div>
-  <div class="toolbar"><div style="flex:1"></div><button class="btn primary" id="addTicket">${svg('plus','ico')} แจ้งปัญหา / เพิ่มงานเก็บ</button></div>
+  <div class="toolbar"><div style="flex:1"></div>${canEditView('service')?`<button class="btn primary" id="addTicket">${svg('plus','ico')} รับเรื่องใหม่ (เคลม / ร้องเรียน / สอบถาม / งานเก็บ)</button>`:''}</div>
+  <div class="card" style="margin-bottom:16px;${talk.length?'border-color:var(--crit)':''}"><div class="card-head">${svg('msg')}<h3>ร้องเรียน & สอบถาม (รอตอบ / รอแก้)</h3><span class="pill ${talk.length?'crit':'good'}" style="margin-left:auto">${talk.length}</span></div>
+   <div class="table-wrap"><table><thead><tr><th>รหัส</th><th>ลูกค้า</th><th>ประเภท</th><th>เรื่อง</th><th>รับเรื่องเมื่อ</th><th>สถานะ</th><th></th></tr></thead><tbody>${talk.length?talk.map(row).join(''):emptyRow(7,'✓ ไม่มีเรื่องค้าง')}</tbody></table></div></div>
   <div class="card" style="margin-bottom:16px;${punch.length?'border-color:var(--warn)':''}"><div class="card-head">${svg('wrench')}<h3>งานเก็บค้าง (ติดตั้งแล้วยังไม่จบ)</h3><span class="pill ${punch.length?'warn':'good'}" style="margin-left:auto">${punch.length}</span></div>
    <div class="table-wrap"><table><thead><tr><th>รหัส</th><th>ลูกค้า</th><th>ประเภท</th><th>ปัญหา (หมายเหตุ)</th><th>แจ้งเมื่อ</th><th>สถานะ</th><th></th></tr></thead><tbody>${punch.length?punch.map(row).join(''):emptyRow(7,'✓ ไม่มีงานเก็บค้าง — จบครบทุกงาน')}</tbody></table></div></div>
   <div class="card" style="margin-bottom:16px"><div class="card-head">${svg('shield')}<h3>เคลมประกัน (ในระยะรับประกัน 1 ปี)</h3><span class="pill ${warranty.length?'info':'good'}" style="margin-left:auto">${warranty.length}</span></div>
@@ -2039,17 +2057,19 @@ function renderService(){
   <div class="card"><div class="card-head">${svg('check')}<h3>ปิดงานแล้ว</h3><span class="spacer"></span><span class="hint">${resolved.length} รายการ</span></div>
    <div class="table-wrap"><table><thead><tr><th>รหัส</th><th>ลูกค้า</th><th>ประเภท</th><th>ปัญหา</th><th>ปิดเมื่อ</th><th>สถานะ</th><th></th></tr></thead><tbody>${resolved.length?resolved.map(row).join(''):emptyRow(7,'—')}</tbody></table></div></div>`;
  c.querySelectorAll('[data-ticket]').forEach(r=>r.onclick=()=>openTicket(r.dataset.ticket));
- c.querySelectorAll('[data-resolve]').forEach(b=>b.onclick=e=>{e.stopPropagation();const t=state.tickets.find(x=>x.id===b.dataset.resolve);t.status='resolved';t.resolved=todayISO();if(t.quoteId)refreshInstall(t.quoteId);save();render();});
+ c.querySelectorAll('[data-resolve]').forEach(b=>b.onclick=e=>{e.stopPropagation();const t=state.tickets.find(x=>x.id===b.dataset.resolve);t.status='resolved';t.resolved=todayISO();t.resolvedBy=currentUser.id;if(t.quoteId)refreshInstall(t.quoteId);save();render();});
  const at=c.querySelector('#addTicket');if(at)at.onclick=()=>openAddTicket();
 }
 function openAddTicket(preLeadId){
  const m=document.getElementById('modal');
  let mPhotos=[];
- const eligible=state.leads.filter(l=>quoteOfLead(l.id)&&['production','installing','done'].includes(l.stage));
- m.innerHTML=`<div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">${svg('shield')}<h3 style="font-size:16px">แจ้งปัญหา / เพิ่มงานเก็บ</h3><span style="flex:1"></span><button class="icon-btn" id="mClose">${svg('x')}</button></div>
+ const eligible=brandLeads().filter(l=>l.stage!=='lost'||l.id===preLeadId).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'th'));
+ const toOpts=ACCOUNTS.filter(a=>!a.inactive&&['manager','installer','sales','sales_support','admin'].includes(a.role));
+ m.innerHTML=`<div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">${svg('shield')}<h3 style="font-size:16px">รับเรื่องใหม่</h3><span style="flex:1"></span><button class="icon-btn" id="mClose">${svg('x')}</button></div>
   <div style="padding:20px 22px">
    <div class="field"><label>ลูกค้า / โปรเจค</label><select id="t-lead">${eligible.map(l=>`<option value="${l.id}" ${preLeadId===l.id?'selected':''}>${l.name} · ${l.site}</option>`).join('')||'<option value="">— ไม่มีงานที่ถึงขั้นติดตั้ง —</option>'}</select></div>
-   <div class="field-row"><div class="field"><label>ประเภท</label><select id="t-type"><option value="punch">งานเก็บ (ติดตั้งแล้วยังไม่จบ)</option><option value="warranty">เคลมประกัน (หลังจบงาน)</option></select></div><div class="field"><label>สาเหตุ</label><select id="t-issue"><option value="site">หน้างานมีปัญหา</option><option value="product">สินค้ามีปัญหา</option><option value="other">อื่นๆ</option></select></div></div>
+   <div class="field-row"><div class="field"><label>ประเภท</label><select id="t-type"><option value="warranty">เคลมสินค้า / ประกัน</option><option value="complaint">ร้องเรียน</option><option value="inquiry">สอบถามข้อมูล</option><option value="punch">งานเก็บ (ติดตั้งแล้วยังไม่จบ)</option></select></div><div class="field"><label>สาเหตุ</label><select id="t-issue"><option value="site">หน้างานมีปัญหา</option><option value="product">สินค้ามีปัญหา</option><option value="other">อื่นๆ</option></select></div></div>
+   <div class="field-row"><div class="field"><label>ลูกค้าติดต่อมาทาง</label><select id="t-ch">${Object.entries(TK_CH).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><div class="field"><label>ส่งต่อให้ (ผู้รับผิดชอบ)</label><select id="t-to"><option value="">— ยังไม่ส่งต่อ —</option>${toOpts.map(a=>`<option value="${a.id}">${escH(a.name)} · ${ROLE_LABEL[a.role]||a.role}</option>`).join('')}</select></div></div>
    <div class="field"><label>รายละเอียดปัญหา (หมายเหตุ)</label><textarea id="t-desc" rows="3" placeholder="อธิบายปัญหาที่พบหน้างาน..."></textarea></div>
    <div class="field"><label>แนบรูปปัญหาหน้างาน</label><input id="t-photos" type="file" accept="image/*" multiple><div id="t-thumbs" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div></div>
    <div class="field"><label>กำหนดเข้าแก้ (ถ้ามี)</label><input id="t-due" type="date"></div>
@@ -2061,7 +2081,7 @@ function openAddTicket(preLeadId){
  m.querySelector('#mSave').onclick=()=>{
   const lid=m.querySelector('#t-lead').value;if(!lid){close();return;}
   const q=quoteOfLead(lid);const type=m.querySelector('#t-type').value;const id='TK-'+(state.seq.T++);
-  state.tickets.push({id,leadId:lid,quoteId:q?q.id:null,type,issue:m.querySelector('#t-issue').value,desc:m.querySelector('#t-desc').value||'(ไม่ระบุ)',status:type==='punch'?'progress':'open',opened:todayISO(),due:m.querySelector('#t-due').value||'',team:'',resolved:'',photos:mPhotos.slice(),log:[]});
+  state.tickets.push({id,leadId:lid,quoteId:q?q.id:null,type,issue:m.querySelector('#t-issue').value,desc:m.querySelector('#t-desc').value||'(ไม่ระบุ)',status:type==='punch'?'progress':'open',opened:todayISO(),due:m.querySelector('#t-due').value||'',channel:m.querySelector('#t-ch').value,assignee:m.querySelector('#t-to').value||'',createdBy:currentUser.id,team:'',resolved:'',photos:mPhotos.slice(),log:[]});
   if(type==='punch'&&q)refreshInstall(q.id);
   save();close();view='service';render();
  };
@@ -2980,6 +3000,7 @@ function wireRows(root){
 
 /* ============ LEAD DRAWER ============ */
 function openLead(id){
+ if(currentUser&&currentUser.role==='online_sales'){const l0=leadById(id);if(l0&&l0.onlineBy!==currentUser.id)return openLeadLite(l0);}
  const l=leadById(id);if(!l)return;
  const sv=surveyOfLead(id),q=quoteOfLead(id);
  const head=document.getElementById('drawerHead'),body=document.getElementById('drawerBody');
@@ -2991,7 +3012,8 @@ function openLead(id){
  steps.push({done:true,ico:'inbox',color:'var(--info)',title:'รับลีดเข้าระบบ',meta:`${srcOf(l.source).l} · ${fmtDate(l.created)}`,
   card:`<div class="kv"><dt>เบอร์</dt><dd>${l.phone}</dd>${l.desiredInstall?`<dt>วันติดตั้งที่ต้องการ</dt><dd>${fmtDate(l.desiredInstall)}</dd>`:''}${isReferralSrc(l.source)?`<dt>ผู้แนะนำ</dt><dd>${l.referrer||'—'} · ค่าแนะนำ ${l.referralPct||0}%</dd>`:''}</div>${l.note?`<div class="mini-note" style="margin-top:8px">📝 ${l.note}</div>`:''}`});
  steps.push({done:!!l.assignedTo,ico:'user',color:'var(--accent)',title:l.assignedTo?'มอบหมายให้เซลล์':'รอมอบหมายเซลล์',meta:l.assignedTo?personById(l.assignedTo).name:'ยังไม่มอบหมาย',card:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="assignSel" style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px">${SALES.filter(s=>!s.inactive||s.id===l.assignedTo).map(s=>`<option value="${s.id}" ${((l.assignedTo||SALES[0].id)===s.id)?'selected':''}>${s.name}</option>`).join('')}</select><button class="btn primary" id="assignBtn">${l.assignedTo?'เปลี่ยนผู้รับผิดชอบ':'＋ มอบหมาย'}</button></div>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><label for="pmSel" style="font-size:12.5px;color:var(--text-muted)">PM ผู้ดูแล</label><select id="pmSel" data-lead="${l.id}" ${canEditView(view)?'':'disabled'} style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px"><option value="">— ยังไม่กำหนด —</option>${ACCOUNTS.filter(a=>a.role==='manager'&&(!a.inactive||a.id===l.pmId)).map(a=>`<option value="${a.id}" ${l.pmId===a.id?'selected':''}>${a.name}</option>`).join('')}</select></div>`});
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><label for="pmSel" style="font-size:12.5px;color:var(--text-muted)">PM ผู้ดูแล</label><select id="pmSel" data-lead="${l.id}" data-lfield="pmId" ${canEditView(view)&&role!=='online_sales'?'':'disabled'} style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px"><option value="">— ยังไม่กำหนด —</option>${ACCOUNTS.filter(a=>a.role==='manager'&&(!a.inactive||a.id===l.pmId)).map(a=>`<option value="${a.id}" ${l.pmId===a.id?'selected':''}>${a.name}</option>`).join('')}</select></div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><label for="onlineSel" style="font-size:12.5px;color:var(--text-muted)">เซลล์ออนไลน์ผู้รับลีด</label><select id="onlineSel" data-lead="${l.id}" data-lfield="onlineBy" ${role==='admin'||role==='sales_support'?'':'disabled'} style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px"><option value="">— ไม่มี (ไม่ได้มาจากเซลล์ออนไลน์) —</option>${ACCOUNTS.filter(a=>a.role==='online_sales'&&(!a.inactive||a.id===l.onlineBy)).map(a=>`<option value="${a.id}" ${l.onlineBy===a.id?'selected':''}>${escH(a.name)}</option>`).join('')}</select></div>`});
  const svPhotos=sv?sv.points.reduce((a,p)=>a+(p.photos||[]).length,0):0;
  steps.push({done:!!sv,ico:'ruler',color:'var(--warn)',title:sv?`วัดหน้างานแล้ว · ${sv.points.length} จุด`:'รอวัดหน้างาน',meta:sv?`${fmtDate(sv.date)} · โดย ${personById(sv.by).short} · ${svPhotos} รูป`:'—',
   card:sv?`${sv.points.map((pt,pi)=>surveyPointSummary(pt,pi)).join('')}<button class="btn sm" id="editSurveyBtn" style="margin-top:6px">${svg('ruler','ico')} ดู / แก้ไขการวัดแบบละเอียด</button>`:(l.assignedTo&&l.stage==='assigned'?`<button class="btn primary" id="surveyBtn">${svg('ruler','ico')} บันทึกการวัดหน้างาน</button>`:'')});
@@ -3105,7 +3127,8 @@ function openAddLead(){
    <div class="field-row"><div class="field"><label>เบอร์</label><input id="f-phone" placeholder="08x-xxx-xxxx"></div><div class="field"><label>แบรนด์</label><select id="f-brand"><option${brand==='VYNN'?' selected':''}>VYNN</option><option${brand==='Vangarde'?' selected':''}>Vangarde</option></select></div></div>
    <div class="field-row"><div class="field"><label>ช่องทาง</label><select id="f-src">${Object.entries(SOURCE).filter(([k,v])=>!v.old).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('')}</select></div><div class="field"><label>วันติดตั้งที่ต้องการ</label><input id="f-install" type="date"></div></div>
    <div id="referralWrap" style="display:none"><div class="field-row"><div class="field"><label>ผู้แนะนำ (ดีไซเนอร์)</label><input id="f-ref" placeholder="ชื่อดีไซน์เนอร์/สตูดิโอ"></div><div class="field"><label>ค่าแนะนำ (%)</label><input id="f-refpct" type="number" value="10"></div></div></div>
-   <div class="field"><label>มอบหมายเซลล์</label><select id="f-sales"><option value="">— รอมอบหมาย —</option>${SALES.filter(s=>!s.inactive).map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+   ${role==='admin'||role==='sales_support'?`<div class="field"><label>เซลล์ออนไลน์ผู้รับลีด (ถ้ามี)</label><select id="f-online"><option value="">— ไม่มี —</option>${ACCOUNTS.filter(a=>a.role==='online_sales'&&!a.inactive).map(a=>`<option value="${a.id}">${escH(a.name)}</option>`).join('')}</select></div>`:''}
+   <div class="field"><label>${role==='online_sales'?'ส่งต่อให้เซลล์ลงพื้นที่':'มอบหมายเซลล์'}</label><select id="f-sales"><option value="">— รอมอบหมาย —</option>${SALES.filter(s=>!s.inactive).map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
    <div class="field"><label>บันทึก</label><textarea id="f-note" rows="2" placeholder="รายละเอียดความต้องการ"></textarea></div>
    <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" id="mCancel">ยกเลิก</button><button class="btn primary" id="mSave">＋ บันทึกลีด</button></div>
   </div>`;
@@ -3115,7 +3138,7 @@ function openAddLead(){
  m.querySelector('#mSave').onclick=()=>{
   const sid=m.querySelector('#f-sales').value;const src=m.querySelector('#f-src').value;const nid='L-'+(state.seq.L++);
   const nbrand=m.querySelector('#f-brand').value;
-  state.leads.unshift({id:nid,custCode:nextCustCode(nbrand),name:m.querySelector('#f-name').value.trim()||'ลูกค้าใหม่',site:m.querySelector('#f-site').value||'—',phone:m.querySelector('#f-phone').value||'—',brand:nbrand,source:src,assignedTo:sid||null,stage:sid?'assigned':'new',created:todayISO(),desiredInstall:m.querySelector('#f-install').value||'',note:m.querySelector('#f-note').value,referrer:isReferralSrc(src)?m.querySelector('#f-ref').value:'',referralPct:isReferralSrc(src)?+m.querySelector('#f-refpct').value:0});
+  state.leads.unshift({id:nid,custCode:nextCustCode(nbrand),name:m.querySelector('#f-name').value.trim()||'ลูกค้าใหม่',site:m.querySelector('#f-site').value||'—',phone:m.querySelector('#f-phone').value||'—',brand:nbrand,source:src,onlineBy:role==='online_sales'?currentUser.id:((m.querySelector('#f-online')||{}).value||null),assignedTo:sid||null,stage:sid?'assigned':'new',created:todayISO(),desiredInstall:m.querySelector('#f-install').value||'',note:m.querySelector('#f-note').value,referrer:isReferralSrc(src)?m.querySelector('#f-ref').value:'',referralPct:isReferralSrc(src)?+m.querySelector('#f-refpct').value:0});
   logAudit('add_lead','เพิ่มลูกค้า '+(leadById(nid)?leadById(nid).name:nid)+' ('+nid+')');
   save();close();view='leads';render();openLead(nid);
  };
@@ -3276,7 +3299,7 @@ function roBlocked(){
    Nothing is saved while viewing: every save() is rolled back to the snapshot taken on entry,
    and server actions (signature, password…) are refused so nothing happens under the CEO's session. */
 let viewAs=null; // {user, role, snap, view} = the real CEO session while previewing someone else
-const DEPT_ORDER=[['admin','CEO'],['sales_support','Admin'],['manager','PM'],['sales','Sales'],['installer','Staff · ทีมช่าง'],['hr','Staff'],['accounting','Accounts']];
+const DEPT_ORDER=[['admin','CEO'],['sales_support','Admin'],['manager','PM'],['sales','Sales'],['online_sales','เซลล์ออนไลน์'],['installer','Staff · ทีมช่าง'],['hr','Staff'],['accounting','Accounts']];
 function realIsCEO(){return viewAs?true:!!currentUser&&role==='admin';}
 function startViewAs(uid){
  const who=accountByUid(uid);if(!who||!realIsCEO())return;
@@ -3322,6 +3345,7 @@ const MOD_INFO={
  crm:{t:'CRM',s:'ข้อมูลลูกค้า และประวัติการซื้อ',ic:'user'},
  vgprice:{t:'Pricelists',s:'Pergola · Zip Shade · Awning',ic:'box'},
  quote:{t:'Quotation',s:'ใบเสนอราคา และการอนุมัติ',ic:'doc'},
+ service:{t:'เคลม & ร้องเรียน',s:'เคลมสินค้า ร้องเรียน สอบถาม และงานเก็บหลังติดตั้ง',ic:'shield'},
  kpi:{t:'KPI · โปรไฟล์ของฉัน',s:'ตารางงาน ยอดขาย งานที่ดูแล และสถานะของฉัน',ic:'trend'},
  staffdir:{t:'รายชื่อพนักงาน',s:'ข้อมูล เอกสาร เงินเดือน และ username (เฉพาะ CEO)',ic:'user'},
 };
@@ -3431,7 +3455,7 @@ function bindTasks(root){
 }
 
 function homeStats(){
- const L=brandLeads();
+ const L=role==='online_sales'?scopedLeads():brandLeads();
  let outstanding=0;state.quotes.forEach(q=>{const l=leadById(q.leadId);if(!l||l.brand!==brand)return;const pi=payInfo(q.id);if(pi)outstanding+=pi.total-pi.paid;});
  const cand=[
   {mod:'leads',t:'ลีดใหม่รอติดต่อ',v:L.filter(l=>l.stage==='new').length},
@@ -3575,7 +3599,7 @@ function renderAgenda(){
 /* ============ EMPLOYEE DIRECTORY (CEO only · data lives on the server, never in /api/state) ============ */
 let dirData=null,dirQ='';
 const DOC_LABEL={idcard:'บัตรประชาชน',house:'ทะเบียนบ้าน',other:'เอกสารอื่น'};
-const ROLE_OPTS=[['admin','CEO'],['sales_support','Admin'],['manager','PM'],['sales','Sales'],['installer','Staff (ช่าง)'],['hr','Staff (สำนักงาน)'],['accounting','Accounts']];
+const ROLE_OPTS=[['admin','CEO'],['sales_support','Admin'],['manager','PM'],['sales','Sales'],['online_sales','เซลล์ออนไลน์'],['installer','Staff (ช่าง)'],['hr','Staff (สำนักงาน)'],['accounting','Accounts']];
 const blobB64=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=no;r.readAsDataURL(f);});
 async function shrinkDoc(f){
  if(!/^image\/(jpeg|png|webp)$/.test(f.type)||f.size<900*1024)return f;
@@ -3836,6 +3860,7 @@ function renderMyKPI(){
  if(pr==='sales')main=salesBoxes(uid)+newLeadBox(myLeads(uid))+wipBox(myLeads(uid))+customerBox(myLeads(uid));
  else if(pr==='pm')main=salesBoxes(uid)+newLeadBox(pmLeads(uid))+wipBox(pmLeads(uid),'Work on Process · ของฉันและงานที่ดูแล')+customerBox(pmLeads(uid));
  else if(pr==='staff')main=staffBoxes(uid);
+ else if(pr==='online')main=onlineBoxes(uid);
  else if(pr==='admin')main=adminBoxes();
  else if(pr==='ceo')main=ceoBoxes()+adminBoxes();
  else main='<div class="card" style="padding:20px">ยังไม่มีหน้า KPI สำหรับบทบาทนี้</div>';
@@ -3849,6 +3874,94 @@ function renderMyKPI(){
   const seg=state.payments[qid][+i];if(!seg||!confirm(`บันทึกว่าได้รับชำระ ${qid} งวด ${seg.n||+i+1} วันนี้?`))return;
   seg.st='paid';seg.d=todayISO();logAudit('payment','รับชำระ '+qid+' งวด '+(seg.n||+i+1));save();render(false);});
  const tb=el.querySelector('#kpiTeamBtn');if(tb)tb.onclick=()=>{kpiTeam=true;render(false);window.scrollTo(0,0);};
+}
+
+/* ============ lead owner fields (PM ผู้ดูแล · เซลล์ออนไลน์ผู้รับลีด) ============ */
+document.addEventListener('change',e=>{
+ const t=e.target;if(!t||!t.dataset||!t.dataset.lfield)return;
+ const l=leadById(t.dataset.lead),k=t.dataset.lfield;if(!l||!['pmId','onlineBy'].includes(k))return;
+ l[k]=t.value||null;logAudit('lead',(k==='pmId'?'ตั้ง PM ผู้ดูแล ':'ตั้งเซลล์ออนไลน์ ')+l.name+' → '+((accountByUid(t.value)||{}).name||'ไม่มี'));save();render(false);
+});
+
+/* ============ ONLINE SALES (เซลล์ออนไลน์): own leads → commission 0.5% of the pre-VAT deal,
+   paid in two halves: 50% when the first deposit comes in, 50% when the job is fully paid ============ */
+const ONLINE_RATE=0.005;
+const onlineLeads=uid=>brandLeads().filter(l=>l.onlineBy===uid);
+function commissionOf(l){
+ const q=quoteOfLead(l.id);if(!q||l.stage==='lost')return null;
+ const base=calcQuote(q).netBeforeVat||0,pi=payInfo(q.id)||{sched:[]},paid=(pi.sched||[]).filter(s=>s.st==='paid');
+ if(!paid.length&&!isWon(l))return null;
+ const half=Math.round(base*ONLINE_RATE/2);
+ const first=paid.map(s=>s.d||'').filter(Boolean).sort()[0]||'';
+ const full=pi.sched.length&&pi.sched.every(s=>s.st==='paid');
+ return {l,q,base,h1:{amt:half,ok:paid.length>0,d:first},h2:{amt:half,ok:!!full,d:full?paid.map(s=>s.d||'').sort().pop():''}};
+}
+const JOURNEY=['รับติดต่อ','ส่งต่อเซลล์','วัดหน้างาน','ใบเสนอราคา','อนุมัติ','มัดจำ','ผลิต','ติดตั้ง','เก็บเงินครบ','จบงาน'];
+function journeyOf(l){
+ const q=quoteOfLead(l.id),pi=q?payInfo(q.id):null,sch=pi?pi.sched:[];
+ const sv=state.surveys.some(s=>s.leadId===l.id),ins=(state.installs||[]).find(i=>i.leadId===l.id);
+ const anyPaid=sch.some(s=>s.st==='paid'),full=sch.length&&sch.every(s=>s.st==='paid');
+ const prod=['production','installing','done'].includes(l.stage),installed=(ins&&ins.status==='done')||l.stage==='done';
+ const ok=[true,!!l.assignedTo,sv,!!q,!!q&&(['approved','sent','accepted'].includes(q.status)||isWon(l)),anyPaid,prod||installed,installed,!!full,installed&&!!full];
+ let n=0;while(n<ok.length&&ok[n])n++;
+ return {n,ok,lost:l.stage==='lost'};
+}
+function journeyHTML(l,big){
+ const j=journeyOf(l);
+ return `<div class="jr${big?' big':''}">${JOURNEY.map((t,i)=>`<i class="${i<j.n?'on':''}" title="${t}"></i>`).join('')}</div><small class="jr-t">${j.lost?'❌ ไม่ปิดการขาย':j.n>=JOURNEY.length?'✓ จบงาน':'ล่าสุด: '+JOURNEY[j.n-1]+' → ถัดไป: '+JOURNEY[j.n]}</small>`;
+}
+function onlineBoxes(uid){
+ const m=kpiMonth,L=onlineLeads(uid),inM=L.filter(l=>ymOf(l.created)===m);
+ const handed=inM.filter(l=>l.assignedTo),closed=L.filter(l=>{const c=commissionOf(l);return c&&c.h1.ok&&ymOf(c.h1.d)===m;});
+ const C=L.map(commissionOf).filter(Boolean);
+ const earnedM=C.reduce((a,c)=>a+(c.h1.ok&&ymOf(c.h1.d)===m?c.h1.amt:0)+(c.h2.ok&&ymOf(c.h2.d)===m?c.h2.amt:0),0);
+ const waiting=C.reduce((a,c)=>a+(c.h1.ok?0:c.h1.amt)+(c.h2.ok?0:c.h2.amt),0);
+ const byCh={};inM.forEach(l=>byCh[l.source]=(byCh[l.source]||0)+1);
+ const pct=(a,b)=>b?Math.round(a/b*100)+'%':'—';
+ const st=h=>h.ok?`<span class="pill good">ได้แล้ว ${h.d?thDate(h.d):''}</span>`:'<span class="pill neutral">รอ</span>';
+ return `<div class="kpi-sec"><div class="sec-h"><h2>งานขายออนไลน์ของฉัน</h2><select id="kpiMonth" class="pill-sel" aria-label="เลือกเดือน">${last12().map(x=>`<option value="${x}"${x===m?' selected':''}>${thMonth(x)}</option>`).join('')}</select></div>
+  <div class="pastels four">
+   <div class="pastel" style="--pc:#F7DA7B"><span>ลีดที่รับเข้า ${thMonth(m)}</span><b>${inM.length} ราย</b><small>ลูกค้าทั้งหมดของฉัน ${L.length} ราย</small></div>
+   <div class="pastel" style="--pc:#CCDCE7"><span>ส่งต่อเซลล์ลงพื้นที่</span><b>${handed.length} ราย</b><small>${pct(handed.length,inM.length)} ของลีดเดือนนี้</small></div>
+   <div class="pastel" style="--pc:#E5D9EE"><span>ปิดการขาย (มัดจำงวดแรก)</span><b>${closed.length} ราย</b><small>ฐานก่อน VAT ฿${money(closed.reduce((a,l)=>a+(commissionOf(l)||{base:0}).base,0))}</small></div>
+   <div class="pastel" style="--pc:#D6EAD9"><span>Commission ${thMonth(m)}</span><b>฿${money(earnedM)}</b><small>รอรับอีก ฿${money(waiting)}</small></div>
+  </div>
+  <div class="ch-bars">${Object.keys(SOURCE).filter(k=>byCh[k]).map(k=>`<span><b>${escH(srcOf(k).l)}</b> ${byCh[k]}</span>`).join('')||'<span class="mute">เดือนนี้ยังไม่มีลีดเข้า</span>'}</div></div>
+  <div class="kpi-sec"><div class="sec-h"><h2>Commission 0.5% (ยอดก่อน VAT)</h2><span>50% เมื่อมัดจำงวดแรก · 50% เมื่อเก็บเงินครบ</span></div>
+  <div class="tbl-soft">${C.length?`<div class="ts-head"><span>ลูกค้า</span><span>ยอดก่อน VAT</span><span>งวดแรก 50%</span><span>เก็บครบ 50%</span></div>${C.map(c=>`<button class="ts-row" data-lead="${escH(c.l.id)}"><span class="ts-cust">${escH(c.l.name)}<small class="mute"> · ${escH((accountByUid(c.l.assignedTo)||{}).name||'')}</small></span><span>฿${money(c.base)}</span><span>฿${money(c.h1.amt)} ${st(c.h1)}</span><span>฿${money(c.h2.amt)} ${st(c.h2)}</span></button>`).join('')}`:'<p class="tk-empty">ยังไม่มีดีลที่ปิดได้</p>'}</div></div>
+  <div class="kpi-sec"><div class="sec-h"><h2>ติดตามลูกค้าของฉัน (รับติดต่อ → จบงาน)</h2><span>${L.filter(l=>l.stage!=='lost').length} ราย</span></div>
+  <div class="jr-list">${L.map(l=>`<button class="mini-row" data-lead="${escH(l.id)}"><b>${escH(l.name)} <small class="mute">· ${escH(srcOf(l.source).l)}${l.assignedTo?' · เซลล์ '+escH((accountByUid(l.assignedTo)||{}).name||''):' · ยังไม่ส่งต่อ'}</small></b>${journeyHTML(l)}</button>`).join('')||'<p class="tk-empty">ยังไม่มีลูกค้า — เพิ่มลีดที่หน้า Lead Intake</p>'}</div></div>
+  ${serviceBox(uid)}`;
+}
+function serviceBox(uid){
+ const T=(state.tickets||[]).filter(t=>t.createdBy===uid),m=kpiMonth;
+ const inM=T.filter(t=>ymOf(t.opened)===m),done=T.filter(t=>t.status==='resolved'&&ymOf(t.resolved)===m),open=T.filter(t=>t.status!=='resolved');
+ const days=done.map(t=>(dOf(t.resolved)-dOf(t.opened))/864e5).filter(x=>x>=0),avg=days.length?(days.reduce((a,b)=>a+b,0)/days.length).toFixed(1):'—';
+ return `<div class="kpi-sec"><div class="sec-h"><h2>งานบริการลูกค้า (เคลม / ร้องเรียน / สอบถาม)</h2><button class="pill-btn" data-go="service">เปิดเมนูเคลม</button></div>
+  <div class="pastels four">
+   <div class="pastel" style="--pc:#F7DA7B"><span>รับเรื่อง ${thMonth(m)}</span><b>${inM.length} เรื่อง</b><small>ที่ฉันเปิด</small></div>
+   <div class="pastel" style="--pc:#D6EAD9"><span>ปิดเรื่องแล้ว</span><b>${done.length} เรื่อง</b><small>ในเดือนที่เลือก</small></div>
+   <div class="pastel" style="--pc:#CCDCE7"><span>เวลาเฉลี่ยจนปิดเรื่อง</span><b>${avg} วัน</b><small>นับจากวันที่รับเรื่อง</small></div>
+   <div class="pastel" style="--pc:#F6C9C2"><span>ยังค้างอยู่</span><b>${open.length} เรื่อง</b><small>${open.filter(t=>t.due&&t.due<todayISO()).length} เรื่องเกินกำหนด</small></div>
+  </div></div>`;
+}
+/* someone else's customer, opened by online sales: status only — no prices or amounts */
+function openLeadLite(l){
+ const q=quoteOfLead(l.id),pi=q?payInfo(q.id):null,ins=(state.installs||[]).find(i=>i.leadId===l.id),sv=state.surveys.find(s=>s.leadId===l.id);
+ const head=document.getElementById('drawerHead'),body=document.getElementById('drawerBody');
+ head.innerHTML=`<div style="flex:1"><div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">${stagePill(l.stage)}<span class="mono" style="font-size:12px;color:var(--text-muted)">${escH(l.custCode||l.id)}</span></div><h2 style="font-size:17px">${escH(l.name)}</h2><span style="font-size:12px;color:var(--text-muted)">${escH(l.site||'')}</span></div><button class="icon-btn" id="liteClose" aria-label="ปิด">✕</button>`;
+ const pays=pi?pi.sched.map((s,i)=>`<span class="pill ${s.st==='paid'?'good':'neutral'}">งวด ${s.n||i+1} · ${s.st==='paid'?'ชำระแล้ว':'ยังไม่ชำระ'}</span>`).join(' '):'<span class="mute">ยังไม่มีใบเสนอราคา</span>';
+ body.innerHTML=`<div class="banner-info" style="margin-bottom:14px">${svg('shield')}ลูกค้าของเซลล์คนอื่น · ดูสถานะเพื่อตอบลูกค้าได้ แต่ไม่แสดงราคาและยอดเงิน</div>
+  <div class="kv"><dt>เบอร์</dt><dd>${escH(l.phone||'-')}</dd><dt>ช่องทาง</dt><dd>${escH(srcOf(l.source).l)}</dd><dt>เซลล์ลงพื้นที่</dt><dd>${escH((accountByUid(l.assignedTo)||{}).name||'ยังไม่มอบหมาย')}</dd><dt>PM ผู้ดูแล</dt><dd>${escH((accountByUid(l.pmId)||{}).name||'—')}</dd>
+   <dt>วัดหน้างาน</dt><dd>${sv?thDate(sv.date):'ยังไม่วัด'}</dd><dt>ติดตั้ง</dt><dd>${ins?(thDate(ins.scheduled)+' · '+(ins.status==='done'?'ติดตั้งเสร็จแล้ว':'นัดแล้ว')+(ins.team?' · '+escH(ins.team):'')):'ยังไม่นัด'}</dd><dt>การชำระเงิน</dt><dd>${pays}</dd></div>
+  <h3 class="ag-sub">ความคืบหน้า</h3>${journeyHTML(l,true)}
+  <h3 class="ag-sub">เคลม / ร้องเรียน / สอบถาม</h3>
+  ${ticketsOf(l.id).map(t=>`<button class="mini-row" data-tk="${escH(t.id)}"><b>${escH((TK_TYPE[t.type]||{}).l||t.type)} · ${escH(t.id)}</b><span>${escH(t.desc||'')} · ${escH((TK_STATUS[t.status]||{}).l||'')}</span></button>`).join('')||'<p class="tk-empty">ยังไม่มีเรื่อง</p>'}
+  <button class="btn primary" id="liteTicket" style="margin-top:10px">＋ เปิดเรื่องเคลม / ร้องเรียน / สอบถาม</button>`;
+ const dr=document.getElementById('drawer'),sc=document.getElementById('scrim');dr.classList.add('open');sc.classList.add('open');
+ head.querySelector('#liteClose').onclick=()=>{dr.classList.remove('open');sc.classList.remove('open');};
+ body.querySelector('#liteTicket').onclick=()=>{dr.classList.remove('open');sc.classList.remove('open');openAddTicket(l.id);};
+ body.querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>openTicket(b.dataset.tk));
 }
 
 /* ============ QUOTE REVISIONS: mark the FINAL one the customer agreed to ============ */
@@ -4061,7 +4174,7 @@ function renderCRM(){
  el.innerHTML=`<div class="crm-head"><div class="crm-kpis">
    <div class="card crm-k"><span>ลูกค้าทั้งหมด</span><b>${L.length}</b></div>
    <div class="card crm-k"><span>ปิดการขายแล้ว</span><b>${won.length}</b></div>
-   <div class="card crm-k"><span>ยอดขายรวม</span><b>฿${money(won.reduce((a,l)=>a+(dealTotal(l.id)||0),0))}</b></div></div>
+   <div class="card crm-k"><span>ยอดขายรวม</span><b>${role==='online_sales'?'—':'฿'+money(won.reduce((a,l)=>a+(dealTotal(l.id)||0),0))}</b></div></div>
    <input id="crmSearch" class="crm-search" type="search" placeholder="ค้นหาชื่อ เบอร์โทร รหัสลูกค้า หรือเซลล์" value="${escH(crmQ)}"></div>
   <div id="crmList">${crmRows()}</div>`;
  const bind=()=>document.querySelectorAll('#crmList [data-lead]').forEach(b=>b.onclick=()=>openLead(b.dataset.lead));
