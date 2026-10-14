@@ -241,6 +241,10 @@
   .sv-overlay{position:fixed;inset:0;z-index:150;background:var(--bg);overflow:auto;display:none}
   .sv-head{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:2;flex-wrap:wrap}
   .sv-body{padding:16px 20px 80px;max-width:940px;margin:0 auto;width:100%}
+  /* phone: long option text in a select must not widen the grid (it pushed the editor off-screen) */
+  .pt-grid>*,.field-row>*,.pt-card .field{min-width:0}
+  .pt-card select,.pt-card input,.pt-card textarea,.field select{max-width:100%;min-width:0}
+  .sv-overlay{overflow-x:hidden}
   .pt-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
   .pt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 12px}
   .pt-grid .field{margin-bottom:0}
@@ -2250,8 +2254,8 @@ function ptCard(pt,i,fabOpt,sel){
    ${(pt.vgProduct==='Pergola'||pt.vgProduct==='Zip Shade')?`<div class="field col2"><label>รุ่น <span class="mini-note">(แนะนำอัตโนมัติจากขนาด)</span></label><select data-i="${i}" data-f="vgSeries">${(pt.vgProduct==='Pergola'?vgp.pergola:vgp.zipshade).map(r=>`<option value="${r.series}" ${pt.vgSeries===r.series?'selected':''}>${r.series}${r.priceSqm?' — '+THB(r.priceSqm)+'/ตร.ม.':''}${r.msrp?' — '+THB(r.msrp)+'/ตร.ม. (ขั้นต่ำ '+r.moq+')':''}</option>`).join('')}</select></div>`:''}
    ${pt.vgProduct==='Zip Shade'?`<div class="field"><label>ราคา/ตร.ม. <span class="mini-note">(อ้างอิงราคารุ่น ฿${((vgp.zipshade||[]).find(x=>x.series===pt.vgSeries)||{}).priceSqm||est.priceSqm||0} · แก้เองได้)</span></label><input type="number" data-i="${i}" data-f="vgPriceSqm" value="${pt.vgPriceSqm||0}"></div>`:''}
    <div class="field col4"><label>ส่วนลดพื้นฐาน (โชว์ในใบเสนอราคา — รวมเป็น "ส่วนลดพิเศษ")</label><div style="display:flex;flex-wrap:wrap">
-    <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="install" ${pt.vgDisc&&pt.vgDisc.install?'checked':''}> ฟรีค่าติดตั้ง</label>
-    <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:nowrap"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="motor" ${pt.vgDisc&&pt.vgDisc.motor?'checked':''}> ส่วนลดมอเตอร์+รีโมท (Vangarde ฟรี 100% / Somfy ลด 50%)</label>
+    <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:normal;max-width:100%"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="install" ${pt.vgDisc&&pt.vgDisc.install?'checked':''}> ฟรีค่าติดตั้ง</label>
+    <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin:0 14px 4px 0;white-space:normal;max-width:100%"><input type="checkbox" data-i="${i}" data-fg="vgDisc" data-fk="motor" ${pt.vgDisc&&pt.vgDisc.motor?'checked':''}> ส่วนลดมอเตอร์+รีโมท (Vangarde ฟรี 100% / Somfy ลด 50%)</label>
    </div></div>
    ${pt.vgProduct==='Awning'?`<div class="field"><label>เกรดผ้า</label><select data-i="${i}" data-f="vgGrade"><option value="poly" ${pt.vgGrade!=='acr'?'selected':''}>Polyester (จีน)</option><option value="acr" ${pt.vgGrade==='acr'?'selected':''}>Acrylic (สเปน)</option></select></div>`:''}
    <div class="field col2"><label>รายละเอียดเพิ่มเติม</label><input data-i="${i}" data-f="detail" value="${pt.detail||''}" placeholder="เช่น ขวา10 cm / ติดซ้าย10 ขวา10"></div>
