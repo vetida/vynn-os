@@ -710,7 +710,11 @@ const accountByLogin=lid=>ACCOUNTS.find(u=>u.login.toLowerCase()===String(lid||'
 const accountByUid=uid=>ACCOUNTS.find(u=>u.id===uid);
 const personById=id=>SALES.find(s=>s.id===id)||USERS.find(u=>u.id===id)||{name:'ยังไม่มอบหมาย',short:'—',color:'#9A9186'};
 
-const SOURCE={line:{l:'LINE OA',i:'msg'},booth:{l:'ออกบูธ',i:'booth'},repeat:{l:'ลูกค้าเก่า',i:'repeat'},interior:{l:'อินทีเรีย',i:'palette'}};
+// lead channels (Oct 2026 owner list). 'booth' and 'interior' are kept only so older leads still show a label.
+const SOURCE={line:{l:'LINE OA',i:'msg'},fb:{l:'Facebook',i:'msg'},ig:{l:'Instagram',i:'msg'},tiktok:{l:'TikTok',i:'msg'},baanlaesuan:{l:'งานบ้านและสวน',i:'booth'},archexpo:{l:'งานสถาปนิก',i:'booth'},repeat:{l:'ลูกค้าเก่า',i:'repeat'},designer:{l:'ดีไซเนอร์',i:'palette'},owner:{l:'ลูกค้าพี่นุ๊กพี่นิค',i:'user'},
+ booth:{l:'ออกบูธ',i:'booth',old:true},interior:{l:'อินทีเรีย',i:'palette',old:true}};
+const srcOf=s=>SOURCE[s]||{l:s||'—',i:'inbox'};
+const isReferralSrc=s=>s==='designer'||s==='interior';  // designer / interior referrals carry a referral fee
 const STAGES=['new','assigned','surveyed','quoted','approved','won','production','installing','done','lost'];
 const SL={new:'ลีดใหม่',assigned:'มอบหมายแล้ว',surveyed:'วัดหน้างานแล้ว',quoted:'เสนอราคาแล้ว',approved:'อนุมัติแล้ว',won:'ปิดการขาย',production:'กำลังผลิต',installing:'รอ/นัดติดตั้ง',done:'จบงาน',lost:'เสียโอกาส'};
 const SP={new:'info',assigned:'accent',surveyed:'warn',quoted:'warn',approved:'accent',won:'good',production:'info',installing:'accent',done:'good',lost:'crit'};
@@ -1119,7 +1123,7 @@ function travelOfMonth(empId,month){return (state.travelClaims||[]).filter(t=>t.
 function payslipData(empId,month){const e=empById(empId)||{};const r=payrollRec(empId,month);const base=e.salary||0;const ot=Math.round((r.otHours||0)*(r.otRate||0));const adv=advOfMonth(empId,month).reduce((a,x)=>a+x.amount,0);const absN=absentDays(empId,month);const absDeduct=Math.round(absN*(base/30));const sso=ssoAmount(e);const travelClaim=travelOfMonth(empId,month);const earn=base+(r.commission||0)+(r.bonus||0)+ot+(r.fuel||0)+(r.travel||0)+travelClaim+(r.welfare||0)+(r.otherEarn||0);const ded=sso+adv+absDeduct+(r.otherDeduct||0);return {e,r,base,ot,adv,absN,absDeduct,sso,travelClaim,earn,ded,net:earn-ded};}
 function ageOf(dob){if(!dob)return '';const[y,m,d]=dob.split('-').map(Number);const t=new Date(2026,6,14);let a=2026-y;if(m-1>6||(m-1===6&&d>14))a--;return a;}
 function daysToBirthday(dob){if(!dob)return null;const[,m,d]=dob.split('-').map(Number);const today=new Date(2026,6,14);let bd=new Date(2026,m-1,d);if(bd<today)bd=new Date(2027,m-1,d);return Math.round((bd-today)/86400000);}
-function sourceBadge(s){const c=SOURCE[s];return `<span class="pill neutral">${svg(c.i,'')}&nbsp;${c.l}</span>`;}
+function sourceBadge(s){const c=srcOf(s);return `<span class="pill neutral">${svg(c.i,'')}&nbsp;${c.l}</span>`;}
 
 /* ============ CALC ENGINE ============ */
 function findFabric(code){if(!code)return null;const p=P();return [...p.fabricsBlackout,...p.fabricsSheer,...(p.fabricsLining||[])].find(f=>f.code===code)||null;}
@@ -1597,7 +1601,7 @@ const META={
  crm:{t:'CRM ลูกค้า',s:'ข้อมูลลูกค้า VANGARDE · ใบเสนอราคา · ยอดชำระ · งานเก็บ/ประกัน ในที่เดียว',act:false},
  overview:{t:'ภาพรวมบริษัท',s:'สรุปทุกโมดูลแบบเรียลไทม์',act:true},
  expenses:{t:'ค่าใช้จ่ายรายวัน',s:'พนักงานพิมพ์ยอด+หมวด (เช่น "ค่าน้ำมัน 500") แนบรูปบิล → บันทึกทันที เข้าฐานข้อมูลเดียวกับทั้งระบบ',act:false},
- leads:{t:'Lead Intake',s:'รับลูกค้า 4 ช่องทาง (LINE / ออกบูธ / ลูกค้าเก่า / อินทีเรีย) แล้วมอบหมายเซลล์',act:true},
+ leads:{t:'Lead Intake',s:'รับลูกค้าจากทุกช่องทาง (LINE OA / FB / IG / TikTok / งานแสดงสินค้า / ลูกค้าเก่า / ดีไซเนอร์) แล้วมอบหมายเซลล์',act:true},
  survey:{t:'Site Survey',s:'ลงพื้นที่วัดหน้างานหลายจุด บันทึกขนาด/ผ้า/อุปกรณ์/รูป',act:false},
  quote:{t:'Quotation',s:'คำนวณผ้า+อุปกรณ์อัตโนมัติจากหน้างาน → ใบเสนอราคา → ผู้จัดการอนุมัติ',act:false},
  sewing:{t:'คิวตัดเย็บ VYNN',s:'สั่งผ้า (ซัพพลายเออร์ไทย) → เข้าคิวตัดเย็บ 7–30 วัน',act:false},
@@ -1680,11 +1684,11 @@ function renderOverview(){
 }
 function sourceBreak(L){
  const by={};L.forEach(l=>by[l.source]=(by[l.source]||0)+1);const total=L.length||1;
- const colors={line:'#2E7D46',booth:'#2C6BB3',repeat:'#B77504',interior:'#B65C36'};
+ const colors={line:'#2E7D46',fb:'#1877F2',ig:'#C13584',tiktok:'#111111',baanlaesuan:'#6E9F3B',archexpo:'#2C6BB3',repeat:'#B77504',designer:'#B65C36',owner:'#7A4FB5',booth:'#5B8DB8',interior:'#C98A6B'};
  const seg=Object.entries(by).map(([s,n])=>`<div style="width:${n/total*100}%;background:${colors[s]}"></div>`).join('');
  const interiorN=by.interior||0;
  return `<div style="display:flex;height:14px;border-radius:7px;overflow:hidden;margin-bottom:14px">${seg}</div>
-  <div class="legend">${Object.entries(by).map(([s,n])=>`<span class="li"><span class="sw" style="background:${colors[s]}"></span>${SOURCE[s].l} · ${n}</span>`).join('')}</div>
+  <div class="legend">${Object.entries(by).map(([s,n])=>`<span class="li"><span class="sw" style="background:${colors[s]}"></span>${srcOf(s).l} · ${n}</span>`).join('')}</div>
   ${interiorN?`<div class="mini-note" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">${svg('palette','')} มีลูกค้าอินทีเรีย ${interiorN} ราย — ต้องจ่ายค่าแนะนำ</div>`:''}`;
 }
 function leaderboard(){
@@ -1697,7 +1701,7 @@ let queueActions=[];
 function actionQueue(){
  const items=[];queueActions=[];
  const L=scopedLeads();
- L.filter(l=>l.stage==='new').forEach(l=>{items.push({i:'inbox',c:'info',t:'มอบหมายลีดใหม่: '+bn(l),sub:SOURCE[l.source].l});queueActions.push(()=>openLead(l.id));});
+ L.filter(l=>l.stage==='new').forEach(l=>{items.push({i:'inbox',c:'info',t:'มอบหมายลีดใหม่: '+bn(l),sub:srcOf(l.source).l});queueActions.push(()=>openLead(l.id));});
  L.filter(l=>l.stage==='assigned').forEach(l=>{items.push({i:'ruler',c:'warn',t:'นัดวัดหน้างาน: '+bn(l),sub:personById(l.assignedTo).short});queueActions.push(()=>openLead(l.id));});
  state.quotes.filter(q=>q.status==='pending').forEach(q=>{const l=leadById(q.leadId);if(brand!=='all'&&l.brand!==brand)return;items.push({i:'doc',c:'warn',t:'รออนุมัติใบเสนอราคา '+q.id,sub:bn(l)});queueActions.push(()=>openLead(q.leadId));});
  state.installs.filter(i=>i.status==='scheduled').forEach(i=>{const l=leadById(i.leadId);if(brand!=='all'&&l.brand!==brand)return;const pi=payInfo(i.quoteId);const unpaid2=pi&&!preInstallPaid(pi);const preN=pi?pi.sched.length-1:2;items.push({i:'wrench',c:unpaid2?'crit':'accent',t:(unpaid2?'⚠ ยังไม่เก็บงวด '+preN+' · ':'')+'นัดติดตั้ง '+fmtDate(i.scheduled),sub:bn(l)});queueActions.push(()=>{view='install';render();});});
@@ -1719,7 +1723,7 @@ function renderLeads(){
     <td><span class="mono" style="font-size:12.5px;font-weight:600">${l.custCode||l.id}</span><div class="mini-note">รับบริการ ${fmtDate(l.created)}</div></td>
     <td><div style="font-weight:600">${bn(l)}</div><div class="mini-note">${l.site}</div></td>
     <td>${brandChip(l.brand)}</td>
-    <td>${sourceBadge(l.source)}${l.source==='interior'?' <span class="pill accent" style="margin-left:2px">ค่าแนะนำ</span>':''}</td>
+    <td>${sourceBadge(l.source)}${isReferralSrc(l.source)?' <span class="pill accent" style="margin-left:2px">ค่าแนะนำ</span>':''}</td>
     <td>${l.assignedTo?who(l.assignedTo):'<span class="pill warn">รอมอบหมาย</span>'}</td>
     <td>${l.desiredInstall?fmtDate(l.desiredInstall):'<span class="mini-note">—</span>'}</td>
     <td>${stagePill(l.stage)}</td>
@@ -2326,7 +2330,7 @@ function docPreparer(){return docQ?sigOf(docQ.preparedBy||docQ.createdBy,['sales
 function sigName(a){return a?`<div style="font-size:10px;color:#555;margin-top:2px">( ${escH(a.name)} )</div>`:'';}
 function docSign(a,b){const p=docPreparer();const slot=(t,s)=>`<div style="width:45%"><div style="height:46px;display:flex;align-items:flex-end;justify-content:center">${sigImg(s,44)}</div>.............................................<div style="margin-top:4px">${t}</div>${sigName(s)}<div style="color:#888;margin-top:2px">วันที่ ......../......../........</div></div>`;return `<div style="display:flex;justify-content:space-between;margin-top:14px;font-size:12px;text-align:center">${slot(a,p)}${slot(b,null)}</div>`;}
 function docQuotation(q,l,co,cc){return docHead(co,'ใบเสนอราคา','QUOTATION',q.id,fmtDate(q.date))+docCustomer(l,'พนักงานขาย',personById(l.assignedTo).name)+docLines(cc)+`<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start"><div style="flex:1;font-size:11px;color:#555;padding-top:6px">* ยืนยันราคาภายใน 30 วัน<br>* มัดจำ 50% เมื่อยืนยันสั่งผลิต · 30% ก่อนติดตั้ง · 20% เมื่อจบงาน<br>* จำนวนเงินเป็นตัวอักษร: <b>(${bahtText(cc.total)})</b></div>${docTotals(cc)}</div>`+docSign('ผู้เสนอราคา / '+co.brand,'ผู้อนุมัติสั่งซื้อ / ลูกค้า');}
-function docInvoice(q,l,co,cc){const pi=payInfo(q.id);return docHead(co,'ใบกำกับภาษี / ใบเสร็จรับเงิน','TAX INVOICE / RECEIPT','INV-'+q.id.replace('QT-',''),fmtDate(q.date))+docCustomer(l,'ประเภทงาน',l.brand+' · '+(l.source==='interior'?'ผ่านอินทีเรีย':'ขายตรง'))+docLines(cc)+`<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start"><div style="flex:1;font-size:11.5px;border:1px solid #cfcfcf;padding:9px 11px;border-radius:4px"><div style="color:#888;font-size:11px">จำนวนเงินเป็นตัวอักษร</div><div style="font-weight:700">(${bahtText(cc.total)})</div><div style="color:#888;font-size:11px;margin-top:8px">การชำระเงิน 3 งวด</div>${pi.sched.map(s=>`<div style="display:flex;justify-content:space-between"><span>งวด ${s.n} (${s.pct}%)</span><span>${money(pi.total*s.pct/100)} · ${s.st==='paid'?'จ่ายแล้ว '+fmtDate(s.d):'ค้างชำระ'}</span></div>`).join('')}</div>${docTotals(cc)}</div>`+docSign('ผู้รับเงิน / '+co.brand,'ผู้รับสินค้า / ลูกค้า')+`<div style="margin-top:12px;font-size:10.5px;color:#999;text-align:center">${co.bank?'ชำระผ่าน '+co.bank+' · ':''}เอกสารตัวอย่างจากระบบ VYNN·OS</div>`;}
+function docInvoice(q,l,co,cc){const pi=payInfo(q.id);return docHead(co,'ใบกำกับภาษี / ใบเสร็จรับเงิน','TAX INVOICE / RECEIPT','INV-'+q.id.replace('QT-',''),fmtDate(q.date))+docCustomer(l,'ประเภทงาน',l.brand+' · '+(isReferralSrc(l.source)?'ผ่านอินทีเรีย':'ขายตรง'))+docLines(cc)+`<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start"><div style="flex:1;font-size:11.5px;border:1px solid #cfcfcf;padding:9px 11px;border-radius:4px"><div style="color:#888;font-size:11px">จำนวนเงินเป็นตัวอักษร</div><div style="font-weight:700">(${bahtText(cc.total)})</div><div style="color:#888;font-size:11px;margin-top:8px">การชำระเงิน 3 งวด</div>${pi.sched.map(s=>`<div style="display:flex;justify-content:space-between"><span>งวด ${s.n} (${s.pct}%)</span><span>${money(pi.total*s.pct/100)} · ${s.st==='paid'?'จ่ายแล้ว '+fmtDate(s.d):'ค้างชำระ'}</span></div>`).join('')}</div>${docTotals(cc)}</div>`+docSign('ผู้รับเงิน / '+co.brand,'ผู้รับสินค้า / ลูกค้า')+`<div style="margin-top:12px;font-size:10.5px;color:#999;text-align:center">${co.bank?'ชำระผ่าน '+co.bank+' · ':''}เอกสารตัวอย่างจากระบบ VYNN·OS</div>`;}
 function docDelivery(q,l,co,cc){const sv=surveyById(q.surveyId);const ins=state.installs.find(i=>i.quoteId===q.id);return docHead(co,'ใบส่งมอบงาน','DELIVERY / HANDOVER NOTE','DN-'+q.id.replace('QT-',''),ins?fmtDate(ins.scheduled):fmtDate(todayISO()))+docCustomer(l,'ทีมติดตั้ง',ins?ins.team:'—')+`<table><thead><tr><th style="width:32px">#</th><th>ห้อง / จุดติดตั้ง</th><th>รายการที่ส่งมอบ</th><th class="doc-num" style="width:66px">จำนวน</th></tr></thead><tbody>${sv?sv.points.map((p,i)=>`<tr><td>${i+1}</td><td>${p.room}</td><td>${p.kind==='curtain'?p.curtainType+' · '+([p.fabricBlackout,p.fabricSheer,p.fabricLining].filter(Boolean).map(cd=>(findFabric(cd)||{}).name||cd).join(' + '))+(p.track==='motor'?' + รางมอเตอร์ '+p.motorModel:' + รางธรรมดา'):p.blindType+(p.track==='motor'?' + มอเตอร์':'')}</td><td class="doc-num">${p.qty}</td></tr>`).join(''):'<tr><td colspan="4">—</td></tr>'}</tbody></table><div style="border:1px solid #cfcfcf;border-radius:4px;padding:9px 12px;font-size:12px;background:#f6faf9"><b>การรับประกัน:</b> รับประกันงานติดตั้ง 1 ปี${ins&&ins.warrantyUntil?' (ถึงวันที่ '+fmtDate(ins.warrantyUntil)+')':''} — ครอบคลุมความเสียหายจากการติดตั้งและอุปกรณ์ตามเงื่อนไข</div><div style="margin-top:10px;font-size:12px;color:#555">ข้าพเจ้าได้รับมอบและตรวจรับงานเรียบร้อยแล้วตามรายการข้างต้น</div>`+docSign('ผู้ส่งมอบงาน / '+co.brand,'ผู้รับมอบงาน / ลูกค้า');}
 function docButtons(q,l){const isV=accIsVat(q);const dealt=['approved','accepted'].includes(q.status)||['won','production','installing','done'].includes(l.stage);return `<div><div class="section-title">เอกสาร (พิมพ์ได้)</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-doc="quotation" data-q="${q.id}">${svg('doc','ico')} ใบเสนอราคา</button>${dealt?`<button class="btn sm" data-doc="billing" data-q="${q.id}">${svg('cash','ico')} ใบแจ้งหนี้ (แบ่งงวด)</button>`:''}${['approved','accepted'].includes(q.status)?`<button class="btn sm" data-doc="taxinvoice" data-q="${q.id}">${svg('print','ico')} ${isV?'ใบกำกับภาษี/ใบเสร็จ':'ใบเสร็จรับเงิน'}</button>`:''}${['won','production','installing','done'].includes(l.stage)?`<button class="btn sm" data-doc="delivery" data-q="${q.id}">${svg('doc','ico')} ใบส่งมอบงาน</button>`:''}</div></div>`;}
 /* --- standard bilingual (TH/EN) document layout (overrides simple versions above) --- */
@@ -2554,7 +2558,7 @@ function projectPnL(l){
  const revenue=cc.netBeforeVat;                 // รายได้ก่อน VAT (VAT ไม่นับเป็นรายได้)
  const cogs=cc.cost;                            // ต้นทุนสินค้า/วัตถุดิบ
  const ship=l.brand==='Vangarde'?shipAlloc(q.id):0;
- const referral=l.source==='interior'?Math.round(revenue*(l.referralPct||0)/100):0;
+ const referral=isReferralSrc(l.source)?Math.round(revenue*(l.referralPct||0)/100):0;
  const sv=surveyById(q.surveyId);
  const points=sv?sv.points.reduce((a,p)=>a+p.qty,0):0;
  const labor=points*(P().installLaborPerPoint||0);
@@ -2984,8 +2988,8 @@ function openLead(id){
  const pi=q?payInfo(q.id):null;
  // journey
  const steps=[];
- steps.push({done:true,ico:'inbox',color:'var(--info)',title:'รับลีดเข้าระบบ',meta:`${SOURCE[l.source].l} · ${fmtDate(l.created)}`,
-  card:`<div class="kv"><dt>เบอร์</dt><dd>${l.phone}</dd>${l.desiredInstall?`<dt>วันติดตั้งที่ต้องการ</dt><dd>${fmtDate(l.desiredInstall)}</dd>`:''}${l.source==='interior'?`<dt>ผู้แนะนำ</dt><dd>${l.referrer||'—'} · ค่าแนะนำ ${l.referralPct||0}%</dd>`:''}</div>${l.note?`<div class="mini-note" style="margin-top:8px">📝 ${l.note}</div>`:''}`});
+ steps.push({done:true,ico:'inbox',color:'var(--info)',title:'รับลีดเข้าระบบ',meta:`${srcOf(l.source).l} · ${fmtDate(l.created)}`,
+  card:`<div class="kv"><dt>เบอร์</dt><dd>${l.phone}</dd>${l.desiredInstall?`<dt>วันติดตั้งที่ต้องการ</dt><dd>${fmtDate(l.desiredInstall)}</dd>`:''}${isReferralSrc(l.source)?`<dt>ผู้แนะนำ</dt><dd>${l.referrer||'—'} · ค่าแนะนำ ${l.referralPct||0}%</dd>`:''}</div>${l.note?`<div class="mini-note" style="margin-top:8px">📝 ${l.note}</div>`:''}`});
  steps.push({done:!!l.assignedTo,ico:'user',color:'var(--accent)',title:l.assignedTo?'มอบหมายให้เซลล์':'รอมอบหมายเซลล์',meta:l.assignedTo?personById(l.assignedTo).name:'ยังไม่มอบหมาย',card:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="assignSel" style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px">${SALES.filter(s=>!s.inactive||s.id===l.assignedTo).map(s=>`<option value="${s.id}" ${((l.assignedTo||SALES[0].id)===s.id)?'selected':''}>${s.name}</option>`).join('')}</select><button class="btn primary" id="assignBtn">${l.assignedTo?'เปลี่ยนผู้รับผิดชอบ':'＋ มอบหมาย'}</button></div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><label for="pmSel" style="font-size:12.5px;color:var(--text-muted)">PM ผู้ดูแล</label><select id="pmSel" data-lead="${l.id}" ${canEditView(view)?'':'disabled'} style="padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:13px"><option value="">— ยังไม่กำหนด —</option>${ACCOUNTS.filter(a=>a.role==='manager'&&(!a.inactive||a.id===l.pmId)).map(a=>`<option value="${a.id}" ${l.pmId===a.id?'selected':''}>${a.name}</option>`).join('')}</select></div>`});
  const svPhotos=sv?sv.points.reduce((a,p)=>a+(p.photos||[]).length,0):0;
@@ -3013,7 +3017,7 @@ function openLead(id){
   steps.push({done:ins&&ins.status==='done',ico:'wrench',color:'var(--good)',title:ins?(ins.status==='done'?'ติดตั้งเสร็จ + รับประกัน 1 ปี':ins.status==='incomplete'?`ติดตั้งแล้ว · มีงานเก็บค้าง ${punch} รายการ`:`นัดติดตั้ง ${fmtDate(ins.scheduled)}`):'รอนัดติดตั้ง',meta:ins?`${ins.team}${ins.status==='done'?' · ประกันถึง '+fmtDate(ins.warrantyUntil):''}`:'First-come-first-serve',card:''});
  }
  // referral summary for interior
- const referralAmt = (l.source==='interior'&&cc)?Math.round(cc.netBeforeVat*(l.referralPct||0)/100):0;
+ const referralAmt = (isReferralSrc(l.source)&&cc)?Math.round(cc.netBeforeVat*(l.referralPct||0)/100):0;
  body.innerHTML=`
   <div class="card card-pad" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
    <div><div class="mini-note">มูลค่าดีล (รวม VAT)</div><div style="font-size:20px;font-weight:750;margin-top:2px">${cc?THB(cc.total):'—'}</div></div>
@@ -3099,19 +3103,19 @@ function openAddLead(){
   <div style="padding:20px 22px">
    <div class="field-row"><div class="field"><label>ชื่อลูกค้า</label><input id="f-name" placeholder="เช่น คุณสมชาย"></div><div class="field"><label>สถานที่/โปรเจกต์</label><input id="f-site" placeholder="เช่น คอนโด XYZ"></div></div>
    <div class="field-row"><div class="field"><label>เบอร์</label><input id="f-phone" placeholder="08x-xxx-xxxx"></div><div class="field"><label>แบรนด์</label><select id="f-brand"><option${brand==='VYNN'?' selected':''}>VYNN</option><option${brand==='Vangarde'?' selected':''}>Vangarde</option></select></div></div>
-   <div class="field-row"><div class="field"><label>ช่องทาง</label><select id="f-src">${Object.entries(SOURCE).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('')}</select></div><div class="field"><label>วันติดตั้งที่ต้องการ</label><input id="f-install" type="date"></div></div>
-   <div id="referralWrap" style="display:none"><div class="field-row"><div class="field"><label>ผู้แนะนำ (อินทีเรีย)</label><input id="f-ref" placeholder="ชื่อดีไซน์เนอร์/สตูดิโอ"></div><div class="field"><label>ค่าแนะนำ (%)</label><input id="f-refpct" type="number" value="10"></div></div></div>
+   <div class="field-row"><div class="field"><label>ช่องทาง</label><select id="f-src">${Object.entries(SOURCE).filter(([k,v])=>!v.old).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('')}</select></div><div class="field"><label>วันติดตั้งที่ต้องการ</label><input id="f-install" type="date"></div></div>
+   <div id="referralWrap" style="display:none"><div class="field-row"><div class="field"><label>ผู้แนะนำ (ดีไซเนอร์)</label><input id="f-ref" placeholder="ชื่อดีไซน์เนอร์/สตูดิโอ"></div><div class="field"><label>ค่าแนะนำ (%)</label><input id="f-refpct" type="number" value="10"></div></div></div>
    <div class="field"><label>มอบหมายเซลล์</label><select id="f-sales"><option value="">— รอมอบหมาย —</option>${SALES.filter(s=>!s.inactive).map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
    <div class="field"><label>บันทึก</label><textarea id="f-note" rows="2" placeholder="รายละเอียดความต้องการ"></textarea></div>
    <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" id="mCancel">ยกเลิก</button><button class="btn primary" id="mSave">＋ บันทึกลีด</button></div>
   </div>`;
  const close=()=>{m.classList.remove('open');document.getElementById('scrim').classList.remove('open');};
  m.querySelector('#mClose').onclick=close;m.querySelector('#mCancel').onclick=close;
- m.querySelector('#f-src').onchange=e=>{m.querySelector('#referralWrap').style.display=e.target.value==='interior'?'block':'none';};
+ m.querySelector('#f-src').onchange=e=>{m.querySelector('#referralWrap').style.display=isReferralSrc(e.target.value)?'block':'none';};
  m.querySelector('#mSave').onclick=()=>{
   const sid=m.querySelector('#f-sales').value;const src=m.querySelector('#f-src').value;const nid='L-'+(state.seq.L++);
   const nbrand=m.querySelector('#f-brand').value;
-  state.leads.unshift({id:nid,custCode:nextCustCode(nbrand),name:m.querySelector('#f-name').value.trim()||'ลูกค้าใหม่',site:m.querySelector('#f-site').value||'—',phone:m.querySelector('#f-phone').value||'—',brand:nbrand,source:src,assignedTo:sid||null,stage:sid?'assigned':'new',created:todayISO(),desiredInstall:m.querySelector('#f-install').value||'',note:m.querySelector('#f-note').value,referrer:src==='interior'?m.querySelector('#f-ref').value:'',referralPct:src==='interior'?+m.querySelector('#f-refpct').value:0});
+  state.leads.unshift({id:nid,custCode:nextCustCode(nbrand),name:m.querySelector('#f-name').value.trim()||'ลูกค้าใหม่',site:m.querySelector('#f-site').value||'—',phone:m.querySelector('#f-phone').value||'—',brand:nbrand,source:src,assignedTo:sid||null,stage:sid?'assigned':'new',created:todayISO(),desiredInstall:m.querySelector('#f-install').value||'',note:m.querySelector('#f-note').value,referrer:isReferralSrc(src)?m.querySelector('#f-ref').value:'',referralPct:isReferralSrc(src)?+m.querySelector('#f-refpct').value:0});
   logAudit('add_lead','เพิ่มลูกค้า '+(leadById(nid)?leadById(nid).name:nid)+' ('+nid+')');
   save();close();view='leads';render();openLead(nid);
  };
