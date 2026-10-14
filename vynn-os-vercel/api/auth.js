@@ -107,9 +107,43 @@ A.uploadDoc = async (req, res, me, b) => {
 
 A.deleteDoc = async (req, res, me, b) => {
   need(V.isCEO(me), 403, 'เฉพาะ CEO');
-  await pool.query('DELETE FROM vos_docs WHERE id=$1', [String(b.id || '')]);
+  await pool.query("DELETE FROM vos_docs WHERE id=$1 AND kind<>'signature'", [String(b.id || '')]);
   return { ok: true };
 };
+
+/* ---------- document signatures: each signer uploads / removes ONLY their own ---------- */
+const SIGNERS = ['admin', 'manager', 'sales_support'];   // CEO, PM (approvers) · Admin (preparer)
+async function setSigStamp(uid, stamp) {
+  await pool.query("UPDATE vos_users SET profile = jsonb_set(coalesce(profile,'{}'::jsonb), '{sigAt}', to_jsonb($2::text)), updated_at=now() WHERE id=$1", [uid, stamp]);
+}
+A.uploadSignature = async (req, res, me, b) => {
+  need(SIGNERS.includes(me.role), 403, 'บทบาทนี้ไม่ต้องใช้ลายเซ็นในเอกสาร');
+  const mime = str(b.mime, 40);
+  need(mime === 'image/png' || mime === 'image/jpeg', 400, 'รองรับเฉพาะรูป PNG / JPG');
+  const buf = Buffer.from(String(b.data || ''), 'base64');
+  need(buf.length > 0 && buf.length <= 400 * 1024, 413, 'ไฟล์ลายเซ็นใหญ่เกิน 400KB');
+  await pool.query("DELETE FROM vos_docs WHERE user_id=$1 AND kind='signature'", [me.id]);
+  await pool.query("INSERT INTO vos_docs(id,user_id,kind,name,mime,size,bytes) VALUES($1,$2,'signature','signature',$3,$4,$5)",
+    ['s' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), me.id, mime, buf.length, buf]);
+  const stamp = Date.now().toString(36);
+  await setSigStamp(me.id, stamp);
+  return { ok: true, sig: stamp };
+};
+A.deleteSignature = async (req, res, me) => {
+  await pool.query("DELETE FROM vos_docs WHERE user_id=$1 AND kind='signature'", [me.id]);
+  await setSigStamp(me.id, '');
+  return { ok: true };
+};
+// any logged-in user may draw a colleague's signature on a company document
+async function sendSig(req, res) {
+  const f = (await pool.query("SELECT mime, bytes FROM vos_docs WHERE user_id=$1 AND kind='signature' ORDER BY created_at DESC LIMIT 1", [String(req.query.uid || '')])).rows[0];
+  need(f, 404, 'not found');
+  res.setHeader('Content-Type', f.mime);
+  res.setHeader('Cache-Control', 'private, max-age=86400');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Content-Disposition', 'inline');
+  res.status(200).send(f.bytes);
+}
 
 async function sendDoc(req, res, me) {
   need(V.isCEO(me), 404, 'not found');
@@ -129,6 +163,7 @@ module.exports = async (req, res) => {
     await V.ensureVos();
     const me = await V.sessionUser(req);
     if (req.method === 'GET' && req.query.a === 'doc') { need(me, 401, 'login required'); return await sendDoc(req, res, me); }
+    if (req.method === 'GET' && req.query.a === 'sig') { need(me, 401, 'login required'); return await sendSig(req, res); }
     need(req.method === 'POST', 405, 'POST only');
     let b = req.body;
     if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }
