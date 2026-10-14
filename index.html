@@ -560,6 +560,9 @@
   #viewAsBar{position:fixed;top:0;left:0;right:0;z-index:9000;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:7px 14px;background:#F7DA7B;color:#2B2B2B;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
   #viewAsBar button{background:#111;color:#fff;border:0;border-radius:999px;padding:5px 14px;font:inherit;font-size:12.5px;cursor:pointer}
   body.viewas{padding-top:40px}
+  .cam-src{display:none !important}
+  .cam-row{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 4px}
+  .cam-row .btn{flex:1;min-width:120px;justify-content:center}
   .jr{display:flex;gap:3px;margin-top:6px}
   .jr i{flex:1;height:6px;border-radius:3px;background:var(--border,#ddd)}
   .jr i.on{background:#3E8E5A}
@@ -3967,6 +3970,42 @@ function openLeadLite(l){
  body.querySelector('#liteTicket').onclick=()=>{dr.classList.remove('open');sc.classList.remove('open');openAddTicket(l.id);};
  body.querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>openTicket(b.dataset.tk));
 }
+
+/* ============ PHOTO INPUTS: camera / gallery buttons + auto-shrink ============
+   Every multi-photo picker (survey points, tickets, repair log, payment slips) gets
+   "📷 ถ่ายรูป" (opens the phone camera) and "🖼 เลือกจากคลัง"; photos are shrunk to ≤1600px JPEG
+   before the page's own handler sees them, so camera shots don't bloat the synced data. */
+const PHOTO_SEL='input[type=file][accept="image/*"][multiple]:not([hidden])';
+async function shrinkPhoto(f){
+ if(!/^image\//.test(f.type)||f.type==='image/gif')return f;
+ try{
+  const bmp=await createImageBitmap(f),k=Math.min(1,1600/Math.max(bmp.width,bmp.height));
+  const cv=document.createElement('canvas');cv.width=Math.round(bmp.width*k);cv.height=Math.round(bmp.height*k);
+  cv.getContext('2d').drawImage(bmp,0,0,cv.width,cv.height);
+  const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.82));
+  return blob&&blob.size<f.size?new File([blob],String(f.name||'photo').replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'}):f;
+ }catch(e){return f;}
+}
+document.addEventListener('change',async e=>{
+ const inp=e.target;if(!inp||!inp.matches||!inp.matches(PHOTO_SEL))return;
+ if(inp._shrunk){inp._shrunk=false;return;}            // second pass: let the page handler run
+ if(!inp.files||!inp.files.length||typeof DataTransfer==='undefined')return;
+ e.stopImmediatePropagation();
+ const out=await Promise.all([...inp.files].map(shrinkPhoto));
+ try{const dt=new DataTransfer();out.forEach(f=>dt.items.add(f));inp.files=dt.files;}catch(x){}
+ inp._shrunk=true;inp.dispatchEvent(new Event('change',{bubbles:true}));
+},true);
+function enhancePhotoInputs(root){
+ (root||document).querySelectorAll(PHOTO_SEL).forEach(inp=>{
+  if(inp._cam)return;inp._cam=true;inp.classList.add('cam-src');
+  const row=document.createElement('div');row.className='cam-row';
+  row.innerHTML='<button type="button" class="btn sm cam-shot">📷 ถ่ายรูป</button><button type="button" class="btn sm cam-pick">🖼 เลือกจากคลัง</button>';
+  row.querySelector('.cam-shot').onclick=()=>{inp.setAttribute('capture','environment');inp.click();};
+  row.querySelector('.cam-pick').onclick=()=>{inp.removeAttribute('capture');inp.click();};
+  inp.insertAdjacentElement('beforebegin',row);
+ });
+}
+new MutationObserver(()=>enhancePhotoInputs()).observe(document.documentElement,{childList:true,subtree:true});
 
 /* ============ QUOTE REVISIONS: mark the FINAL one the customer agreed to ============ */
 document.addEventListener('change',e=>{
