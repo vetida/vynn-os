@@ -26,7 +26,11 @@ A.login = async (req, res, me, b) => {
   if (!u || !u.active) throw new HttpError(401, 'ไม่พบรหัสพนักงานนี้');
   if (u.locked_until && new Date(u.locked_until) > new Date()) throw new HttpError(429, 'ใส่รหัสผิดหลายครั้ง ลองใหม่ใน 10 นาที');
   if (!V.checkPassword(pw, u.pw_hash)) {
-    await pool.query("UPDATE vos_users SET fail_count=fail_count+1, locked_until=CASE WHEN fail_count+1>=5 THEN now()+interval '10 minutes' ELSE NULL END WHERE id=$1", [u.id]);
+    // a lock that has run out starts a fresh count, so the next wrong try is 1 of 5, not 6
+    await pool.query(`UPDATE vos_users SET
+      fail_count=CASE WHEN locked_until<=now() THEN 1 ELSE fail_count+1 END,
+      locked_until=CASE WHEN locked_until<=now() THEN NULL WHEN fail_count+1>=5 THEN now()+interval '10 minutes' ELSE NULL END
+      WHERE id=$1`, [u.id]);
     throw new HttpError(401, 'รหัสผ่านไม่ถูกต้อง');
   }
   await pool.query('UPDATE vos_users SET fail_count=0, locked_until=NULL WHERE id=$1', [u.id]);
