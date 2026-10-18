@@ -1589,7 +1589,7 @@ function openReviseModal(quoteId){
  m.querySelector('#mSave').onclick=()=>{
   q.discount=+m.querySelector('#rv-discount').value||0;q.adjust=+m.querySelector('#rv-adjust').value||0;q.scopeNote=m.querySelector('#rv-scope').value;q.date=todayISO();
   const total=calcQuote(q).total;
-  q.revisions.push({rev:q.revisions.length+1,date:todayISO(),discount:q.discount,adjust:q.adjust,note:m.querySelector('#rv-note').value||'แก้ไขราคา',status:q.status,total,by:currentUser?currentUser.id:'a1',pts:JSON.parse(JSON.stringify(q.points||[]))});
+  q.finalRev=null;q.revisions.push({rev:q.revisions.length+1,date:todayISO(),discount:q.discount,adjust:q.adjust,note:m.querySelector('#rv-note').value||'แก้ไขราคา',status:q.status,total,by:currentUser?currentUser.id:'a1',pts:JSON.parse(JSON.stringify(q.points||[]))});
   save();close();openLead(q.leadId);render(false);
  };
  m.classList.add('open');document.getElementById('scrim').classList.add('open');
@@ -2353,7 +2353,7 @@ function saveEdit(){
   if(sv){sv.points=editState.points;sv.date=todayISO();}
   else{state.surveys.push({id:'SV-'+(state.seq.SV++),leadId:editState.leadId,date:todayISO(),by:lead.assignedTo||'s1',points:editState.points});}
   // ซิงค์การแก้ไขหน้างานเข้าใบเสนอราคาที่ยังไม่ปิดการขาย + บันทึกเป็น revision ใหม่ (เก็บ snapshot ไว้ดูย้อนหลัง)
-  quotesOfLead(editState.leadId).forEach(q=>{if(['accepted','rejected'].includes(q.status))return;q.points=JSON.parse(JSON.stringify(editState.points));q.date=todayISO();if(!q.revisions)q.revisions=[];const total=calcQuote(q).total;q.revisions.push({rev:q.revisions.length+1,date:todayISO(),discount:q.discount||0,adjust:q.adjust||0,note:'แก้ไขจากการวัดหน้างาน ('+editState.points.length+' จุด)',status:q.status,total,by:currentUser?currentUser.id:'a1',pts:JSON.parse(JSON.stringify(editState.points))});});
+  quotesOfLead(editState.leadId).forEach(q=>{if(['accepted','rejected'].includes(q.status))return;q.points=JSON.parse(JSON.stringify(editState.points));q.date=todayISO();if(!q.revisions)q.revisions=[];const total=calcQuote(q).total;q.finalRev=null;q.revisions.push({rev:q.revisions.length+1,date:todayISO(),discount:q.discount||0,adjust:q.adjust||0,note:'แก้ไขจากการวัดหน้างาน ('+editState.points.length+' จุด)',status:q.status,total,by:currentUser?currentUser.id:'a1',pts:JSON.parse(JSON.stringify(editState.points))});});
   if(lead.stage==='assigned')lead.stage='surveyed';
   logAudit('survey','บันทึกวัดหน้างาน — '+lead.name+' ('+editState.points.length+' จุด)');
   save();closeEditor();render();openLead(editState.leadId);
@@ -2361,7 +2361,7 @@ function saveEdit(){
   const q=quoteById(editState.quoteId);if(!q)return;
   q.points=editState.points;q.date=todayISO();q.priceMode=editState.priceMode;
   const total=calcQuote(q).total;
-  q.revisions.push({rev:q.revisions.length+1,date:todayISO(),discount:q.discount||0,adjust:q.adjust||0,note:'แก้ไขรายการ (จุด/ขนาด/รายละเอียด)',status:q.status,total,by:currentUser?currentUser.id:'a1',pts:JSON.parse(JSON.stringify(q.points))});
+  q.finalRev=null;q.revisions.push({rev:q.revisions.length+1,date:todayISO(),discount:q.discount||0,adjust:q.adjust||0,note:'แก้ไขรายการ (จุด/ขนาด/รายละเอียด)',status:q.status,total,by:currentUser?currentUser.id:'a1',pts:JSON.parse(JSON.stringify(q.points))});
   save();closeEditor();render();openLead(editState.leadId);
  }
 }
