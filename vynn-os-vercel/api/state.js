@@ -1,6 +1,6 @@
 'use strict';
 // Vercel serverless function: GET /api/state  and  PUT /api/state
-const { pool, ensureSchema, composeState, saveState } = require('../lib/db');
+const { pool, ensureSchema, composeState, saveState, readExtras } = require('../lib/db');
 const { sessionUser } = require('../lib/vos');
 
 module.exports = async (req, res) => {
@@ -34,8 +34,9 @@ module.exports = async (req, res) => {
       try {
         await client.query('BEGIN');
         await saveState(client, state);
+        const extras = await readExtras(client);   // merged result, so this device sees other devices' entries
         await client.query('COMMIT');
-        res.status(200).json({ ok: true, savedAt: new Date().toISOString() });
+        res.status(200).json({ ok: true, savedAt: new Date().toISOString(), extras });
       } catch (e) {
         await client.query('ROLLBACK');
         throw e;
