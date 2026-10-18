@@ -560,6 +560,24 @@
   #viewAsBar{position:fixed;top:0;left:0;right:0;z-index:9000;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:7px 14px;background:#F7DA7B;color:#2B2B2B;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
   #viewAsBar button{background:#111;color:#fff;border:0;border-radius:999px;padding:5px 14px;font:inherit;font-size:12.5px;cursor:pointer}
   body.viewas{padding-top:40px}
+  .att-card{margin-top:14px;width:100%;background:var(--surface);border-radius:14px;padding:12px;box-shadow:var(--shadow);text-align:left}
+  .att-card.on{box-shadow:0 0 0 2px #3E8E5A inset,var(--shadow)}
+  .att-h{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px;font-size:13px}
+  .att-h span{color:var(--text-muted);font-size:12px}
+  .att-note{font-size:11px;color:var(--text-muted);margin:8px 0 4px;line-height:1.5}
+  .att-hist{background:none;border:0;padding:0;font:inherit;font-size:12px;color:var(--text-muted);text-decoration:underline;cursor:pointer}
+  .att-tbl{display:grid;gap:6px;max-height:60vh;overflow:auto}
+  .att-tbl>div{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px dashed var(--border)}
+  .att-list{display:grid;gap:10px;margin-top:14px}
+  .att-row{display:grid;grid-template-columns:minmax(180px,1fr) 2fr auto;gap:12px;align-items:center;background:var(--surface);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow)}
+  .att-who{display:flex;gap:10px;align-items:center;position:relative;min-width:0}
+  .att-who span{display:flex;flex-direction:column;min-width:0}
+  .att-who small,.att-side small{color:var(--text-muted);font-size:11.5px}
+  .att-who .dot{position:absolute;left:30px;top:30px;width:11px;height:11px;border-radius:50%;background:#B8BCC4;border:2px solid var(--surface)}
+  .att-who .dot.on{background:#3E8E5A}
+  .att-times{display:grid;gap:4px;font-size:12.5px;min-width:0}
+  .att-side{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+  @media (max-width:700px){.att-row{grid-template-columns:1fr}.att-side{align-items:flex-start;flex-direction:row;flex-wrap:wrap}}
   .kit-box{border:1px solid var(--border);border-radius:12px;padding:6px 12px;background:var(--surface)}
   .kit-row{display:grid;grid-template-columns:minmax(0,1fr) auto 64px 74px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--border);font-size:13px}
   .kit-row .kn{min-width:0}
@@ -977,9 +995,9 @@ const SESSB='vynn_os_brand';
 // VANGARDE launcher (2026-10): the existing login roles map onto the owner's six departments,
 // and each department gets View (V) or View+Edit (E) per module, from the owner's two access tables.
 const PERM_ROLE={admin:'ceo',sales_support:'admin',manager:'pm',sales:'sales',online_sales:'online',installer:'staff',hr:'staff',accounting:'accounts'};
-const MODULES=['overview','leads','expenses','install','survey','crm','vgprice','quote','service','kpi','staffdir'];
+const MODULES=['overview','leads','expenses','install','survey','crm','vgprice','quote','service','kpi','staffdir','attend'];
 const PERMS={
- ceo:     {overview:'E',leads:'E',expenses:'E',install:'E',survey:'E',crm:'E',vgprice:'E',quote:'E',service:'E',kpi:'E',staffdir:'E'},
+ ceo:     {overview:'E',leads:'E',expenses:'E',install:'E',survey:'E',crm:'E',vgprice:'E',quote:'E',service:'E',kpi:'E',staffdir:'E',attend:'E'},
  admin:   {leads:'E',expenses:'E',install:'E',survey:'V',crm:'E',vgprice:'E',quote:'E',service:'E',kpi:'E'},
  pm:      {leads:'E',expenses:'E',install:'E',survey:'E',crm:'V',vgprice:'V',service:'E',kpi:'E'},
  online:  {leads:'E',expenses:'E',install:'V',survey:'V',crm:'V',vgprice:'V',quote:'E',service:'E',kpi:'E'},  // เซลล์ออนไลน์: quotes/money only for own leads (onlineBy)
@@ -999,7 +1017,7 @@ function firstAllowedView(){return 'home';}
 function myScopeId(){return currentUser&&currentUser.role==='sales'?currentUser.id:'';}
 /* ---- server login (2026-10): passwords are checked and stored only on the server (/api/auth) ---- */
 async function vosApi(a,body){
- if(typeof viewAs!=='undefined'&&viewAs&&!['me','verify','dir'].includes(a))throw{code:'viewas',message:'อยู่ในโหมดดูแทน (View as) — กด "กลับเป็น CEO" ก่อน'};
+ if(typeof viewAs!=='undefined'&&viewAs&&!['me','verify','dir','ping'].includes(a))throw{code:'viewas',message:'อยู่ในโหมดดูแทน (View as) — กด "กลับเป็น CEO" ก่อน'};
  let r;try{r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(Object.assign({a},body||{}))});}
  catch(e){throw{code:'offline',message:'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่'};}
  const j=await r.json().catch(()=>({}));
@@ -1020,7 +1038,7 @@ async function tryLogin(loginId,pw){
 }
 async function vosVerify(pw){try{return (await vosApi('verify',{password:pw})).ok===true;}catch(e){return false;}}
 function setSession(uid){currentUser=accountByUid(uid);role=currentUser.role;try{localStorage.setItem(SESS,uid);}catch(e){}}
-function logout(){if(viewAs)stopViewAs();if(state&&window.__vosStateReady){autoPresence('offline');logAudit('logout','ออกจากระบบ');}vosApi('logout').catch(()=>{});currentUser=null;window.__vosStateReady=false;try{localStorage.removeItem(SESS);}catch(e){}pendingBrand=null;showLogin();}
+function logout(){if(viewAs)stopViewAs();clearInterval(attTimer);attOpen=null;if(state&&window.__vosStateReady){autoPresence('offline');logAudit('logout','ออกจากระบบ');}vosApi('logout').catch(()=>{});currentUser=null;window.__vosStateReady=false;try{localStorage.removeItem(SESS);}catch(e){}pendingBrand=null;showLogin();}
 async function restoreSession(){try{const r=await vosApi('me');applyUsers(r.users);setSession(r.me.id);return true;}catch(e){return false;}}
 // apply the active brand: scope + theme + sidebar/topbar labels
 // brand logo image (Settings → company logo; falls back to the built-in VANGARDE logo)
@@ -1040,7 +1058,7 @@ function logAudit(action,detail){
 const ROLE_LABEL={admin:'CEO',manager:'PM',sales_support:'Admin',sales:'Sales',online_sales:'เซลล์ออนไลน์',hr:'Staff',accounting:'Accounts',installer:'Staff'};
 const ROLE_COLOR={online_sales:'#C13584',admin:'#7A4FB5',manager:'#B77504',sales_support:'#0E7C86',sales:'#0F6E68',hr:'#2C6BB3',accounting:'#0E7C86',installer:'#C0392B'};
 function showLogin(){document.getElementById('loginScreen').style.display='flex';document.querySelector('.app').style.display='none';const e=document.getElementById('loginErr');e.classList.remove('show');document.getElementById('loginForm').reset();document.getElementById('brandPick').style.display='none';document.getElementById('loginForm').style.display='';pendingBrand='Vangarde';document.documentElement.setAttribute('data-brand','Vangarde');document.getElementById('loginBrandName').innerHTML=brandLogoHTML('Vangarde');}
-function showApp(){document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';brand='Vangarde';view='home';try{history.replaceState({vos:'root'},'');history.pushState({vos:'view',v:'home'},'');}catch(e){}histView='home';applyBrand(brand);const pwI=document.getElementById('loginPw'),pwE=document.getElementById('pwEye');if(pwI)pwI.type='password';if(pwE)pwE.setAttribute('aria-pressed','false');if(!canOpen(view))view=firstAllowedView();renderUserChip();['emptyBtn','resetBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=(currentUser&&currentUser.id==='a1')?'':'none';});render();}
+function showApp(){setTimeout(startPresence,0);document.getElementById('loginScreen').style.display='none';document.querySelector('.app').style.display='';brand='Vangarde';view='home';try{history.replaceState({vos:'root'},'');history.pushState({vos:'view',v:'home'},'');}catch(e){}histView='home';applyBrand(brand);const pwI=document.getElementById('loginPw'),pwE=document.getElementById('pwEye');if(pwI)pwI.type='password';if(pwE)pwE.setAttribute('aria-pressed','false');if(!canOpen(view))view=firstAllowedView();renderUserChip();['emptyBtn','resetBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=(currentUser&&currentUser.id==='a1')?'':'none';});render();}
 function renderUserChip(){
  const el=document.getElementById('userChip');if(!el||!currentUser)return;
  const col=currentUser.color||ROLE_COLOR[role]||'#7A4FB5';
@@ -1627,10 +1645,12 @@ const NAV=[
  {id:'kpi',label:'KPI',icon:'trend'},
  {grp:'เฉพาะ CEO'},
  {id:'staffdir',label:'รายชื่อพนักงาน',icon:'user'},
+ {id:'attend',label:'เวลาเข้า-ออกงาน',icon:'clock'},
 ];
 const META={
  home:{t:'หน้าแรก',s:'VANGARDE',act:false},
  agenda:{t:'แผนงาน & KPI ของฉัน',s:'อัปเดตงานรายวัน รายสัปดาห์ รายเดือน และดูความคืบหน้าเป็น %',act:false},
+ attend:{t:'เวลาเข้า-ออกงาน',s:'ใครออนไลน์อยู่ · เวลาเข้า-ออกงาน · ตำแหน่ง GPS ระหว่างเข้างาน · เปิดได้เฉพาะ CEO',act:false},
  staffdir:{t:'รายชื่อพนักงาน',s:'ข้อมูลพนักงาน เอกสาร เงินเดือน สวัสดิการ และ username / password · เปิดได้เฉพาะ CEO',act:false},
  crm:{t:'CRM ลูกค้า',s:'ข้อมูลลูกค้า VANGARDE · ใบเสนอราคา · ยอดชำระ · งานเก็บ/ประกัน ในที่เดียว',act:false},
  overview:{t:'ภาพรวมบริษัท',s:'สรุปทุกโมดูลแบบเรียลไทม์',act:true},
@@ -3267,7 +3287,7 @@ function renderVgPrice(){
   ${perg}${zip}${awn}
   <div class="grid two-col" style="grid-template-columns:1fr 1fr 1fr">${addBlock('Pergola',vg.addons.pergola)}${addBlock('Zip Shade',vg.addons.zipshade)}${addBlock('Awning',vg.addons.awning)}</div>`;
 }
-function renderView(){({expenses:renderExpenseApp,kpi:renderMyKPI,home:renderHome,staffdir:renderStaffDir,agenda:renderAgenda,crm:renderCRM,overview:renderOverview,oldexpenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,teamkpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
+function renderView(){({expenses:renderExpenseApp,kpi:renderMyKPI,home:renderHome,staffdir:renderStaffDir,attend:renderAttend,agenda:renderAgenda,crm:renderCRM,overview:renderOverview,oldexpenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,teamkpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
 function render(rerenderNav=true){
  if(!canOpen(view))view=firstAllowedView(); // block disallowed / wrong-brand views
  if(currentUser&&!histPopping&&histView!==view){try{history.pushState({vos:'view',v:view},'');}catch(e){}}
@@ -3367,6 +3387,7 @@ const MOD_INFO={
  quote:{t:'Quotation',s:'ใบเสนอราคา และการอนุมัติ',ic:'doc'},
  service:{t:'เคลม & ร้องเรียน',s:'เคลมสินค้า ร้องเรียน สอบถาม และงานเก็บหลังติดตั้ง',ic:'shield'},
  kpi:{t:'KPI · โปรไฟล์ของฉัน',s:'ตารางงาน ยอดขาย งานที่ดูแล และสถานะของฉัน',ic:'trend'},
+ attend:{t:'เวลาเข้า-ออกงาน',s:'ใครออนไลน์ และเวลาเข้า-ออกงาน',ic:'clock'},
  staffdir:{t:'รายชื่อพนักงาน',s:'ข้อมูล เอกสาร เงินเดือน และ username (เฉพาะ CEO)',ic:'user'},
 };
 const PASTEL=['#F7DA7B','#CCDCE7','#E5D9EE','#D6EAD9'];
@@ -3549,6 +3570,7 @@ function sidePanel(uid,extra){
    <b>${escH(me.name)}</b><span>${ROLE_LABEL[me.role]||me.role}</span>
    <label class="status-chip"><i style="background:${st.c}"></i><select id="profStatus" ${own?'':'disabled'}>${Object.entries(STATUS_OPT).map(([k,o])=>`<option value="${k}"${statusKey(p)===k?' selected':''}>${o.t}</option>`).join('')}</select></label>
   ${own&&SIGN_ROLES.includes(me.role)?sigBoxHTML(me):''}
+  ${own&&!viewAs?attWidget():''}
   </div>
   <div class="ag-h"><h2>ตารางงาน</h2><button class="pill-btn" data-go="agenda">ดูทั้งหมด</button></div>
   <div class="week">${[0,1,2,3,4,5,6].map(i=>{const d=addDays(mon,i),n=agDay(uid,d).length;return `<button class="wd${d===agSel?' on':''}${d===todayISO()?' today':''}" data-ag-day="${d}"><span>${TH_DOW[i]}</span><b>${dOf(d).getDate()}</b>${n?'<i></i>':''}</button>`;}).join('')}</div>
@@ -3565,6 +3587,7 @@ function bindSide(el,uid){
  el.querySelectorAll('[data-lead]').forEach(b=>b.onclick=()=>openLead(b.dataset.lead));
  const ph=el.querySelector('#profPhoto');if(ph&&!ph.disabled)ph.onclick=()=>pickPhoto(uid);
  const ps=el.querySelector('#profStatus');if(ps)ps.onchange=e=>setStatus(uid,e.target.value);
+ const ab=el.querySelector('#attBtn');if(ab)ab.onclick=clockIO;const ah=el.querySelector('#attHist');if(ah)ah.onclick=openMyAttendance;
  const su=el.querySelector('#sigUp');if(su)su.onclick=pickSignature;const sd=el.querySelector('#sigDel');if(sd)sd.onclick=deleteSignature;
  const add=el.querySelector('#agAdd');if(add)add.onclick=()=>openTaskModal(uid,agSel);
  bindTasks(el);
@@ -4101,6 +4124,97 @@ function kitPanelHTML(pt,i){
    ${k.brand!=='somfy'&&g==='arm'?`<div class="kit-row"><label class="kn"><input type="checkbox" data-i="${i}" data-kit="vib" ${k.vib!==false?'checked':''}> Vibration Sensor ระบบกันสั่น</label><span class="kp">${THB(3000)}</span><span class="kq-fix">× ${q}</span><span class="kb on">แถมฟรี</span></div>`:''}
    <div class="kit-sum">ราคาเต็ม ${THB(t.list)} · ส่วนลด ${THB(t.disc)} · <b>สุทธิ ${THB(t.net)}</b></div>
   </div></div>`;
+}
+
+/* ============ TIME CLOCK + PRESENCE (server clock; location only while clocked in; CEO-only view) ============ */
+let attOpen=null,attTimer=null,attTick=0,attLocNote='';
+const tHM=s=>s?new Date(s).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Bangkok'}):'—';
+const hrsBetween=(a,b)=>a?((new Date(b||Date.now())-new Date(a))/36e5):0;
+function getLoc(){
+ return new Promise(res=>{
+  if(!navigator.geolocation){attLocNote='เครื่องนี้ไม่รองรับ GPS';return res(null);}
+  navigator.geolocation.getCurrentPosition(p=>{attLocNote='';res({lat:p.coords.latitude,lng:p.coords.longitude,acc:Math.round(p.coords.accuracy)});},
+   e=>{attLocNote=e.code===1?'ไม่ได้อนุญาตตำแหน่ง (GPS)':'หาตำแหน่งไม่ได้';res(null);},{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
+ });
+}
+async function attPing(withLoc){
+ if(!currentUser||document.hidden)return;
+ try{const r=await vosApi('ping',withLoc&&attOpen?{loc:await getLoc()}:{});const was=!!attOpen;attOpen=r.open;if(was!==!!attOpen&&view!=='attend')render(false);}catch(e){}
+}
+function startPresence(){
+ clearInterval(attTimer);attTick=0;attPing(true);
+ attTimer=setInterval(()=>{attTick++;attPing(attTick%3===0);},60000);   // presence every minute · location every ~3 min while clocked in
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&currentUser)attPing(true);});
+async function clockIO(){
+ const btn=document.getElementById('attBtn');if(btn)btn.disabled=true;
+ const l=await getLoc();
+ try{const r=await vosApi(attOpen?'clockOut':'clockIn',{loc:l});attOpen=r.open;logAudit('clock',attOpen?'ลงเวลาเข้างาน':'ลงเวลาออกงาน');render(false);}
+ catch(e){alert(e.message||'ลงเวลาไม่สำเร็จ');if(btn)btn.disabled=false;}
+}
+function attWidget(){
+ const on=!!attOpen;
+ return `<div class="att-card${on?' on':''}"><div class="att-h"><b>${on?'🟢 กำลังทำงาน':'⚪ ยังไม่ได้ลงเวลาเข้างาน'}</b><span>${on?'เข้างาน '+tHM(attOpen.in_at)+' · '+hrsBetween(attOpen.in_at).toFixed(1)+' ชม.':'วันนี้'}</span></div>
+  <button class="pill-btn wide att-btn" id="attBtn">${on?'🔴 ออกงาน':'🟢 เข้างาน'}</button>
+  <p class="att-note">${on?'📍 ระหว่างเข้างานและเปิดแอพ ระบบบันทึกตำแหน่งประมาณทุก 3 นาที (CEO เห็นเท่านั้น) · หยุดเมื่อกดออกงาน':'กดเข้างานแล้วระบบจะบันทึกเวลาและตำแหน่ง ณ ตอนกด'}${attLocNote?' · ⚠ '+escH(attLocNote):''}</p>
+  <button class="att-hist" id="attHist">ประวัติลงเวลาของฉัน</button></div>`;
+}
+async function openMyAttendance(){
+ let rows=[];try{rows=(await vosApi('myAttendance')).rows;}catch(e){alert(e.message);return;}
+ const m=document.getElementById('modal'),sc=document.getElementById('scrim');
+ m.innerHTML=`<div class="bk-card" style="max-width:520px"><h3 style="margin-bottom:10px">ประวัติลงเวลา 31 วันล่าสุด</h3>
+  <div class="att-tbl">${rows.length?rows.map(r=>`<div><span>${thDate(String(r.day).slice(0,10))}</span><span>${tHM(r.in_at)} – ${r.out_at?tHM(r.out_at):'ยังไม่ออก'}</span><b>${hrsBetween(r.in_at,r.out_at).toFixed(1)} ชม.</b></div>`).join(''):'<p class="tk-empty">ยังไม่มีประวัติ</p>'}</div>
+  <div style="text-align:right;margin-top:12px"><button class="btn" id="attClose">ปิด</button></div></div>`;
+ m.classList.add('open');sc.classList.add('open');
+ m.querySelector('#attClose').onclick=()=>{m.classList.remove('open');sc.classList.remove('open');};
+}
+// ---- CEO page ----
+let attDay='',attData=null;
+const mapUrl=(lat,lng)=>`https://www.google.com/maps?q=${lat},${lng}`;
+const locLink=(lat,lng,acc)=>lat==null?'<span class="mute">ไม่มีตำแหน่ง</span>':`<a href="${mapUrl(lat,lng)}" target="_blank" rel="noopener">📍 แผนที่</a>${acc?` <small class="mute">±${Math.round(acc)} ม.</small>`:''}`;
+async function loadAttend(){try{attData=await vosApi('attendance',{day:attDay});}catch(e){attData={error:e.message};}if(view==='attend')renderAttend();}
+function renderAttend(){
+ const el=document.getElementById('content');
+ if(permRole()!=='ceo'){el.innerHTML='<div class="card" style="padding:24px">เฉพาะ CEO</div>';return;}
+ if(!attDay)attDay=todayISO();
+ if(!attData){el.innerHTML='<div class="card" style="padding:24px;color:var(--text-muted)">กำลังโหลด…</div>';loadAttend();return;}
+ if(attData.error){el.innerHTML=`<div class="card" style="padding:24px">${escH(attData.error)}</div>`;return;}
+ const now=new Date(attData.now).getTime(),isToday=attDay===todayISO();
+ const rowsOf=uid=>attData.rows.filter(r=>r.user_id===uid),lastOf=uid=>attData.last.find(x=>x.user_id===uid);
+ const ppl=attData.users.map(u=>{const rs=rowsOf(u.id),open=rs.find(r=>!r.out_at),seen=u.last_seen?now-new Date(u.last_seen).getTime():Infinity;
+  return {u,rs,open,online:seen<3*60000,seen,hrs:rs.reduce((a,r)=>a+hrsBetween(r.in_at,r.out_at||(isToday?attData.now:r.in_at)),0),last:lastOf(u.id)};});
+ const seenTxt=p=>p.online?'ออนไลน์อยู่':p.u.last_seen?'ใช้ล่าสุด '+(p.seen<864e5?tHM(p.u.last_seen):thDate(String(new Date(p.u.last_seen).toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'}))))+'':'ยังไม่เคยเข้าใช้';
+ const onl=ppl.filter(p=>p.online),working=ppl.filter(p=>p.open),came=ppl.filter(p=>p.rs.length);
+ el.innerHTML=`<div class="att-page">
+  <div class="dir-top"><input type="date" id="attDay" value="${attDay}" class="crm-search" style="max-width:200px"><button class="pill-btn" id="attReload">↻ รีเฟรช</button></div>
+  <div class="pastels four">
+   <div class="pastel" style="--pc:#D6EAD9"><span>ออนไลน์อยู่ตอนนี้</span><b>${onl.length} คน</b><small>เปิดแอพภายใน 3 นาที</small></div>
+   <div class="pastel" style="--pc:#F7DA7B"><span>กำลังทำงาน</span><b>${working.length} คน</b><small>เข้างานแล้ว ยังไม่ออก</small></div>
+   <div class="pastel" style="--pc:#CCDCE7"><span>ลงเวลา ${isToday?'วันนี้':thDate(attDay)}</span><b>${came.length} / ${ppl.length}</b><small>คน</small></div>
+   <div class="pastel" style="--pc:#E5D9EE"><span>ชั่วโมงรวม</span><b>${ppl.reduce((a,p)=>a+p.hrs,0).toFixed(1)} ชม.</b><small>ทุกคน</small></div>
+  </div>
+  <div class="att-list">${ppl.map(p=>`<div class="att-row">
+   <div class="att-who">${avatarHTML(p.u.id,40)}<i class="dot ${p.online?'on':''}"></i><span><b>${escH(p.u.name)}</b><small>${escH(ROLE_LABEL[p.u.role]||p.u.role)} · ${seenTxt(p)}</small></span></div>
+   <div class="att-times">${p.rs.length?p.rs.map(r=>`<div><span class="pill ${r.out_at?'neutral':'good'}">เข้า ${tHM(r.in_at)}</span> ${locLink(r.in_lat,r.in_lng,r.in_acc)} → ${r.out_at?`<span class="pill neutral">ออก ${tHM(r.out_at)}</span> ${locLink(r.out_lat,r.out_lng,r.out_acc)}`:'<span class="pill good">ยังทำงานอยู่</span>'}</div>`).join(''):'<span class="mute">ไม่ได้ลงเวลา</span>'}</div>
+   <div class="att-side"><b>${p.hrs.toFixed(1)} ชม.</b>${p.last?`<small>ตำแหน่งล่าสุด ${tHM(p.last.at)}</small><button class="pill-btn" data-track="${escH(p.u.id)}">เส้นทางวันนี้</button>`:''}</div>
+  </div>`).join('')}</div>
+  <p class="dir-note">${svg('shield','ico')} เวลาใช้นาฬิกาเซิร์ฟเวอร์ (แก้ในมือถือไม่ได้) · ตำแหน่งบันทึกเฉพาะตอนเข้างานและเปิดแอพ เก็บ 60 วัน · ถ้าพนักงานปิดจอหรือออกจากแอพ ตำแหน่งจะไม่อัปเดตจนกว่าจะเปิดใหม่</p></div>`;
+ el.querySelector('#attDay').onchange=e=>{attDay=e.target.value||todayISO();attData=null;renderAttend();};
+ el.querySelector('#attReload').onclick=()=>{attData=null;renderAttend();};
+ el.querySelectorAll('[data-track]').forEach(b=>b.onclick=()=>openTrack(b.dataset.track));
+}
+async function openTrack(uid){
+ let pts=[];try{pts=(await vosApi('track',{uid,day:attDay})).points;}catch(e){alert(e.message);return;}
+ const u=(attData.users||[]).find(x=>x.id===uid)||{},m=document.getElementById('modal'),sc=document.getElementById('scrim');
+ const step=Math.max(1,Math.ceil(pts.length/9)),way=pts.filter((_,i)=>i%step===0||i===pts.length-1).slice(-10);
+ const route=way.length>1?'https://www.google.com/maps/dir/'+way.map(p=>p.lat+','+p.lng).join('/'):'';
+ m.innerHTML=`<div class="bk-card" style="max-width:560px"><h3 style="margin-bottom:6px">เส้นทาง ${escH(u.name||'')} · ${thDate(attDay)}</h3>
+  <p class="mute" style="margin:0 0 10px;font-size:12.5px">${pts.length} จุด · บันทึกระหว่างเข้างานเท่านั้น</p>
+  ${route?`<a class="pill-btn" href="${route}" target="_blank" rel="noopener" style="display:inline-block;margin-bottom:10px">🗺 ดูเส้นทางบน Google Maps</a>`:''}
+  <div class="att-tbl">${pts.slice().reverse().map(p=>`<div><span>${tHM(p.at)}</span><span>${locLink(p.lat,p.lng,p.acc)}</span></div>`).join('')||'<p class="tk-empty">ไม่มีข้อมูลตำแหน่ง</p>'}</div>
+  <div style="text-align:right;margin-top:12px"><button class="btn" id="trClose">ปิด</button></div></div>`;
+ m.classList.add('open');sc.classList.add('open');
+ m.querySelector('#trClose').onclick=()=>{m.classList.remove('open');sc.classList.remove('open');};
 }
 
 /* ============ QUOTE REVISIONS: mark the FINAL one the customer agreed to ============ */

@@ -163,6 +163,67 @@ async function sendSig(req, res) {
   res.status(200).send(f.bytes);
 }
 
+
+/* ---------- time clock (เข้างาน / ออกงาน), presence and work-hours location ----------
+   All times come from the server clock. Location is stored only while the person is clocked in,
+   kept 60 days, and readable only by the CEO. */
+const BKK_DAY = "(now() AT TIME ZONE 'Asia/Bangkok')::date";
+const loc = b => {
+  const l = b && b.loc; if (!l) return [null, null, null];
+  const lat = Number(l.lat), lng = Number(l.lng), acc = Number(l.acc);
+  if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return [null, null, null];
+  return [lat, lng, isFinite(acc) ? Math.min(acc, 1e6) : null];
+};
+const openShift = async uid => (await pool.query('SELECT * FROM vos_attendance WHERE user_id=$1 AND out_at IS NULL ORDER BY in_at DESC LIMIT 1', [uid])).rows[0] || null;
+
+A.ping = async (req, res, me, b) => {
+  await pool.query('UPDATE vos_users SET last_seen=now() WHERE id=$1', [me.id]);
+  const open = await openShift(me.id);
+  const [lat, lng, acc] = loc(b);
+  if (open && lat !== null) {
+    const last = (await pool.query('SELECT at FROM vos_locations WHERE user_id=$1 ORDER BY at DESC LIMIT 1', [me.id])).rows[0];
+    if (!last || Date.now() - new Date(last.at).getTime() > 60000)
+      await pool.query('INSERT INTO vos_locations(user_id,lat,lng,acc) VALUES($1,$2,$3,$4)', [me.id, lat, lng, acc]);
+  }
+  return { open };
+};
+A.clockIn = async (req, res, me, b) => {
+  need(!(await openShift(me.id)), 409, 'ลงเวลาเข้างานไว้แล้ว');
+  const [lat, lng, acc] = loc(b);
+  const r = await pool.query(`INSERT INTO vos_attendance(user_id,day,in_lat,in_lng,in_acc) VALUES($1,${BKK_DAY},$2,$3,$4) RETURNING *`, [me.id, lat, lng, acc]);
+  if (lat !== null) await pool.query('INSERT INTO vos_locations(user_id,lat,lng,acc) VALUES($1,$2,$3,$4)', [me.id, lat, lng, acc]);
+  await pool.query('UPDATE vos_users SET last_seen=now() WHERE id=$1', [me.id]);
+  await pool.query("DELETE FROM vos_locations WHERE at < now() - interval '60 days'");
+  return { open: r.rows[0] };
+};
+A.clockOut = async (req, res, me, b) => {
+  const open = await openShift(me.id);
+  need(open, 409, 'ยังไม่ได้ลงเวลาเข้างาน');
+  const [lat, lng, acc] = loc(b);
+  await pool.query('UPDATE vos_attendance SET out_at=now(), out_lat=$2, out_lng=$3, out_acc=$4 WHERE id=$1', [open.id, lat, lng, acc]);
+  return { open: null };
+};
+A.myAttendance = async (req, res, me) => ({
+  rows: (await pool.query(`SELECT * FROM vos_attendance WHERE user_id=$1 AND day >= ${BKK_DAY} - 31 ORDER BY in_at DESC`, [me.id])).rows,
+});
+// CEO: everyone's presence + one day's clock records + latest location
+A.attendance = async (req, res, me, b) => {
+  need(V.isCEO(me), 403, 'เฉพาะ CEO');
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(String(b.day || '')) ? b.day : null;
+  const [u, a, l] = await Promise.all([
+    pool.query("SELECT id,name,role,last_seen FROM vos_users WHERE active AND NOT coalesce((profile->>'deleted')::boolean,false) ORDER BY name"),
+    pool.query(`SELECT * FROM vos_attendance WHERE day = coalesce($1::date, ${BKK_DAY}) ORDER BY in_at`, [day]),
+    pool.query(`SELECT DISTINCT ON (user_id) user_id, at, lat, lng, acc FROM vos_locations
+                WHERE (at AT TIME ZONE 'Asia/Bangkok')::date = coalesce($1::date, ${BKK_DAY}) ORDER BY user_id, at DESC`, [day]),
+  ]);
+  return { now: new Date().toISOString(), users: u.rows, rows: a.rows, last: l.rows };
+};
+A.track = async (req, res, me, b) => {
+  need(V.isCEO(me), 403, 'เฉพาะ CEO');
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(String(b.day || '')) ? b.day : null;
+  return { points: (await pool.query(`SELECT at, lat, lng, acc FROM vos_locations WHERE user_id=$1
+    AND (at AT TIME ZONE 'Asia/Bangkok')::date = coalesce($2::date, ${BKK_DAY}) ORDER BY at`, [String(b.uid || ''), day])).rows };
+};
 async function sendDoc(req, res, me) {
   need(V.isCEO(me), 404, 'not found');
   const f = (await pool.query('SELECT * FROM vos_docs WHERE id=$1', [String(req.query.id || '')])).rows[0];

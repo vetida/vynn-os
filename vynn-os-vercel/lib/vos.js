@@ -20,6 +20,16 @@ CREATE TABLE IF NOT EXISTS vos_docs (
   id TEXT PRIMARY KEY, user_id TEXT NOT NULL, kind TEXT NOT NULL, name TEXT, mime TEXT NOT NULL,
   size INT NOT NULL, bytes BYTEA NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
 CREATE INDEX IF NOT EXISTS idx_vos_docs_user ON vos_docs(user_id);
+ALTER TABLE vos_users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ;
+CREATE TABLE IF NOT EXISTS vos_attendance (
+  id BIGSERIAL PRIMARY KEY, user_id TEXT NOT NULL, day DATE NOT NULL,
+  in_at TIMESTAMPTZ NOT NULL DEFAULT now(), in_lat DOUBLE PRECISION, in_lng DOUBLE PRECISION, in_acc REAL,
+  out_at TIMESTAMPTZ, out_lat DOUBLE PRECISION, out_lng DOUBLE PRECISION, out_acc REAL);
+CREATE INDEX IF NOT EXISTS idx_vos_att_user_day ON vos_attendance(user_id, day);
+CREATE TABLE IF NOT EXISTS vos_locations (
+  id BIGSERIAL PRIMARY KEY, user_id TEXT NOT NULL, at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  lat DOUBLE PRECISION NOT NULL, lng DOUBLE PRECISION NOT NULL, acc REAL);
+CREATE INDEX IF NOT EXISTS idx_vos_loc_user_at ON vos_locations(user_id, at);
 `;
 
 // accounts that existed in the page source before 2026-10 (passwords carried over as hashes)
