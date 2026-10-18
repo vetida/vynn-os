@@ -1078,6 +1078,7 @@ function migrateState(){
  if(!state.travelClaims)state.travelClaims=[];
  if(!state.agenda)state.agenda=[]; if(!state.profiles)state.profiles={}; // แผนงาน/KPI ส่วนตัว + รูปโปรไฟล์ (sync ผ่าน app_meta)
  if(!state.expenses)state.expenses=[]; // ค่าใช้จ่ายรายวัน (พนักงานกรอกเอง)
+ if(!state.expDeleted)state.expDeleted=[]; // ids of deleted expenses, so other devices don't bring them back
  if(state.seq&&!state.seq.T)state.seq.T=903;
  if(state.seq&&!state.seq.TR)state.seq.TR=1;
  if(state.seq&&!state.seq.EX)state.seq.EX=1;
@@ -2810,7 +2811,7 @@ function renderExpenses(){
  if(fi)fi.onchange=e=>{const files=[...e.target.files];if(!files.length)return;Promise.all(files.map(f=>new Promise(res=>{const rd=new FileReader();rd.onload=()=>res({name:f.name,url:rd.result});rd.onerror=()=>res({name:f.name,url:''});rd.readAsDataURL(f);}))).then(imgs=>{expBarPhotos.push(...imgs);const tc=document.getElementById('exp-thumbs');if(tc)tc.innerHTML=expBarPhotos.map(x=>photoThumb(x,34)).join('');});};
  document.getElementById('exp-month').onchange=e=>{expMonth=e.target.value;render(false);};
  document.getElementById('exp-catf').onchange=e=>{expCatFilter=e.target.value;render(false);};
- c.querySelectorAll('[data-expdel]').forEach(b=>b.onclick=()=>{if(confirm('ลบรายการค่าใช้จ่ายนี้?')){state.expenses=(state.expenses||[]).filter(x=>x.id!==b.dataset.expdel);save();render(false);}});
+ c.querySelectorAll('[data-expdel]').forEach(b=>b.onclick=()=>{if(confirm('ลบรายการค่าใช้จ่ายนี้?')){state.expenses=(state.expenses||[]).filter(x=>x.id!==b.dataset.expdel);(state.expDeleted=state.expDeleted||[]).push(b.dataset.expdel);save();render(false);}});
  c.querySelectorAll('[data-expimg]').forEach(el=>el.onclick=()=>{const e=(state.expenses||[]).find(x=>x.id===el.dataset.expimg);const ph=e&&(e.photos||[])[0];if(ph)openImg(ph.url,ph.name);});
 }
 function opexPnlCard(){
@@ -4509,6 +4510,44 @@ function initChrome(){
     writeMeta(m);
   }
   function isDirty() { return !!readMeta().dirty; }
+
+  /* Old-style expenses, audit log, Vangarde prices and sales history are merged per
+   * record with the server copy (see lib/extras.js; the helpers there must stay identical):
+   * entries from either side are kept, deleted expenses stay deleted, the server's
+   * price list wins unless this device has a newer version, the server's sales history wins. */
+  function expFp(e) { return [e.createdAt || '', e.createdBy || '', e.date || '', e.amount == null ? '' : e.amount, e.by || '', e.note || ''].join('|'); }
+  function expDupId(e) { var h = 5381, s = expFp(e); for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return e.id + '~' + h.toString(36); }
+  function auditKey(a) { return [a.ts || '', a.uid || '', a.action || '', a.detail || ''].join('|'); }
+  // returns how many entries the local copy adds that the server did not have
+  function mergeExtras(dst, srv, loc) {
+    var gained = 0, del = {}, byId = {}, seen = {};
+    (srv.expDeleted || []).concat(loc.expDeleted || []).forEach(function (id) { del[id] = 1; });
+    var exps = (srv.expenses || []).filter(function (e) { return e && !del[e.id]; });
+    exps.forEach(function (e) { byId[e.id] = e; });
+    (loc.expenses || []).forEach(function (e) {
+      if (!e || !e.id || del[e.id]) return;
+      var cur = byId[e.id];
+      if (cur && expFp(cur) === expFp(e)) return;
+      if (cur) { var d = expDupId(e); if (byId[d] || del[d]) return; e = Object.assign({}, e, { id: d }); }
+      byId[e.id] = e; exps.push(e); gained++;
+    });
+    var aud = [];
+    (srv.audit || []).forEach(function (a) { if (a && !seen[auditKey(a)]) { seen[auditKey(a)] = 1; aud.push(a); } });
+    var mine = [];
+    (loc.audit || []).forEach(function (a) { if (a && !seen[auditKey(a)]) { seen[auditKey(a)] = 1; aud.push(a); mine.push(a); } });
+    var cut = Date.now() - 60 * 864e5;
+    aud = aud.filter(function (a) { return new Date(a.ts).getTime() >= cut; })
+      .sort(function (a, b) { return a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0; }).slice(-600);
+    gained += mine.filter(function (a) { return aud.indexOf(a) >= 0; }).length;
+    var vg = srv.vgPricing, lvg = loc.vgPricing;
+    if (lvg && (!vg || (lvg.v || 0) > (vg.v || 0))) { vg = lvg; gained++; }
+    var sh = srv.salesHist;
+    if (!sh && loc.salesHist) { sh = loc.salesHist; gained++; }
+    dst.expenses = exps; dst.expDeleted = Object.keys(del); dst.audit = aud;
+    if (vg) dst.vgPricing = vg;
+    if (sh) dst.salesHist = sh;
+    return gained;
+  }
   function hasLocal() { try { return !!localStorage.getItem(LS); } catch (e) { return false; } }
 
   function badge(stateName) {
@@ -4537,6 +4576,10 @@ function initChrome(){
       body: JSON.stringify({ state: state })
     }).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json().catch(function () { return {}; });
+    }).then(function (j) {
+      // take in what other devices added meanwhile (anything typed during the request stays: it is in `state`)
+      if (j && j.extras) { mergeExtras(state, j.extras, state); try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {} }
       setDirty(false);
       badge('saved');
     }).catch(function (e) {
@@ -4564,10 +4607,15 @@ function initChrome(){
       return r.json();
     }).then(function (j) {
       if (j && j.state) {                       // existing data in DB
-        state = j.state; migrateState();
+        var local = null;
+        try { local = JSON.parse(localStorage.getItem(LS)); } catch (e) {}
+        state = j.state;
+        // entries only this device had (before these fields synced) are kept and pushed up, not dropped
+        var gained = local ? mergeExtras(state, state, local) : 0;
+        migrateState();
         try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {}
-        setDirty(false);
-        return 'server';
+        setDirty(gained > 0);
+        return gained > 0 ? 'server-merged' : 'server';
       }
       state = seed(); migrateState();           // DB reachable but empty -> seed + push
       try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {}
@@ -4611,7 +4659,7 @@ function initChrome(){
       // a device that has never synced and is offline only holds sample data: keep it out of the server
       window.__vosStateReady = mode !== 'offline-empty';
       mountBadge((mode === 'offline' || mode === 'local-dirty' || mode === 'offline-empty') ? (isDirty() ? 'unsynced' : 'saved') : 'saved');
-      if (mode === 'local-dirty') setTimeout(serverSaveNow, 400);   // push this device's unsynced edits
+      if (mode === 'local-dirty' || mode === 'server-merged') setTimeout(serverSaveNow, 400);   // push this device's unsynced edits
       return mode;
     });
   };

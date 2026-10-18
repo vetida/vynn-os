@@ -5,6 +5,7 @@
 const { Pool, neonConfig } = require('@neondatabase/serverless');
 const ws = require('ws');
 neonConfig.webSocketConstructor = ws;
+const { EXTRAS_SQL, readExtras, saveExtras } = require('./extras');
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -46,7 +47,7 @@ CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, data JSONB NOT NULL, 
 
 let schemaReady = null;
 function ensureSchema() {
-  if (!schemaReady) schemaReady = pool.query(SCHEMA_SQL).catch(e => { schemaReady = null; throw e; });
+  if (!schemaReady) schemaReady = pool.query(SCHEMA_SQL + EXTRAS_SQL).catch(e => { schemaReady = null; throw e; });
   return schemaReady;
 }
 
@@ -103,7 +104,10 @@ async function composeState(client) {
   (await client.query('SELECT key, data FROM app_meta')).rows.forEach(r => { mm[r.key] = r.data; });
   for (const k of META_KEYS) if (mm[k] !== undefined) { state[k] = mm[k]; any = true; }
 
-  return any ? state : null;
+  if (!any) return null;
+  // expenses, audit, vgPricing, salesHist: merged per record (lib/extras.js)
+  Object.assign(state, await readExtras(client));
+  return state;
 }
 
 async function saveState(client, state) {
@@ -147,6 +151,7 @@ async function saveState(client, state) {
       );
     }
   }
+  await saveExtras(client, state);
 }
 
-module.exports = { pool, ensureSchema, composeState, saveState };
+module.exports = { pool, ensureSchema, composeState, saveState, readExtras };
