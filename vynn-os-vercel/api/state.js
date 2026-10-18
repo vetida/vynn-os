@@ -3,6 +3,13 @@
 const { pool, ensureSchema, composeState, saveState } = require('../lib/db');
 
 module.exports = async (req, res) => {
+  // HOTFIX: this old version has no server-side login, so anyone on the internet
+  // could read or overwrite all company data here. Closed until the
+  // vangarde-launcher version (which requires a login session) is merged.
+  // The page is offline-first and keeps working from each device's local cache.
+  res.setHeader('Cache-Control', 'no-store');
+  return res.status(403).json({ error: 'disabled: login required (upgrade pending)' });
+  // eslint-disable-next-line no-unreachable
   try {
     await ensureSchema();
 
