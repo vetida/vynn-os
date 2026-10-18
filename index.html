@@ -3666,11 +3666,52 @@ const list=dirData.filter(u=>!(u.profile||{}).deleted).filter(u=>!q||[u.name,u.l
  el.querySelectorAll('[data-dedit]').forEach(b=>b.onclick=()=>openDirEditor(dirData.find(u=>u.id===b.dataset.dedit)));
  el.querySelectorAll('[data-ddel]').forEach(b=>b.onclick=()=>confirmDeleteUser(dirData.find(u=>u.id===b.dataset.ddel)));
 }
+// open work an employee still owns. Deleting never touches these records; the CEO may hand them over first.
+// onlineBy is listed but never moved: it decides who earns the online-sales commission.
+const OPEN_LEAD=l=>!['done','lost'].includes(l.stage);
+function openWorkOf(uid){
+ const act=f=>ACCOUNTS.filter(a=>!a.inactive&&a.id!==uid&&f(a));
+ const sellers=act(a=>a.role==='sales'||a.role==='manager'),pms=act(a=>a.role==='manager'),fitters=act(a=>a.role==='installer'),anyone=act(()=>true);
+ const out=[],L=state.leads||[];
+ L.filter(l=>OPEN_LEAD(l)&&l.assignedTo===uid).forEach(l=>out.push({g:'ลูกค้า / ลีดที่ดูแล (เซลล์)',t:l.name+(l.custCode?' · '+l.custCode:''),rec:l,f:'assignedTo',to:sellers}));
+ L.filter(l=>OPEN_LEAD(l)&&l.pmId===uid).forEach(l=>out.push({g:'งานที่เป็น PM ผู้ดูแล',t:l.name,rec:l,f:'pmId',to:pms}));
+ (state.tickets||[]).filter(t=>t.status!=='resolved'&&t.assignee===uid).forEach(t=>out.push({g:'งานเก็บ / เคลมที่รับผิดชอบ',t:t.id+' · '+((leadById(t.leadId)||{}).name||''),rec:t,f:'assignee',to:anyone}));
+ (state.installs||[]).filter(i=>i.status!=='done'&&(i.installerId===uid||(i.crew||[]).includes(uid))).forEach(i=>out.push({g:'งานติดตั้งที่ยังไม่เสร็จ',t:i.id+' · '+((leadById(i.leadId)||{}).name||''),rec:i,f:i.installerId===uid?'installerId':'crew',to:fitters}));
+ L.filter(l=>OPEN_LEAD(l)&&l.onlineBy===uid).forEach(l=>out.push({g:'ลีดที่รับมาจากเซลล์ออนไลน์คนนี้ (ไม่โอน · ค่าคอมยังเป็นของคนเดิม)',t:l.name,rec:l,f:'onlineBy',to:[]}));
+ return out;
+}
+function handOver(it,to,from){
+ if(it.f==='crew')it.rec.crew=it.rec.crew.map(x=>x===from?to:x);else it.rec[it.f]=to;
+ (it.rec.handover||(it.rec.handover=[])).push({f:it.f,from,to,at:new Date().toISOString(),by:currentUser.id});
+}
+// step 1 of deleting: if the person still owns open work, the CEO picks where each item goes (or keeps the old name) first
 function confirmDeleteUser(u){
  if(!u)return;
+ const work=state?openWorkOf(u.id):[];
+ if(!work.length)return confirmDeleteUserFinal(u,[]);
+ const m=document.getElementById('modal'),sc=document.getElementById('scrim');
+ const all=[...new Map(work.flatMap(w=>w.to).map(a=>[a.id,a])).values()];
+ const opt=(list,sel)=>`<option value="">เก็บไว้ชื่อเดิม</option>`+list.map(a=>`<option value="${escH(a.id)}"${a.id===sel?' selected':''}>โอนให้ ${escH(a.name)} · ${escH(ROLE_LABEL[a.role]||a.role)}</option>`).join('');
+ let grp='';
+ m.innerHTML=`<div class="bk-card" style="max-width:520px"><h3 style="margin-bottom:8px">${escH(u.name)} ยังมีงานค้าง ${work.filter(w=>w.to.length).length} รายการ</h3>
+  <p style="margin:0 0 10px;color:var(--text-muted);font-size:13.5px;line-height:1.6">การลบพนักงานไม่ลบและไม่แก้ข้อมูลลูกค้า ใบเสนอราคา การชำระเงิน งานติดตั้ง หรือเคลม ชื่อเดิมจะยังแสดงในประวัติ<br>เลือกได้ว่าจะโอนงานที่ยังไม่จบให้ใคร หรือเก็บไว้ชื่อเดิม ค่าคอมที่ได้ไปแล้วยังเป็นของคนเดิม</p>
+  ${all.length?`<div class="field"><label for="hoAll">โอนทั้งหมดให้</label><select id="hoAll"><option value="">— เลือกทีละรายการ —</option>${all.map(a=>`<option value="${escH(a.id)}">${escH(a.name)} · ${escH(ROLE_LABEL[a.role]||a.role)}</option>`).join('')}</select></div>`:''}
+  <div style="max-height:46vh;overflow:auto;margin:6px 0 4px">${work.map((w,i)=>{const h=w.g!==grp?`<div style="font-size:12.5px;font-weight:600;margin:10px 0 4px">${escH(grp=w.g)}</div>`:'';return h+`<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${escH(w.t)}</span>${w.to.length?`<select data-ho="${i}" style="max-width:55%;padding:5px 7px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:12.5px">${opt(w.to)}</select>`:'<span class="mini-note">เก็บไว้ชื่อเดิม</span>'}</div>`;}).join('')}</div>
+  <p class="mini-note" id="hoNote" hidden></p>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap"><button class="btn" id="hoNo">ยกเลิก</button><button class="btn primary" id="hoGo">ต่อไป: ยืนยันการลบ</button></div></div>`;
+ const close=()=>{m.classList.remove('open');sc.classList.remove('open');};
+ const sels=[...m.querySelectorAll('[data-ho]')],note=m.querySelector('#hoNote');
+ const hoAll=m.querySelector('#hoAll');
+ if(hoAll)hoAll.onchange=()=>{let miss=0;sels.forEach(s=>{const w=work[+s.dataset.ho];if(!hoAll.value)return;if(w.to.some(a=>a.id===hoAll.value))s.value=hoAll.value;else{s.value='';miss++;}});note.textContent=miss?miss+' รายการโอนให้คนนี้ไม่ได้ (บทบาทไม่ตรง) เลือกเองในรายการ':'';note.hidden=!miss;};
+ m.querySelector('#hoNo').onclick=close;
+ m.querySelector('#hoGo').onclick=()=>{const plan=sels.filter(s=>s.value).map(s=>({it:work[+s.dataset.ho],to:s.value}));confirmDeleteUserFinal(u,plan);};
+ m.classList.add('open');sc.classList.add('open');
+}
+// step 2: type the name to confirm; the hand-over is applied only after the server delete succeeds
+function confirmDeleteUserFinal(u,plan){
  const m=document.getElementById('modal'),sc=document.getElementById('scrim');
  m.innerHTML=`<div class="bk-card"><h3 style="margin-bottom:8px">ลบ ${escH(u.name)} ออกจากรายชื่อ?</h3>
-  <p style="margin:0 0 10px;color:var(--text-muted);font-size:13.5px;line-height:1.6">ระบบจะลบ username รหัสผ่าน ข้อมูลส่วนตัว เงินเดือน เอกสาร (บัตรประชาชน / ทะเบียนบ้าน) และลายเซ็นของคนนี้ทั้งหมด และล็อกอินไม่ได้อีก<br>ชื่อจะยังแสดงในประวัติงานเก่า (ลีด ใบเสนอราคา) เพื่อให้รู้ว่าใครเป็นคนทำ</p>
+  <p style="margin:0 0 10px;color:var(--text-muted);font-size:13.5px;line-height:1.6">ระบบจะลบ username รหัสผ่าน ข้อมูลส่วนตัว เงินเดือน เอกสาร (บัตรประชาชน / ทะเบียนบ้าน) และลายเซ็นของคนนี้ทั้งหมด และล็อกอินไม่ได้อีก<br>ข้อมูลลูกค้า ใบเสนอราคา การชำระเงิน งานติดตั้ง และเคลม ไม่ถูกลบหรือแก้ไข ชื่อจะยังแสดงในประวัติงานเก่าเพื่อให้รู้ว่าใครเป็นคนทำ</p>${plan.length?`<p style="margin:0 0 10px;font-size:13px">จะโอนงาน ${plan.length} รายการให้คนที่เลือกไว้</p>`:''}
   <p style="margin:0 0 14px;font-size:13px;color:var(--bad,#c33)"><b>ลบแล้วกู้คืนไม่ได้</b> — ถ้าแค่ลาออกชั่วคราว ให้ใช้ "ปิดใช้งาน" ในหน้าแก้ไขแทน</p>
   <div class="field"><label for="delConfirm">พิมพ์ชื่อ <b>${escH(u.name)}</b> เพื่อยืนยัน</label><input id="delConfirm" autocomplete="off"></div>
   <p class="dir-err" id="delErr" hidden></p>
@@ -3681,7 +3722,9 @@ function confirmDeleteUser(u){
  m.querySelector('#delNo').onclick=close;
  yes.onclick=async()=>{
   yes.disabled=true;er.hidden=true;
-  try{await vosApi('deleteUser',{id:u.id});logAudit('deleteUser','ลบพนักงาน '+u.name+' ออกจากรายชื่อ');await loadDir();applyUsers(dirData.map(x=>x));close();
+  try{await vosApi('deleteUser',{id:u.id});
+   if(plan.length){plan.forEach(p=>handOver(p.it,p.to,u.id));logAudit('handover','โอนงาน '+plan.length+' รายการของ '+u.name+' ก่อนลบ: '+plan.map(p=>p.it.t+' → '+((accountByUid(p.to)||{}).name||p.to)).join(', '));}
+   logAudit('deleteUser','ลบพนักงาน '+u.name+' ออกจากรายชื่อ');await loadDir();applyUsers(dirData.map(x=>x));close();
    document.getElementById('drawer').classList.remove('open');renderStaffDir();}
   catch(x){er.textContent=x.message||'ลบไม่สำเร็จ';er.hidden=false;yes.disabled=false;}
  };
