@@ -3783,7 +3783,7 @@ const qOf=d=>{const m=+String(d).slice(5,7);return String(d).slice(0,4)+'-Q'+(Ma
 const qLabel=q=>{const[y,n]=q.split('-Q');return 'Q'+n+'/'+(+y+543);};
 function last12(){const out=[],d=dOf(todayISO());d.setDate(1);for(let i=0;i<12;i++){out.push(ymdOf(d).slice(0,7));d.setMonth(d.getMonth()-1);}return out;}
 // a won deal counts on the day the first deposit came in (else the quote date)
-function dealDate(l){const q=quoteOfLead(l.id);if(!q)return '';const pi=payInfo(q.id),first=pi&&pi.sched&&pi.sched.find(s=>s.st==='paid'&&s.d);return first?first.d:(q.date||l.created||'');}
+function dealDate(l){const q=quoteOfLead(l.id);if(!q)return '';const pi=payInfo(q.id),first=pi&&pi.sched&&pi.sched.find(s=>s.st==='paid'&&s.d);return first?first.d:'';}
 const isWon=l=>{const q=quoteOfLead(l.id);return WON_STAGES.includes(l.stage)||(q&&q.status==='accepted');};
 function wipOf(l){
  if(l.stage==='lost')return null;
