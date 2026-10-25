@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
@@ -180,22 +181,15 @@
     --accent:#9C8676; --accent-d:#86705F; --accent-soft:#F1EBE5;
     --vynn:#9C8676; --vangarde:#3F5B4C;
     --ink:#2B2926; --muted:#857D74; --faint:#B3ABA2;
-    --paper:#F7F5F2; --surface:#FFFFFF; --surface2:#F6F3EF; --border:#ECE6DF; --border2:#E2DBD2;
+    --paper:#FFFFFF; --surface:#FFFFFF; --surface2:#F7F5F2; color-scheme:light; --border:#ECE6DF; --border2:#E2DBD2;
     --good:#3F6B4F; --good-bg:#E7F0EA; --warn:#B07A2A; --warn-bg:#F8EEDC; --bad:#B4483B; --bad-bg:#F8E6E2;
     --sans:"IBM Plex Sans Thai",system-ui,"Segoe UI","Leelawadee UI",Tahoma,sans-serif;
     --serif:"Cormorant Garamond","Times New Roman",serif;
     --num:"IBM Plex Sans Thai",system-ui,sans-serif;
     --sh:0 1px 2px rgba(60,45,30,.04),0 6px 18px rgba(60,45,30,.06);
   }
-  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-    --accent:#C4AE9C; --accent-d:#B09A88; --accent-soft:#2E2924; --vynn:#C4AE9C; --vangarde:#86A894;
-    --ink:#F1ECE6; --muted:#A79F96; --faint:#766F68;
-    --paper:#171513; --surface:#211E1B; --surface2:#2A2622; --border:#36312C; --border2:#433D37;
-    --good:#86B898; --good-bg:#1E2B23; --warn:#D9A65A; --warn-bg:#2F2619; --bad:#E08A7C; --bad-bg:#33201C;
-    --sh:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.35);
-  }}
-  :root[data-theme="dark"]{--accent:#C4AE9C;--accent-soft:#2E2924;--vynn:#C4AE9C;--vangarde:#86A894;--ink:#F1ECE6;--muted:#A79F96;--faint:#766F68;--paper:#171513;--surface:#211E1B;--surface2:#2A2622;--border:#36312C;--border2:#433D37;--good:#86B898;--good-bg:#1E2B23;--warn:#D9A65A;--warn-bg:#2F2619;--bad:#E08A7C;--bad-bg:#33201C}
-  body{background:var(--paper)}
+  body{background:#FFFFFF;color:var(--ink)}
+  @media (prefers-color-scheme:dark){:root{--accent:#9C8676;--accent-d:#86705F;--accent-soft:#F1EBE5;--vynn:#9C8676;--vangarde:#3F5B4C;--ink:#2B2926;--muted:#857D74;--faint:#B3ABA2;--paper:#FFFFFF;--surface:#FFFFFF;--surface2:#F7F5F2;--border:#ECE6DF;--border2:#E2DBD2;--good:#3F6B4F;--good-bg:#E7F0EA;--warn:#B07A2A;--warn-bg:#F8EEDC;--bad:#B4483B;--bad-bg:#F8E6E2;--sh:0 1px 2px rgba(60,45,30,.04),0 6px 18px rgba(60,45,30,.06)}}
   .appbar{background:var(--surface);border-bottom:1px solid var(--border);box-shadow:none}
   .appbar-in{padding:14px 18px}
   .logo{display:flex;align-items:center;gap:10px;font-weight:400}
