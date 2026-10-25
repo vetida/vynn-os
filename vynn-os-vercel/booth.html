@@ -208,6 +208,7 @@
       <div class="card">
         <h2 id="formTitle">＋ เพิ่มลูกค้าใหม่</h2>
         <p class="sub">กรอกเร็วๆ ที่จำเป็นคือ ชื่อ + เบอร์ (ที่เหลือเว้นได้ ค่อยเติมทีหลัง)</p>
+        <div class="f"><label class="fl">ลูกค้าจากงานไหน <span class="req">*</span> <span class="opt">(เครื่องนี้จำค่าล่าสุดไว้)</span></label><select id="fSource"></select></div>
         <div class="f"><label class="fl">ชื่อลูกค้า <span class="req">*</span></label><input id="fName" placeholder="ชื่อ-นามสกุล / ชื่อเล่น" autocomplete="off"></div>
         <div class="f"><label class="fl">เบอร์โทร <span class="req">*</span></label><input type="tel" id="fPhone" placeholder="08x-xxx-xxxx" inputmode="tel" autocomplete="off"></div>
         <div class="f"><label class="fl">ที่อยู่ / พื้นที่ <span class="opt">(ไม่บังคับ)</span></label><textarea id="fAddr" placeholder="บ้าน/คอนโด/โครงการ, เขต/อำเภอ, จังหวัด"></textarea></div>
@@ -328,7 +329,11 @@
    VYNN:['ผ้าม่าน','ม่านม้วน','มู่ลี่ไม้','ม่านพับ','วอลเปเปอร์','ฟิล์มกันแดด/กันความร้อน','ม่านมอเตอร์/ออโต้','ม่านโรมัน'],
    Vangarde:['Pergola (ระแนง/หลังคาปรับได้)','Zip Shade (ม่านกันแดด-ฝน)','กันสาดพับได้ (Awning)','Skylight (หลังคากระจก)','ม่านม้วนกลางแจ้ง']
  };
- var st={sales:'',event:'',eventDate:'',oaId:'',oaQr:'',leads:[]};
+ // booth events = lead sources in the main app (SOURCE in index.html). 'booth' only labels older leads.
+ var SOURCES={baanlaesuan:'งานบ้านและสวน',archexpo:'งานสถาปนิก'};
+ var OLD_SOURCES={booth:'ออกบูธ'};
+ function srcLabel(k){return SOURCES[k]||OLD_SOURCES[k]||k||'';}
+ var st={sales:'',event:'',eventDate:'',source:'',oaId:'',oaQr:'',leads:[]};
  var draft={brands:[],prodV:[],prodG:[],use:'',cb:'',cbt:'',hasDep:false,pay:'',editId:null};
  function money(n){return (+n||0).toLocaleString('en-US');}
  function fmtD(d){if(!d)return '';var p=String(d).split('-');return p.length===3?(+p[2]+'/'+(+p[1])):d;}
@@ -411,7 +416,15 @@
  $('depToggle').querySelector('.chip').onclick=function(){var c=$('depToggle').querySelector('.chip');c.classList.toggle('on');draft.hasDep=c.classList.contains('on');$('depBlock').classList.toggle('show',draft.hasDep);};
  $('fSlip').onchange=function(e){var files=[].slice.call(e.target.files);if(!files.length)return;files.forEach(function(f){var rd=new FileReader();rd.onload=function(){draftSlips.push(rd.result);$('slipThumbs').innerHTML=draftSlips.map(function(u){return slipThumb(u,40);}).join('');};rd.readAsDataURL(f);});e.target.value='';};
 
+ function fillSource(extra){
+   var o='<option value="">— เลือกงาน —</option>';
+   Object.keys(SOURCES).forEach(function(k){o+='<option value="'+k+'">'+esc(SOURCES[k])+'</option>';});
+   if(extra&&!SOURCES[extra])o+='<option value="'+esc(extra)+'">'+esc(srcLabel(extra))+' (เดิม)</option>';
+   $('fSource').innerHTML=o;$('fSource').value=extra||(SOURCES[st.source]?st.source:'');
+ }
+ $('fSource').onchange=function(){if(!draft.editId&&SOURCES[this.value]){st.source=this.value;save();}};
  function resetForm(){
+   fillSource();
    ['fName','fPhone','fAddr','fNote','fCbFrom','fCbTo','fDep'].forEach(function(id){$(id).value='';});
    $('fDate').value=todayISO();$('fRate').value='';
    draftSlips=[];if($('slipThumbs'))$('slipThumbs').innerHTML='';
@@ -430,6 +443,8 @@
  $('saveLead').onclick=function(){
    var name=$('fName').value.trim(), phone=$('fPhone').value.trim();
    var e=$('formErr');
+   var source=$('fSource').value;
+   if(!source){e.textContent='⚠ เลือกก่อนว่าลูกค้ามาจากงานไหน';e.classList.add('show');$('fSource').focus();return;}
    if(!name||!phone){e.textContent=!name?'⚠ ใส่ชื่อลูกค้าก่อน':'⚠ ใส่เบอร์โทรก่อน';e.classList.add('show');(!name?$('fName'):$('fPhone')).focus();return;}
    var products=draft.prodV.map(function(p){return{brand:'VYNN',name:p};}).concat(draft.prodG.map(function(p){return{brand:'Vangarde',name:p};}));
    var rec={
@@ -441,7 +456,7 @@
      rate:$('fRate').value,
      useWhen:draft.use, callback:draft.cb, cbFrom:$('fCbFrom').value||'', cbTo:$('fCbTo').value||'', cbTime:draft.cbt,
      deposit:draft.hasDep?(+$('fDep').value||0):0, payMethod:draft.hasDep?draft.pay:'', slips:draft.hasDep?draftSlips.slice():[],
-     note:$('fNote').value.trim(), source:'booth'
+     note:$('fNote').value.trim(), source:source
    };
    if(draft.editId){var idx=st.leads.findIndex(function(x){return x.id===draft.editId;});if(idx>=0)st.leads[idx]=rec;toast('แก้ไขแล้ว ✓');}
    else{st.leads.unshift(rec);toast('บันทึกลูกค้าแล้ว ✓  (รวม '+st.leads.length+' ราย)');}
@@ -452,7 +467,7 @@
  /* ---------- edit / delete ---------- */
  window._editLead=function(id){
    var L=st.leads.find(function(x){return x.id===id;});if(!L)return;
-   resetForm();draft.editId=id;
+   resetForm();draft.editId=id;fillSource(L.source||'');
    $('fName').value=L.name;$('fPhone').value=L.phone;$('fAddr').value=L.address||'';$('fNote').value=L.note||'';
    $('fCbFrom').value=L.cbFrom||'';$('fCbTo').value=L.cbTo||'';
    $('fDate').value=L.date||todayISO();$('fRate').value=L.rate||'';
@@ -582,6 +597,7 @@
        '<div class="meta">'+
          '<a class="lp" href="tel:'+esc(digits(L.phone))+'">📞 '+esc(L.phone)+'</a>'+
          '<span>📆 '+esc(fmtD(L.date))+'</span>'+
+         (L.source?'<span>🏷️ '+esc(srcLabel(L.source))+'</span>':'')+
          (L.address?'<span>📍 '+esc(L.address)+'</span>':'')+
        '</div>'+
        '<div class="meta">'+
@@ -628,7 +644,7 @@
  function toCSV(leads){
    var head=['วันที่บันทึก','เซลล์','งาน','แบรนด์','ชื่อลูกค้า','เบอร์โทร','ที่อยู่','สินค้าที่สนใจ','เรทลูกค้า','ต้องการใช้งาน','ช่วงติดต่อกลับ','เวลาที่สะดวก','วางจอง(บาท)','วิธีจ่าย','โน้ต','ที่มา'];
    function q(s){s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
-   var rows=leads.map(function(L){return [L.date,L.sales,L.event,(L.brands||[]).join('+'),L.name,L.phone,L.address,(L.products||[]).map(function(p){return p.brand+':'+p.name;}).join(' | '),L.rate||'',L.useWhen,(L.callback==='ระบุช่วงวันที่'?((L.cbFrom||'')+(L.cbTo?'–'+L.cbTo:'')):L.callback),L.cbTime,(L.deposit>0?L.deposit:''),L.payMethod||'',L.note,'booth'].map(q).join(',');});
+   var rows=leads.map(function(L){return [L.date,L.sales,L.event,(L.brands||[]).join('+'),L.name,L.phone,L.address,(L.products||[]).map(function(p){return p.brand+':'+p.name;}).join(' | '),L.rate||'',L.useWhen,(L.callback==='ระบุช่วงวันที่'?((L.cbFrom||'')+(L.cbTo?'–'+L.cbTo:'')):L.callback),L.cbTime,(L.deposit>0?L.deposit:''),L.payMethod||'',L.note,srcLabel(L.source||'booth')].map(q).join(',');});
    return '﻿'+head.join(',')+'\n'+rows.join('\n');
  }
  $('expDayCSV').onclick=function(){var d=(dayFilter==='all'||!dayFilter)?todayISO():dayFilter;var ls=leadsOfDay(d);if(!ls.length){toast('วันที่เลือกยังไม่มีข้อมูล');return;}dl(toCSV(ls),'text/csv;charset=utf-8',fname('csv',d));toast('ดาวน์โหลด Excel ('+fmtD(d)+' · '+ls.length+' ราย) แล้ว');};
@@ -721,7 +737,7 @@
  /* ---------- init ---------- */
  load();
  try{roi=Object.assign(roi,JSON.parse(localStorage.getItem(ROIK)||'{}'));}catch(e){}
- $('fDate').value=todayISO();
+ $('fDate').value=todayISO();fillSource();
  if(!st.eventDate)$('sEventDate').value=todayISO();else $('sEventDate').value=st.eventDate;
  $('sName').value=st.sales||'';$('sEvent').value=st.event||'';
  renderWho();showSetupOrMain();
