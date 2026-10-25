@@ -224,6 +224,55 @@ A.track = async (req, res, me, b) => {
   return { points: (await pool.query(`SELECT at, lat, lng, acc FROM vos_locations WHERE user_id=$1
     AND (at AT TIME ZONE 'Asia/Bangkok')::date = coalesce($2::date, ${BKK_DAY}) ORDER BY at`, [String(b.uid || ''), day])).rows };
 };
+
+/* ---------- booth leads (ลูกค้าหน้าบูธ): saved on the phone first, synced here, kept apart from Lead Intake
+   until a manager picks the ones worth following up ---------- */
+const BOOTH_MGR = ['admin', 'sales_support', 'manager'];   // CEO · Admin · PM see everyone's booth leads
+const BOOTH_ROLES = ['admin', 'sales_support', 'manager', 'sales', 'online_sales'];
+let boothReady = null;
+async function ensureBooth() {
+  if (boothReady) return boothReady;
+  boothReady = (async () => {
+  await pool.query(`CREATE TABLE IF NOT EXISTS booth_leads (
+    id TEXT PRIMARY KEY, user_id TEXT NOT NULL, data JSONB NOT NULL, status TEXT NOT NULL DEFAULT 'new',
+    lead_id TEXT, deleted BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
+    CREATE INDEX IF NOT EXISTS idx_booth_user ON booth_leads(user_id);`);
+  })().catch(e => { boothReady = null; throw e; });
+  return boothReady;
+}
+// push the phone's unsynced records, get back the list this person may see
+A.boothSync = async (req, res, me, b) => {
+  need(BOOTH_ROLES.includes(me.role), 403, 'บทบาทนี้ไม่ได้ใช้บันทึกลูกค้าบูธ');
+  await ensureBooth();
+  const mgr = BOOTH_MGR.includes(me.role), saved = [];
+  for (const r of (Array.isArray(b.push) ? b.push : []).slice(0, 200)) {
+    const id = str(r && r.id, 60), data = r && r.data;
+    if (!/^[A-Za-z0-9_-]{6,60}$/.test(id) || !data || typeof data !== 'object') continue;
+    const json = JSON.stringify(data);
+    if (json.length > 3 * 1024 * 1024) continue;
+    const cur = (await pool.query('SELECT user_id FROM booth_leads WHERE id=$1', [id])).rows[0];
+    if (cur && cur.user_id !== me.id && !mgr) continue;            // only your own, unless manager
+    await pool.query(`INSERT INTO booth_leads(id,user_id,data,deleted) VALUES($1,$2,$3,$4)
+      ON CONFLICT (id) DO UPDATE SET data=EXCLUDED.data, deleted=EXCLUDED.deleted, updated_at=now()`,
+      [id, cur ? cur.user_id : me.id, json, !!r.deleted]);
+    saved.push(id);
+  }
+  const rows = (await pool.query(
+    `SELECT b.id, b.user_id, b.data, b.status, b.lead_id, b.created_at, b.updated_at, u.name AS user_name
+     FROM booth_leads b LEFT JOIN vos_users u ON u.id=b.user_id
+     WHERE NOT b.deleted AND ($1 OR b.user_id=$2) ORDER BY b.created_at DESC LIMIT 5000`, [mgr, me.id])).rows;
+  return { saved, rows, mgr };
+};
+// manager marks booth leads as sent to Lead Intake (the lead itself is created in the app state)
+A.boothMark = async (req, res, me, b) => {
+  need(BOOTH_MGR.includes(me.role), 403, 'เฉพาะ CEO / Admin / PM');
+  await ensureBooth();
+  const items = (Array.isArray(b.items) ? b.items : []).slice(0, 500);
+  for (const it of items) await pool.query("UPDATE booth_leads SET status=$2, lead_id=$3, updated_at=now() WHERE id=$1",
+    [str(it.id, 60), it.leadId ? 'sent' : 'new', it.leadId ? str(it.leadId, 40) : null]);
+  return { ok: true, n: items.length };
+};
 async function sendDoc(req, res, me) {
   need(V.isCEO(me), 404, 'not found');
   const f = (await pool.query('SELECT * FROM vos_docs WHERE id=$1', [String(req.query.id || '')])).rows[0];
