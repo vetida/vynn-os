@@ -560,59 +560,6 @@
   #viewAsBar{position:fixed;top:0;left:0;right:0;z-index:9000;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:7px 14px;background:#F7DA7B;color:#2B2B2B;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
   #viewAsBar button{background:#111;color:#fff;border:0;border-radius:999px;padding:5px 14px;font:inherit;font-size:12.5px;cursor:pointer}
   body.viewas{padding-top:40px}
-  .bo{display:grid;gap:12px;max-width:820px}
-  .bo-status{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 12px;border-radius:12px;font-size:13px;background:#E6F2EA;color:#245A36}
-  .bo-status.wait{background:#FFF4D6;color:#7A5A00}.bo-status.warn{background:#FBE3E0;color:#8A2A1E}
-  .bo-status .pill-btn{margin-left:auto}
-  .bo-tabs{display:flex;gap:6px;flex-wrap:wrap}
-  .bo-tabs button{flex:1;min-width:120px;padding:9px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
-  .bo-tabs button.on{background:#111;color:#fff;border-color:#111}
-  .bo-form{padding:16px;display:grid;gap:4px}
-  .bo-chips{display:flex;flex-wrap:wrap;gap:6px}
-  .bo-chips button{padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
-  .bo-chips button.on{background:#3E8E5A;border-color:#3E8E5A;color:#fff}
-  .bo-thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.bo-thumbs span{position:relative}.bo-thumbs img{width:64px;height:64px;object-fit:cover;border-radius:8px}
-  .bo-thumbs button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#111;color:#fff;font-size:11px;cursor:pointer}
-  .bo-import{padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12.5px}.bo-import span{color:var(--text-muted);flex:1;min-width:200px}
-  .bo-bar,.bo-mgr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}.bo-bar select{padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit}
-  .bo-bar span{color:var(--text-muted);flex:1}
-  .bo-list{display:grid;gap:8px}
-  .bo-card{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
-  .bo-card.sent{opacity:.6}.bo-pick{width:20px;height:20px;margin-top:2px;flex:none}
-  .bo-main{flex:1;min-width:0;display:grid;gap:3px}.bo-main small{color:var(--text-muted);font-size:12px;overflow-wrap:anywhere}
-  .bo-act{display:flex;flex-direction:column;gap:6px;align-items:flex-end}.bo-del{background:none;border:0;color:var(--bad,#c33);font-size:12px;cursor:pointer;text-decoration:underline}
-  /* booth — Mindease minimal: soft grey ground, white 18px cards, pastel stats, black pills */
-  .bo{gap:14px}
-  .bo-hello h1{font-size:26px;font-weight:700;letter-spacing:-.02em;margin:0}
-  .bo-hello p{margin:4px 0 0;color:var(--text-muted);font-size:13px}
-  .bo-stats{grid-template-columns:repeat(3,1fr)}
-  .bo-stats .pastel{min-height:96px;cursor:default}
-  .bo-status{background:var(--surface);color:var(--text);border-radius:999px;padding:8px 8px 8px 16px;box-shadow:var(--shadow);font-size:12.5px}
-  .bo-status.ok{color:#2F6B45}.bo-status.wait{background:var(--surface);color:#8A6A00}.bo-status.warn{background:var(--surface);color:#A2392B}
-  .bo-status small{color:var(--text-muted)}
-  .bo-tabs{background:#E4E5E8;border-radius:999px;padding:4px;gap:4px;flex-wrap:nowrap;overflow-x:auto}
-  .bo-tabs button{border:0;background:transparent;font-weight:500;white-space:nowrap;min-width:0;padding:9px 6px}
-  .bo-tabs button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(16,24,40,.12)}
-  .bo-form{border:0;border-radius:18px;padding:20px;gap:6px;box-shadow:var(--shadow)}
-  .bo-form label{font-size:12px;color:var(--text-muted);font-weight:500}
-  .bo-form input,.bo-form select,.bo-form textarea{border-radius:12px;background:#F4F5F7;border:1px solid transparent}
-  .bo-form input:focus,.bo-form select:focus,.bo-form textarea:focus{background:var(--surface);border-color:#111;outline:none}
-  .bo-chips button{background:#F4F5F7;border-color:transparent;font-weight:500}
-  .bo-chips button.on{background:#111;border-color:#111;color:#fff}
-  .bo-form .btn.primary,.bo-mgr .btn.primary{background:#111;border-color:#111;color:#fff;border-radius:999px;padding:11px 22px}
-  .bo-form .btn{border-radius:999px}
-  .bo-import{border:0;border-radius:18px;box-shadow:var(--shadow);background:var(--surface)}
-  .bo-bar select{border-radius:999px;background:var(--surface);border:0;box-shadow:var(--shadow);padding:8px 14px}
-  .bo-card{border-radius:18px;padding:14px 16px;align-items:center}
-  .bo-card::before{content:attr(data-ini);flex:none;width:40px;height:40px;border-radius:50%;background:#EEEFF1;display:grid;place-items:center;font-weight:600;font-size:15px;color:#333}
-  .bo-main{display:block}.bo-main small{display:block;margin-top:3px}
-  .bo-main .pill{display:inline-block;margin:3px 4px 0 0;vertical-align:middle}
-  .bo-main b{font-size:14.5px;font-weight:600;margin-right:4px}
-  @media (max-width:560px){.bo-card{padding:12px;gap:8px}.bo-card::before{width:34px;height:34px;font-size:13px}.bo-act{flex-direction:row}}
-  .bo-main .pill{border-radius:999px;font-size:11px;padding:2px 8px}
-  .bo-act .pill-btn{background:var(--surface);border:1px solid var(--border)}
-  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .bo-tabs{background:#2A2D33}:root:not([data-theme="light"]) .bo-form input,:root:not([data-theme="light"]) .bo-form select,:root:not([data-theme="light"]) .bo-form textarea,:root:not([data-theme="light"]) .bo-chips button{background:#24272C}:root:not([data-theme="light"]) .bo-card::before{background:#2A2D33;color:#ddd}}
-  @media (max-width:560px){.bo-stats{grid-template-columns:1fr 1fr}.bo-stats .pastel:first-child{grid-column:1/-1}.bo-hello h1{font-size:22px}}
   .att-card{margin-top:14px;width:100%;background:var(--surface);border-radius:14px;padding:12px;box-shadow:var(--shadow);text-align:left}
   .att-card.on{box-shadow:0 0 0 2px #3E8E5A inset,var(--shadow)}
   .att-h{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px;font-size:13px}
@@ -1048,13 +995,13 @@ const SESSB='vynn_os_brand';
 // VANGARDE launcher (2026-10): the existing login roles map onto the owner's six departments,
 // and each department gets View (V) or View+Edit (E) per module, from the owner's two access tables.
 const PERM_ROLE={admin:'ceo',sales_support:'admin',manager:'pm',sales:'sales',online_sales:'online',installer:'staff',hr:'staff',accounting:'accounts'};
-const MODULES=['overview','leads','expenses','install','survey','crm','vgprice','quote','service','kpi','staffdir','attend','booth'];
+const MODULES=['overview','leads','expenses','install','survey','crm','vgprice','quote','service','kpi','staffdir','attend'];
 const PERMS={
- ceo:     {booth:'E',overview:'E',leads:'E',expenses:'E',install:'E',survey:'E',crm:'E',vgprice:'E',quote:'E',service:'E',kpi:'E',staffdir:'E',attend:'E'},
- admin:   {booth:'E',leads:'E',expenses:'E',install:'E',survey:'V',crm:'E',vgprice:'E',quote:'E',service:'E',kpi:'E'},
- pm:      {booth:'E',leads:'E',expenses:'E',install:'E',survey:'E',crm:'V',vgprice:'V',service:'E',kpi:'E'},
- online:  {booth:'E',leads:'E',expenses:'E',install:'V',survey:'V',crm:'V',vgprice:'V',quote:'E',service:'E',kpi:'E'},  // เซลล์ออนไลน์: quotes/money only for own leads (onlineBy)
- sales:   {booth:'E',leads:'V',expenses:'E',install:'V',survey:'E',vgprice:'V',quote:'V',kpi:'E'},
+ ceo:     {overview:'E',leads:'E',expenses:'E',install:'E',survey:'E',crm:'E',vgprice:'E',quote:'E',service:'E',kpi:'E',staffdir:'E',attend:'E'},
+ admin:   {leads:'E',expenses:'E',install:'E',survey:'V',crm:'E',vgprice:'E',quote:'E',service:'E',kpi:'E'},
+ pm:      {leads:'E',expenses:'E',install:'E',survey:'E',crm:'V',vgprice:'V',service:'E',kpi:'E'},
+ online:  {leads:'E',expenses:'E',install:'V',survey:'V',crm:'V',vgprice:'V',quote:'E',service:'E',kpi:'E'},  // เซลล์ออนไลน์: quotes/money only for own leads (onlineBy)
+ sales:   {leads:'V',expenses:'E',install:'V',survey:'E',vgprice:'V',quote:'V',kpi:'E'},
  staff:   {expenses:'E',install:'V',survey:'V',service:'V',kpi:'E'},
  accounts:{overview:'V',expenses:'E',quote:'V'},
 };
@@ -1688,7 +1635,6 @@ const NAV=[
  {grp:'VANGARDE'},
  {id:'overview',label:'Dashboard',icon:'chart'},
  {id:'leads',label:'Lead Intake',icon:'inbox',count:()=>scopedLeads().filter(l=>l.stage==='new').length},
- {id:'booth',label:'ลูกค้าหน้าบูธ',icon:'booth',count:()=>booth.mgr?boothAll().filter(r=>r._status!=='sent').length:0},
  {id:'expenses',label:'เบิก-จ่าย',icon:'cash'},
  {id:'install',label:'ตารางงาน',icon:'wrench',count:()=>state.installs.filter(i=>i.status==='scheduled').length},
  {id:'survey',label:'Onsite (วัดหน้างาน)',icon:'ruler',count:()=>scopedLeads().filter(l=>l.stage==='assigned').length},
@@ -1699,12 +1645,11 @@ const NAV=[
  {id:'kpi',label:'KPI',icon:'trend'},
  {grp:'เฉพาะ CEO'},
  {id:'staffdir',label:'รายชื่อพนักงาน',icon:'user'},
- {id:'attend',label:'เวลาเข้า-ออกงาน',icon:'cal'},
+ {id:'attend',label:'เวลาเข้า-ออกงาน',icon:'clock'},
 ];
 const META={
  home:{t:'หน้าแรก',s:'VANGARDE',act:false},
  agenda:{t:'แผนงาน & KPI ของฉัน',s:'อัปเดตงานรายวัน รายสัปดาห์ รายเดือน และดูความคืบหน้าเป็น %',act:false},
- booth:{t:'ลูกค้าหน้าบูธ',s:'บันทึกลูกค้าระหว่างออกบูธ · เก็บในเครื่องก่อนแล้วส่งขึ้นระบบอัตโนมัติ · หัวหน้าคัดส่งเข้า Lead Intake',act:false},
  attend:{t:'เวลาเข้า-ออกงาน',s:'ใครออนไลน์อยู่ · เวลาเข้า-ออกงาน · ตำแหน่ง GPS ระหว่างเข้างาน · เปิดได้เฉพาะ CEO',act:false},
  staffdir:{t:'รายชื่อพนักงาน',s:'ข้อมูลพนักงาน เอกสาร เงินเดือน สวัสดิการ และ username / password · เปิดได้เฉพาะ CEO',act:false},
  crm:{t:'CRM ลูกค้า',s:'ข้อมูลลูกค้า VANGARDE · ใบเสนอราคา · ยอดชำระ · งานเก็บ/ประกัน ในที่เดียว',act:false},
@@ -3342,7 +3287,7 @@ function renderVgPrice(){
   ${perg}${zip}${awn}
   <div class="grid two-col" style="grid-template-columns:1fr 1fr 1fr">${addBlock('Pergola',vg.addons.pergola)}${addBlock('Zip Shade',vg.addons.zipshade)}${addBlock('Awning',vg.addons.awning)}</div>`;
 }
-function renderView(){({expenses:renderExpenseApp,kpi:renderMyKPI,home:renderHome,staffdir:renderStaffDir,attend:renderAttend,booth:renderBooth,agenda:renderAgenda,crm:renderCRM,overview:renderOverview,oldexpenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,teamkpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
+function renderView(){({expenses:renderExpenseApp,kpi:renderMyKPI,home:renderHome,staffdir:renderStaffDir,attend:renderAttend,agenda:renderAgenda,crm:renderCRM,overview:renderOverview,oldexpenses:renderExpenses,leads:renderLeads,survey:renderSurvey,quote:renderQuote,sewing:renderSewing,china:renderChina,purchase:renderPurchase,install:renderInstall,service:renderService,finance:renderFinance,forecast:renderForecast,teamkpi:renderKPI,stats:renderStats,pnl:renderPnL,settings:renderSettings,hr:renderHR,saleshist:renderSalesHist,users:renderUsers,audit:renderAudit,vgprice:renderVgPrice}[view]||renderOverview)();}
 function render(rerenderNav=true){
  if(!canOpen(view))view=firstAllowedView(); // block disallowed / wrong-brand views
  if(currentUser&&!histPopping&&histView!==view){try{history.pushState({vos:'view',v:view},'');}catch(e){}}
@@ -3442,8 +3387,7 @@ const MOD_INFO={
  quote:{t:'Quotation',s:'ใบเสนอราคา และการอนุมัติ',ic:'doc'},
  service:{t:'เคลม & ร้องเรียน',s:'เคลมสินค้า ร้องเรียน สอบถาม และงานเก็บหลังติดตั้ง',ic:'shield'},
  kpi:{t:'KPI · โปรไฟล์ของฉัน',s:'ตารางงาน ยอดขาย งานที่ดูแล และสถานะของฉัน',ic:'trend'},
- booth:{t:'ลูกค้าหน้าบูธ',s:'บันทึกลูกค้าตอนออกบูธ',ic:'booth'},
- attend:{t:'เวลาเข้า-ออกงาน',s:'ใครออนไลน์ และเวลาเข้า-ออกงาน',ic:'cal'},
+ attend:{t:'เวลาเข้า-ออกงาน',s:'ใครออนไลน์ และเวลาเข้า-ออกงาน',ic:'clock'},
  staffdir:{t:'รายชื่อพนักงาน',s:'ข้อมูล เอกสาร เงินเดือน และ username (เฉพาะ CEO)',ic:'user'},
 };
 const PASTEL=['#F7DA7B','#CCDCE7','#E5D9EE','#D6EAD9'];
@@ -4271,168 +4215,6 @@ async function openTrack(uid){
   <div style="text-align:right;margin-top:12px"><button class="btn" id="trClose">ปิด</button></div></div>`;
  m.classList.add('open');sc.classList.add('open');
  m.querySelector('#trClose').onclick=()=>{m.classList.remove('open');sc.classList.remove('open');};
-}
-
-/* ============ BOOTH LEADS (ลูกค้าหน้าบูธ) ============
-   Same record shape as the old public booth form (booth.html) so its JSON exports import 1:1.
-   Saved on the phone first (localStorage outbox) → synced to /api/auth boothSync whenever online, so closing the
-   browser or switching phones never loses a lead. Kept apart from Lead Intake: CEO / Admin / PM pick the
-   genuinely interested ones and send them in. */
-const BOOTH_EVENTS={baanlaesuan:'งานบ้านและสวน',archexpo:'งานสถาปนิก'};
-const BOOTH_RATES=['VVIP','VIP','สนใจมาก','สนใจ','ดูทั่วไป'];
-const BOOTH_USE=['ด่วน','1-3 เดือน','3-6 เดือน','6 เดือนขึ้นไป','ยังไม่แน่ใจ'];
-const BOOTH_PRODUCTS={VYNN:['ผ้าม่าน','ม่านม้วน','มู่ลี่ไม้','ม่านพับ','วอลเปเปอร์','ฟิล์มกันแดด/กันความร้อน','ม่านมอเตอร์/ออโต้','ม่านโรมัน'],
- Vangarde:['Pergola (ระแนง/หลังคาปรับได้)','Zip Shade (ม่านกันแดด-ฝน)','กันสาดพับได้ (Awning)','Skylight (หลังคากระจก)','ม่านม้วนกลางแจ้ง']};
-const BOOTH_LS='vynn_booth_os_v1';
-let booth={rows:[],outbox:{},event:'',mgr:false,syncing:false,lastSync:'',err:''},boothTab='add',boothDay='all',boothEdit=null,boothSel={};
-function boothLoad(){try{const s=JSON.parse(localStorage.getItem(BOOTH_LS+':'+(currentUser&&currentUser.id))||'{}');booth.rows=s.rows||[];booth.outbox=s.outbox||{};booth.event=s.event||'';}catch(e){}}
-function boothStore(){try{localStorage.setItem(BOOTH_LS+':'+currentUser.id,JSON.stringify({rows:booth.rows,outbox:booth.outbox,event:booth.event}));}catch(e){booth.err='เครื่องเต็ม — ต่อเน็ตเพื่อส่งข้อมูลขึ้นระบบ';}}
-const boothNew=()=>'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-async function boothSync(){
- if(booth.syncing||!currentUser)return;booth.syncing=true;booth.err='';
- try{
-  let ids=Object.keys(booth.outbox),resp=null;
-  do{ // small batches keep each request well under the upload limit (slip photos are inside the record)
-   const batch=[];let size=0;
-   while(ids.length&&(batch.length<10)){const r=booth.outbox[ids[0]];const s=JSON.stringify(r).length;if(batch.length&&size+s>2.5e6)break;batch.push(r);size+=s;ids.shift();}
-   resp=await vosApi('boothSync',{push:batch});
-   (resp.saved||[]).forEach(id=>delete booth.outbox[id]);
-  }while(ids.length);
-  booth.mgr=!!resp.mgr;
-  booth.rows=resp.rows.map(r=>Object.assign({},r.data,{id:r.id,_user:r.user_id,_userName:r.user_name,_status:r.status,_leadId:r.lead_id,_at:r.created_at}));
-  booth.lastSync=new Date().toISOString();boothStore();
- }catch(e){booth.err=e.code==='offline'?'ไม่มีเน็ต — บันทึกไว้ในเครื่องแล้ว จะส่งขึ้นระบบอัตโนมัติ':(e.message||'ส่งข้อมูลไม่สำเร็จ');}
- booth.syncing=false;if(view==='booth')renderBooth();
-}
-setInterval(()=>{if(currentUser&&Object.keys(booth.outbox).length&&navigator.onLine!==false)boothSync();},30000);
-window.addEventListener('online',()=>{if(currentUser)boothSync();});
-function boothAll(){ // server copy + anything still waiting on this phone
- const m={};booth.rows.forEach(r=>m[r.id]=r);
- Object.values(booth.outbox).forEach(o=>{if(o.deleted)delete m[o.id];else m[o.id]=Object.assign({},m[o.id]||{},o.data,{id:o.id,_user:(m[o.id]||{})._user||currentUser.id,_userName:(m[o.id]||{})._userName||currentUser.name,_status:(m[o.id]||{})._status||'new',_pending:true});});
- return Object.values(m).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b._at||b.ts||'').localeCompare(String(a._at||a.ts||'')));
-}
-function boothPut(id,data,deleted){booth.outbox[id]={id,data,deleted:!!deleted};boothStore();boothSync();}
-function boothNoteOf(r){return [r.rate&&'เรท '+r.rate,(r.products||[]).length&&'สนใจ '+r.products.map(p=>p.name).join(', '),r.useWhen&&'ต้องการใช้ '+r.useWhen,r.callback&&'ติดต่อกลับ '+r.callback+(r.cbTime?' ('+r.cbTime+')':''),+r.deposit>0&&'วางเงินจอง ฿'+money(r.deposit)+(r.payMethod?' ('+r.payMethod+')':''),r.note].filter(Boolean).join(' · ');}
-function renderBooth(){
- const el=document.getElementById('content');
- if(!booth._loaded){booth._loaded=true;boothLoad();boothSync();}
- const all=boothAll(),mine=all.filter(r=>r._user===currentUser.id),pend=Object.keys(booth.outbox).length;
- const status=`<div class="bo-status ${booth.err?'warn':pend?'wait':'ok'}">${booth.syncing?'⏳ กำลังส่งข้อมูลขึ้นระบบ…':booth.err?'⚠ '+escH(booth.err)+(pend?` (รอส่ง ${pend} ราย)`:''):pend?`⏳ รอส่งขึ้นระบบ ${pend} ราย`:'✓ ข้อมูลทั้งหมดอยู่บนระบบแล้ว'}${booth.lastSync?` <small>· ซิงค์ล่าสุด ${tHM(booth.lastSync)}</small>`:''} <button class="pill-btn" id="boSync">↻ ซิงค์</button></div>`;
- const tabs=`<div class="seg bo-tabs">${[['add',boothEdit&&!boothEdit._draft?'✎ แก้ไข':'＋ บันทึก'],['mine',`ของฉัน (${mine.length})`],...(booth.mgr?[['all',`ทุกคน (${all.length})`]]:[])].map(([k,l])=>`<button class="${boothTab===k?'on':''}" data-botab="${k}">${l}</button>`).join('')}</div>`;
- let body='';
- if(boothTab==='add')body=boothForm();
- else body=boothList(boothTab==='all'?all:mine,boothTab==='all');
- const tdy=mine.filter(r=>r.date===todayISO()),scope=booth.mgr?all:mine;
- const hello=`<div class="bo-hello"><h1>ลูกค้าหน้าบูธ</h1><p>${booth.event?escH(BOOTH_EVENTS[booth.event]||'')+' · ':''}บันทึกเร็ว · ข้อมูลไม่หายแม้ปิดแอพหรือเน็ตหลุด</p></div>
-  <div class="pastels bo-stats"><div class="pastel" style="--pc:#F7DA7B"><span>วันนี้ของฉัน</span><b>${tdy.length} ราย</b></div><div class="pastel" style="--pc:#CCDCE7"><span>${booth.mgr?'ทั้งหมด (ทุกคน)':'ลูกค้าของฉัน'}</span><b>${scope.length} ราย</b></div><div class="pastel" style="--pc:#E5D9EE"><span>ยอดวางเงินจอง</span><b>฿${money(scope.reduce((a,r)=>a+(+r.deposit||0),0))}</b></div></div>`;
- el.innerHTML=`<div class="bo">${hello}${status}${tabs}${body}</div>`;
- el.querySelector('#boSync').onclick=()=>boothSync();
- el.querySelectorAll('[data-botab]').forEach(b=>b.onclick=()=>{boothTab=b.dataset.botab;if(boothTab!=='add')boothEdit=null;renderBooth();});
- if(boothTab==='add')bindBoothForm(el);else bindBoothList(el,boothTab==='all'?all:mine);
-}
-function boothForm(){
- const r=boothEdit||{brands:[],products:[],date:todayISO(),source:booth.event};
- const chips=(name,list,sel,multi)=>`<div class="bo-chips" data-chip="${name}" data-multi="${multi?1:''}">${list.map(v=>`<button type="button" class="${(multi?(sel||[]).includes(v):sel===v)?'on':''}" data-v="${escH(v)}">${escH(v)}</button>`).join('')}</div>`;
- const prodSel=(r.products||[]).map(p=>p.brand+'|'+p.name);
- return `<div class="card bo-form">
-  <div class="field"><label>ลูกค้าจากงานไหน *</label><select id="bo-src"><option value="">— เลือกงาน —</option>${Object.entries(BOOTH_EVENTS).map(([k,v])=>`<option value="${k}" ${r.source===k?'selected':''}>${v}</option>`).join('')}${r.source&&!BOOTH_EVENTS[r.source]?`<option value="${escH(r.source)}" selected>${escH(srcOf(r.source).l)}</option>`:''}</select></div>
-  <div class="field-row"><div class="field"><label>ชื่อลูกค้า *</label><input id="bo-name" value="${escH(r.name||'')}" autocomplete="off" placeholder="ชื่อ-นามสกุล / ชื่อเล่น"></div><div class="field"><label>เบอร์โทร *</label><input id="bo-phone" type="tel" inputmode="tel" value="${escH(r.phone||'')}" autocomplete="off" placeholder="08x-xxx-xxxx"></div></div>
-  <div class="field"><label>ที่อยู่ / พื้นที่</label><input id="bo-addr" value="${escH(r.address||'')}" placeholder="บ้าน/คอนโด/โครงการ, เขต"></div>
-  <div class="field-row"><div class="field"><label>วันที่</label><input id="bo-date" type="date" value="${r.date||todayISO()}"></div><div class="field"><label>เรทลูกค้า</label><select id="bo-rate"><option value="">—</option>${BOOTH_RATES.map(x=>`<option ${r.rate===x?'selected':''}>${x}</option>`).join('')}</select></div></div>
-  <div class="field"><label>แบรนด์ที่สนใจ</label>${chips('brands',['VYNN','Vangarde'],r.brands,true)}</div>
-  ${['VYNN','Vangarde'].filter(b=>(r.brands||[]).includes(b)).map(b=>`<div class="field"><label>สินค้า ${b}</label><div class="bo-chips" data-chip="products" data-multi="1">${BOOTH_PRODUCTS[b].map(p=>`<button type="button" class="${prodSel.includes(b+'|'+p)?'on':''}" data-v="${escH(b+'|'+p)}">${escH(p)}</button>`).join('')}</div></div>`).join('')}
-  <div class="field"><label>ต้องการใช้งานเมื่อไหร่</label>${chips('useWhen',BOOTH_USE,r.useWhen)}</div>
-  <div class="field-row"><div class="field"><label>ช่วงติดต่อกลับ</label><input id="bo-cb" value="${escH(r.callback||'')}" placeholder="เช่น หลังจบงาน / สัปดาห์หน้า"></div><div class="field"><label>เวลาที่สะดวก</label><input id="bo-cbt" value="${escH(r.cbTime||'')}" placeholder="เช่น หลัง 18:00"></div></div>
-  <div class="field-row"><div class="field"><label>วางเงินจองในงาน (บาท)</label><input id="bo-dep" type="number" min="0" value="${+r.deposit||''}" placeholder="0"></div><div class="field"><label>วิธีจ่าย</label><select id="bo-pay"><option value="">—</option>${['เงินสด','โอน','บัตร'].map(x=>`<option ${r.payMethod===x?'selected':''}>${x}</option>`).join('')}</select></div></div>
-  <div class="field"><label>สลิป / หลักฐานการจอง</label><input type="file" accept="image/*" multiple id="bo-slip"><div class="bo-thumbs" id="bo-thumbs">${(r.slips||[]).map((u,i)=>`<span><img src="${u}" alt="สลิป ${i+1}"><button type="button" data-rmslip="${i}" aria-label="ลบสลิป">✕</button></span>`).join('')}</div></div>
-  <div class="field"><label>หมายเหตุ</label><textarea id="bo-note" rows="2">${escH(r.note||'')}</textarea></div>
-  <p class="dir-err" id="bo-err" hidden></p>
-  <div style="display:flex;gap:10px;justify-content:flex-end">${boothEdit?'<button class="btn" id="bo-cancel">ยกเลิก</button>':''}<button class="btn primary" id="bo-save">${boothEdit&&!boothEdit._draft?'บันทึกการแก้ไข':'＋ บันทึกลูกค้า'}</button></div>
- </div>
- <div class="card bo-import"><b>มีข้อมูลในฟอร์มบูธแบบเดิม?</b><span>ในฟอร์มเดิมกด "JSON รวม" แล้วเลือกไฟล์ที่นี่ ลูกค้าทั้งหมดจะเข้าระบบใหม่ (ไม่ซ้ำ)</span><label class="pill-btn">⬆ นำเข้าไฟล์ JSON<input type="file" accept="application/json,.json" id="bo-import" hidden></label></div>`;
-}
-function bindBoothForm(el){
- const d=boothEdit?JSON.parse(JSON.stringify(boothEdit)):{brands:[],products:[],slips:[]};d.slips=d.slips||[];
- const read=()=>({source:el.querySelector('#bo-src').value,name:el.querySelector('#bo-name').value.trim(),phone:el.querySelector('#bo-phone').value.trim(),address:el.querySelector('#bo-addr').value.trim(),
-  date:el.querySelector('#bo-date').value||todayISO(),rate:el.querySelector('#bo-rate').value,callback:el.querySelector('#bo-cb').value.trim(),cbTime:el.querySelector('#bo-cbt').value.trim(),
-  deposit:+el.querySelector('#bo-dep').value||0,payMethod:el.querySelector('#bo-pay').value,note:el.querySelector('#bo-note').value.trim()});
- const keep=()=>{boothEdit=Object.assign(boothEdit||{},d,read(),{_draft:!boothEdit||boothEdit._draft});};
- el.querySelectorAll('[data-chip]').forEach(g=>g.querySelectorAll('button').forEach(b=>b.onclick=()=>{
-  const k=g.dataset.chip,v=b.dataset.v;
-  if(k==='products'){const[br,nm]=v.split('|');const i=d.products.findIndex(p=>p.brand===br&&p.name===nm);if(i>=0)d.products.splice(i,1);else d.products.push({brand:br,name:nm});}
-  else if(g.dataset.multi){d[k]=d[k]||[];const i=d[k].indexOf(v);if(i>=0)d[k].splice(i,1);else d[k].push(v);if(k==='brands')d.products=d.products.filter(p=>d.brands.includes(p.brand));}
-  else d[k]=d[k]===v?'':v;
-  keep();renderBooth();}));
- el.querySelector('#bo-src').onchange=e=>{if(BOOTH_EVENTS[e.target.value]){booth.event=e.target.value;boothStore();}};
- el.querySelector('#bo-slip').onchange=async e=>{const fs=[...e.target.files];for(const f of fs){const s=await shrinkPhoto(f);d.slips.push(await new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result);rd.readAsDataURL(s);}));}keep();renderBooth();};
- el.querySelectorAll('[data-rmslip]').forEach(b=>b.onclick=()=>{d.slips.splice(+b.dataset.rmslip,1);keep();renderBooth();});
- const c=el.querySelector('#bo-cancel');if(c)c.onclick=()=>{boothEdit=null;boothTab='mine';renderBooth();};
- el.querySelector('#bo-save').onclick=()=>{
-  const v=read(),err=el.querySelector('#bo-err');
-  if(!v.source){err.textContent='⚠ เลือกก่อนว่าลูกค้ามาจากงานไหน';err.hidden=false;return;}
-  if(!v.name||!v.phone){err.textContent=!v.name?'⚠ ใส่ชื่อลูกค้าก่อน':'⚠ ใส่เบอร์โทรก่อน';err.hidden=false;return;}
-  const id=boothEdit&&boothEdit.id&&!boothEdit._draft?boothEdit.id:boothNew();
-  const rec={brands:d.brands||[],products:d.products||[],useWhen:d.useWhen||'',slips:d.slips||[],...v,sales:(boothEdit&&boothEdit.sales)||currentUser.name,event:BOOTH_EVENTS[v.source]||'',ts:(boothEdit&&boothEdit.ts)||new Date().toISOString()};
-  const was=!!(boothEdit&&!boothEdit._draft);boothPut(id,rec);booth.event=v.source;boothEdit=null;
-  const t=document.createElement('div');t.className='ro-toast';t.textContent=was?'แก้ไขแล้ว ✓':'บันทึกลูกค้าแล้ว ✓';document.body.appendChild(t);setTimeout(()=>t.remove(),1800);
-  if(was)boothTab='mine';renderBooth();window.scrollTo(0,0);
- };
- el.querySelector('#bo-import').onchange=async e=>{
-  const f=e.target.files[0];if(!f)return;
-  try{const j=JSON.parse(await f.text());const list=Array.isArray(j)?j:(j.leads||[]);const have=new Set(boothAll().map(r=>(r.phone||'').replace(/\D/g,'')+'|'+(r.name||'')));let n=0;
-   list.forEach(L=>{if(!L||!L.name||!L.phone)return;const k=String(L.phone).replace(/\D/g,'')+'|'+L.name;if(have.has(k))return;have.add(k);
-    const id=boothNew();booth.outbox[id]={id,data:Object.assign({},L,{id:undefined,source:L.source==='booth'&&booth.event?booth.event:(L.source||booth.event||'booth'),sales:L.sales||currentUser.name,imported:true})};n++;});
-   boothStore();boothSync();alert('นำเข้า '+n+' ราย (ข้ามรายที่มีอยู่แล้ว '+(list.length-n)+')');}
-  catch(x){alert('อ่านไฟล์ไม่ได้ — ใช้ไฟล์ JSON จากฟอร์มบูธเดิม');}
- };
-}
-function boothList(list,mgrView){
- const days=[...new Set(list.map(r=>r.date).filter(Boolean))].sort().reverse();
- if(boothDay!=='all'&&!days.includes(boothDay))boothDay='all';
- const L=boothDay==='all'?list:list.filter(r=>r.date===boothDay);
- const dep=L.reduce((a,r)=>a+(+r.deposit||0),0),sent=L.filter(r=>r._status==='sent').length;
- const card=r=>`<div class="bo-card${r._status==="sent"?" sent":""}" data-ini="${escH(String(r.name||"?").trim().replace(/^คุณs*/,"").slice(0,1)||"?")}">
-   ${mgrView&&r._status!=='sent'?`<input type="checkbox" class="bo-pick" data-pick="${escH(r.id)}" ${boothSel[r.id]?'checked':''} aria-label="เลือก ${escH(r.name)}">`:''}
-   <div class="bo-main"><b>${escH(r.name)}</b>${r.rate?` <span class="pill ${/V?VIP|สนใจมาก/.test(r.rate)?'good':'neutral'}">${escH(r.rate)}</span>`:''}${+r.deposit>0?` <span class="pill accent">จอง ฿${money(r.deposit)}</span>`:''}${r._pending?' <span class="pill warn">รอส่ง</span>':''}${r._status==='sent'?' <span class="pill good">ส่งเข้า Lead แล้ว</span>':''}
-    <small><a href="tel:${escH(String(r.phone||'').replace(/[^\d+]/g,''))}">📞 ${escH(r.phone)}</a> · ${r.date?thDate(r.date):''} · ${escH(srcOf(r.source).l)}${mgrView?' · เซลล์ '+escH(r._userName||r.sales||''):''}</small>
-    <small>${escH(boothNoteOf(r))||'—'}</small></div>
-   ${r._status!=='sent'&&(r._user===currentUser.id||mgrView)?`<div class="bo-act"><button class="pill-btn" data-boedit="${escH(r.id)}">แก้ไข</button><button class="bo-del" data-bodel="${escH(r.id)}">ลบ</button></div>`:''}
-  </div>`;
- return `<div class="bo-bar"><select id="bo-day"><option value="all">ทุกวัน (รวม ${list.length})</option>${days.map(d=>`<option value="${d}" ${boothDay===d?'selected':''}>${thDate(d)} (${list.filter(r=>r.date===d).length})</option>`).join('')}</select>
-  <span>${L.length} ราย · จอง ฿${money(dep)}${mgrView?' · ส่งเข้า Lead แล้ว '+sent:''}</span><button class="pill-btn" id="bo-csv">⬇ Excel</button></div>
-  ${mgrView?`<div class="bo-mgr"><label><input type="checkbox" id="bo-pickall"> เลือกทั้งหมดที่ยังไม่ส่ง</label><button class="btn primary" id="bo-send" ${Object.values(boothSel).some(Boolean)?'':'disabled'}>➜ ส่งที่เลือกเข้า Lead Intake (${Object.values(boothSel).filter(Boolean).length})</button></div>`:''}
-  <div class="bo-list">${L.map(card).join('')||'<p class="tk-empty">ยังไม่มีลูกค้า</p>'}</div>`;
-}
-function bindBoothList(el,list){
- const dsel=el.querySelector('#bo-day');if(dsel)dsel.onchange=e=>{boothDay=e.target.value;renderBooth();};
- el.querySelectorAll('[data-boedit]').forEach(b=>b.onclick=()=>{boothEdit=JSON.parse(JSON.stringify(list.find(r=>r.id===b.dataset.boedit)));boothTab='add';renderBooth();window.scrollTo(0,0);});
- el.querySelectorAll('[data-bodel]').forEach(b=>b.onclick=()=>{const r=list.find(x=>x.id===b.dataset.bodel);if(r&&confirm('ลบลูกค้า '+r.name+'?')){boothPut(r.id,r,true);renderBooth();}});
- el.querySelectorAll('[data-pick]').forEach(c=>c.onchange=()=>{boothSel[c.dataset.pick]=c.checked;renderBooth();});
- const pa=el.querySelector('#bo-pickall');if(pa)pa.onchange=()=>{list.filter(r=>r._status!=='sent'&&(boothDay==='all'||r.date===boothDay)).forEach(r=>boothSel[r.id]=pa.checked);renderBooth();};
- const sd=el.querySelector('#bo-send');if(sd)sd.onclick=()=>boothSend(list.filter(r=>boothSel[r.id]&&r._status!=='sent'));
- el.querySelector('#bo-csv').onclick=()=>{
-  const L=boothDay==='all'?list:list.filter(r=>r.date===boothDay);
-  const q=s=>{s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
-  const head=['วันที่','เซลล์','งาน','ชื่อลูกค้า','เบอร์โทร','ที่อยู่','แบรนด์','สินค้าที่สนใจ','เรท','ต้องการใช้','ติดต่อกลับ','เวลาสะดวก','เงินจอง','วิธีจ่าย','หมายเหตุ','สถานะ'];
-  const rows=L.map(r=>[r.date,r._userName||r.sales,srcOf(r.source).l,r.name,r.phone,r.address,(r.brands||[]).join('+'),(r.products||[]).map(p=>p.brand+':'+p.name).join(' | '),r.rate,r.useWhen,r.callback,r.cbTime,r.deposit||0,r.payMethod,r.note,r._status==='sent'?'ส่งเข้า Lead แล้ว':'']);
-  const blob=new Blob(['﻿'+[head,...rows].map(x=>x.map(q).join(',')).join('\n')],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ลูกค้าบูธ-'+(boothDay==='all'?'รวม':boothDay)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
- };
-}
-async function boothSend(picks){
- if(!picks.length)return;
- if(!confirm('ส่ง '+picks.length+' ราย เข้า Lead Intake?\nระบบจะสร้างลีดใหม่ (สถานะ "ลีดใหม่ รอมอบหมาย") พร้อมเรท สินค้าที่สนใจ และเงินจอง'))return;
- const items=[];
- picks.forEach(r=>{
-  const brand=(r.brands||[]).length===1?r.brands[0]:'Vangarde',nid='L-'+(state.seq.L++);
-  const seller=accountByUid(r._user);
-  state.leads.unshift({id:nid,custCode:nextCustCode(brand),name:r.name,site:r.address||'—',phone:r.phone,brand,source:r.source||'booth',assignedTo:seller&&seller.role==='sales'?seller.id:null,
-   stage:seller&&seller.role==='sales'?'assigned':'new',created:r.date||todayISO(),desiredInstall:'',note:'[จากบูธ · '+(r._userName||r.sales||'')+'] '+boothNoteOf(r),referrer:'',referralPct:0,boothId:r.id,boothDeposit:+r.deposit||0});
-  items.push({id:r.id,leadId:nid});
- });
- logAudit('booth','ส่งลูกค้าบูธ '+picks.length+' ราย เข้า Lead Intake');save();
- try{await vosApi('boothMark',{items});}catch(e){alert('สร้างลีดแล้ว แต่ทำเครื่องหมาย "ส่งแล้ว" ไม่สำเร็จ: '+(e.message||e));}
- boothSel={};await boothSync();
 }
 
 /* ============ QUOTE REVISIONS: mark the FINAL one the customer agreed to ============ */
