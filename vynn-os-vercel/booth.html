@@ -166,6 +166,13 @@
   #imgResult .ir-img{max-width:100%;height:auto;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.5);-webkit-touch-callout:default;}
   .inapp-warn{margin:12px 15px 0;background:var(--warn-bg);border:1px solid color-mix(in srgb,var(--warn) 38%,transparent);border-radius:11px;padding:11px 13px;font-size:12.5px;line-height:1.55;color:var(--ink);}
   .inapp-warn b{color:var(--warn);}
+  .cloud{margin:0 0 12px;padding:11px 14px;border-radius:14px;font-size:13px;display:flex;flex-direction:column;gap:6px;background:var(--good-bg,#E6F2EA);color:var(--good,#2F6B45)}
+  .cloud small{opacity:.75}.cloud.wait{background:var(--warn-bg);color:var(--warn)}.cloud.warn{background:var(--warn-bg);color:var(--ink)}
+  .cloud.warn b{color:var(--warn)}.cloud .two{margin:4px 0}.cloud input{width:100%}
+  .evrow{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border2)}
+  .evrow small{display:block;color:var(--muted);font-size:12px;margin-top:2px}.evrow.off{opacity:.55}
+  .evcode{font-family:ui-monospace,Menlo,monospace;font-size:20px;font-weight:700;letter-spacing:2px}
+  .evbtn{grid-column:1/-1;display:flex;gap:8px}.evbtn .btn{flex:1;padding:9px}
 </style>
 
 <div class="wrap">
@@ -186,18 +193,17 @@
   <div id="salesView" class="pad">
     <!-- setup -->
     <div class="card" id="setupCard">
-      <div class="eyebrow">ขั้นที่ 1 จาก 2 · ตั้งค่าครั้งแรก</div>
-      <h2 style="margin-top:6px">ใส่ชื่อคุณก่อน แล้วค่อยเก็บลูกค้า</h2>
-      <p class="sub">แค่ตั้งชื่อ 1 ครั้ง (จำไว้ในเครื่องนี้) 👉 พอกดปุ่มด้านล่าง <b>ฟอร์มกรอกลูกค้าเต็ม</b> (ชื่อ/เบอร์/สินค้า/เรท/เงินจอง) จะเปิดให้กรอก และเก็บได้เรื่อยๆ ไม่ต้องตั้งชื่อซ้ำ</p>
-      <div class="f"><label class="fl">ชื่อเซลล์ (คุณ) <span class="req">*</span></label><input id="sName" placeholder="เช่น ณิชา / K.ณิชา" autocomplete="off"></div>
-      <div class="two">
-        <div class="f"><label class="fl">ชื่องาน/อีเวนต์</label><input id="sEvent" placeholder="เช่น งานบ้านและสวน 2026" autocomplete="off"></div>
-        <div class="f"><label class="fl">วันที่งาน</label><input type="date" id="sEventDate"></div>
-      </div>
-      <button class="btn" id="saveSetup">บันทึกชื่อ แล้วเริ่มเก็บลูกค้า →</button>
+      <div class="eyebrow">เข้าใช้งาน · ทำครั้งเดียวต่องาน</div>
+      <h2 style="margin-top:6px">ใส่รหัสบูธ และชื่อจริงของคุณ</h2>
+      <p class="sub">ขอรหัสบูธจากหัวหน้า ลูกค้าที่บันทึกจะเก็บในเครื่องและ<b>สำรองขึ้นระบบอัตโนมัติ</b> ถ้าเปลี่ยนเครื่องหรือข้อมูลหาย ใส่รหัสบูธกับชื่อเดิมแล้วข้อมูลกลับมาครบ</p>
+      <div class="f"><label class="fl">รหัสบูธ <span class="req">*</span></label><input id="sCode" placeholder="เช่น 482915" autocomplete="off" style="text-transform:uppercase"></div>
+      <div class="f"><label class="fl">ชื่อจริงของคุณ <span class="req">*</span> <span class="opt">(ใช้ชื่อเดิมทุกครั้ง)</span></label><input id="sName" placeholder="เช่น ณิชา ใจดี" autocomplete="off"></div>
+      <input id="sEvent" type="hidden"><input id="sEventDate" type="hidden">
+      <button class="btn" id="saveSetup">เข้าใช้งาน แล้วเริ่มเก็บลูกค้า →</button>
     </div>
 
     <div id="mainSales" style="display:none">
+      <div id="cloudBox"></div>
       <div class="counter">
         <div class="cbox"><div class="cn num" id="cToday">0</div><div class="cl">วันนี้</div></div>
         <div class="cbox"><div class="cn num" id="cAll">0</div><div class="cl">ทั้งหมด (คุณ)</div></div>
@@ -309,9 +315,10 @@
 
   <!-- MANAGER VIEW -->
   <div id="mgrView" class="pad" style="display:none">
-    <div class="note-info">📊 หน้านี้สำหรับ <b>หัวหน้า</b> รวมข้อมูลจากเซลล์ทุกคน: ให้เซลล์แต่ละคนกด “⬇️ ไฟล์รวม (.json)” ส่งมาทางไลน์ แล้วกดปุ่มด้านล่างเลือกไฟล์ทั้งหมด (เลือกหลายไฟล์พร้อมกันได้) เพื่อดูว่าใครเก็บได้กี่ราย + รวมส่งเข้า ERP</div>
+    <div class="note-info">📊 หน้านี้สำหรับ <b>หัวหน้า</b>: สร้างงานและรหัสบูธ แล้วดูลูกค้าของเซลล์ทุกคนจากระบบได้ทันที (ไม่ต้องรอไฟล์) · ข้อมูลนี้แยกจาก VYNN ERP</div>
+    <div id="admBox"></div>
     <div class="card">
-      <h2>รวมไฟล์จากเซลล์</h2>
+      <h2>หรือรวมจากไฟล์ (แบบเดิม)</h2>
       <p class="sub">เลือกไฟล์ .json ที่เซลล์ส่งมา (เลือกได้หลายไฟล์)</p>
       <label class="btn sec" style="display:block;text-align:center;cursor:pointer">📂 เลือกไฟล์ .json<input type="file" id="mgrFiles" accept=".json,application/json" multiple hidden></label>
       <button class="btn sec" id="mgrClear" style="margin-top:9px;display:none">ล้างข้อมูลที่รวมไว้</button>
@@ -349,7 +356,8 @@
 
  function $(id){return document.getElementById(id);}
  function load(){try{var r=localStorage.getItem(LS);if(r)st=Object.assign(st,JSON.parse(r));}catch(e){}}
- function save(){try{localStorage.setItem(LS,JSON.stringify(st));}catch(e){}}
+ function saveLocal(){try{localStorage.setItem(LS,JSON.stringify(st));}catch(e){toast('⚠ เครื่องเต็ม — ต่อเน็ตเพื่อสำรองข้อมูล');}}
+ function save(){saveLocal();cloudKick();}
  function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
  function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1900);}
@@ -716,7 +724,7 @@
         '<tr><td>กำไร/ขาดทุนจากบูธ</td><td class="n" id="roiProfit" style="font-weight:800">—</td></tr>'+
         '<tr><td>ROI</td><td class="n" id="roiPct" style="font-weight:800">—</td></tr>'+
        '</tbody></table></div><div id="roiVerdict" class="note-warn" style="margin-top:12px"></div></div>'+
-     '<div class="card"><h2>เก็บได้กี่ราย · แยกตามเซลล์</h2><p class="sub">รวมจาก '+merge.sources+' ไฟล์ (ตัดเบอร์ซ้ำอัตโนมัติ) · ประเมินความตั้งใจของแต่ละคน</p>'+
+     '<div class="card"><h2>เก็บได้กี่ราย · แยกตามเซลล์</h2><p class="sub">'+(merge.cloud?'จากระบบ · งาน '+esc(merge.cloud):'รวมจาก '+merge.sources+' ไฟล์ (ตัดเบอร์ซ้ำอัตโนมัติ)')+' · ประเมินความตั้งใจของแต่ละคน</p>'+
      '<div class="tablewrap"><table><thead><tr><th>เซลล์</th><th class="n">ราย</th><th class="n">VYNN</th><th class="n">VG</th><th class="n">ด่วน</th><th class="n">จอง</th><th class="n">ยอดจอง</th></tr></thead><tbody>'+
      rows.map(function(r){return '<tr><td><b>'+esc(r.s)+'</b><div class="bar"><span style="width:'+Math.round(r.d.n/max*100)+'%"></span></div></td><td class="n">'+r.d.n+'</td><td class="n">'+r.d.v+'</td><td class="n">'+r.d.g+'</td><td class="n">'+r.d.hot+'</td><td class="n">'+r.d.dep+'</td><td class="n">'+(r.d.depSum?money(r.d.depSum):'—')+'</td></tr>';}).join('')+
      '</tbody></table></div></div>'+
@@ -730,9 +738,107 @@
    $('mgrJSON').onclick=function(){dl(JSON.stringify({tool:'vynn-booth',merged:true,exportedAt:new Date().toISOString(),leads:merge.leads},null,2),'application/json','booth-รวมทุกคน-'+todayISO()+'.json');toast('ดาวน์โหลดแล้ว');};
  }
 
+ /* ---------- cloud backup (/api/booth) — separate from VYNN·OS ----------
+    Leads still live on the phone first; every change is copied to the server in the background.
+    st.cloud = {token, eventId, eventName}; st.cloudSent = {leadId: fingerprint} of what the server already has. */
+ var ADMK='vynn_booth_admin',admTok='',cloudBusy=false,cloudErr='',cloudTimer=null;
+ function api(a,body){
+   return fetch('/api/booth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({a:a},body||{}))})
+     .then(function(r){return r.json().catch(function(){return{};}).then(function(j){if(!r.ok)throw{code:r.status,message:j.error||('HTTP '+r.status)};return j;});},
+           function(){throw{code:'offline',message:'ไม่มีอินเทอร์เน็ต'};});
+ }
+ function fp(L){var s=JSON.stringify(L),h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;}return s.length+':'+h;}
+ function pendingList(){
+   var sent=st.cloudSent||{},out=[],seen={};
+   st.leads.forEach(function(L){seen[L.id]=1;if(sent[L.id]!==fp(L))out.push({id:L.id,data:L});});
+   Object.keys(sent).forEach(function(id){if(!seen[id]&&sent[id]!=='x')out.push({id:id,data:{id:id},deleted:true});});
+   return out;
+ }
+ function cloudKick(){clearTimeout(cloudTimer);cloudTimer=setTimeout(cloudSync,1200);}
+ function cloudSync(){
+   if(cloudBusy||!st.cloud||!st.cloud.token)return renderCloud();
+   var list=pendingList();if(!list.length){cloudErr='';return renderCloud();}
+   cloudBusy=true;renderCloud();
+   var batch=[],size=0;
+   while(list.length&&batch.length<20){var s=JSON.stringify(list[0]).length;if(batch.length&&size+s>2.5e6)break;batch.push(list.shift());size+=s;}
+   api('sync',{token:st.cloud.token,push:batch}).then(function(r){
+     st.cloudSent=st.cloudSent||{};
+     (r.saved||[]).forEach(function(id){var b=batch.find(function(x){return x.id===id;});if(b&&b.deleted)st.cloudSent[id]='x';else{var L=st.leads.find(function(x){return x.id===id;});if(L)st.cloudSent[id]=fp(L);}});
+     cloudErr='';cloudBusy=false;saveLocal();
+     if(pendingList().length)setTimeout(cloudSync,300);else renderCloud();
+   },function(e){cloudBusy=false;cloudErr=e.code==='offline'?'ไม่มีเน็ต — เก็บในเครื่องไว้แล้ว จะสำรองให้เองเมื่อมีเน็ต':e.code===401?'หมดเวลา — ใส่รหัสบูธอีกครั้ง':(e.message||'สำรองไม่สำเร็จ');if(e.code===401)st.cloud.token='';saveLocal();renderCloud();});
+ }
+ setInterval(function(){if(st.cloud&&st.cloud.token&&pendingList().length)cloudSync();},30000);
+ window.addEventListener('online',function(){cloudSync();});
+ function renderCloud(){
+   var box=$('cloudBox');if(!box)return;
+   if(!st.cloud||!st.cloud.token){
+     box.innerHTML='<div class="cloud warn"><b>☁ ยังไม่ได้เชื่อมระบบสำรองข้อมูล</b><span>ใส่รหัสบูธของงาน (ขอจากหัวหน้า) ลูกค้าที่บันทึกไว้ในเครื่องทั้งหมดจะถูกสำรองขึ้นระบบ</span>'+
+       '<div class="two"><input id="cCode" placeholder="รหัสบูธ" autocomplete="off" inputmode="text" style="text-transform:uppercase"><input id="cName" placeholder="ชื่อจริงของคุณ" value="'+esc(st.sales||'')+'" autocomplete="off"></div>'+
+       '<button class="btn" id="cJoin">เชื่อมและสำรองข้อมูล</button></div>';
+     $('cJoin').onclick=function(){doJoin($('cCode').value,$('cName').value,$('cJoin'));};
+     return;
+   }
+   var n=pendingList().length;
+   box.innerHTML='<div class="cloud '+(cloudErr?'warn':n?'wait':'ok')+'">'+(cloudBusy?'⏳ กำลังสำรองข้อมูล…':cloudErr?'⚠ '+esc(cloudErr)+(n?' (รอสำรอง '+n+' ราย)':''):n?'⏳ รอสำรอง '+n+' ราย':'☁ สำรองขึ้นระบบครบแล้ว')+
+     '<small>'+esc(st.cloud.eventName||'')+'</small></div>';
+ }
+ function doJoin(code,name,btn){
+   code=String(code||'').trim();name=String(name||'').trim();
+   if(!code){toast('ใส่รหัสบูธก่อน');return;}
+   if(name.length<2){toast('ใส่ชื่อจริงของคุณ');return;}
+   if(btn){btn.disabled=true;btn.textContent='กำลังเชื่อม…';}
+   api('join',{code:code,name:name}).then(function(r){
+     st.sales=name;st.event=r.event.name;st.eventDate=r.event.start||'';if(r.event.source&&SOURCES[r.event.source])st.source=r.event.source;
+     st.cloud={token:r.token,eventId:r.event.id,eventName:r.event.name};st.cloudSent=st.cloudSent||{};
+     // bring back anything the server already has for this person (new phone / cleared browser)
+     var have={};st.leads.forEach(function(L){have[L.id]=1;});var back=0;
+     (r.leads||[]).forEach(function(L){if(!have[L.id]){st.leads.push(L);back++;}st.cloudSent[L.id]=fp(L);});
+     st.leads.sort(byNewest);saveLocal();renderWho();showSetupOrMain();fillSource();renderCloud();cloudSync();
+     toast(back?('กู้คืนลูกค้า '+back+' ราย ✓'):'เชื่อมระบบแล้ว ✓');
+   },function(e){if(btn){btn.disabled=false;btn.textContent='เชื่อมและสำรองข้อมูล';}toast('⚠ '+(e.message||'เชื่อมไม่สำเร็จ'));});
+ }
+ // first-time setup now = booth code + real name
+ $('saveSetup').onclick=function(){doJoin($('sCode').value,$('sName').value,$('saveSetup'));};
+
+ /* ---------- manager: events + everyone's leads from the server ---------- */
+ function renderAdmin(){
+   var box=$('admBox');if(!box)return;
+   if(!admTok){
+     box.innerHTML='<div class="card"><h2>ข้อมูลจากระบบ (หัวหน้า)</h2><p class="sub">เข้าด้วยรหัสหัวหน้า เพื่อสร้างงาน ตั้งรหัสบูธ และดูลูกค้าของเซลล์ทุกคน</p><div id="admForm">กำลังตรวจสอบ…</div></div>';
+     api('status').then(function(s){
+       $('admForm').innerHTML=(s.adminSet?'':'<p class="sub" style="color:var(--warn)">ยังไม่มีรหัสหัวหน้า — ตั้งครั้งแรกได้เลย (อย่างน้อย 6 ตัว จำไว้ให้ดี)</p>')+
+         '<div class="f"><input type="password" id="admCode" placeholder="'+(s.adminSet?'รหัสหัวหน้า':'ตั้งรหัสหัวหน้าใหม่')+'" autocomplete="'+(s.adminSet?'current-password':'new-password')+'"></div>'+
+         '<button class="btn" id="admGo">'+(s.adminSet?'เข้าสู่ระบบหัวหน้า':'ตั้งรหัสหัวหน้า')+'</button>';
+       $('admGo').onclick=function(){api(s.adminSet?'adminLogin':'adminSetup',{code:$('admCode').value}).then(function(r){admTok=r.token;try{localStorage.setItem(ADMK,admTok);}catch(e){}renderAdmin();},function(e){toast('⚠ '+e.message);});};
+     },function(e){$('admForm').innerHTML='<p class="sub">⚠ '+esc(e.message)+'</p>';});
+     return;
+   }
+   box.innerHTML='<div class="card"><h2>งานออกบูธ</h2><div id="evList">กำลังโหลด…</div>'+
+     '<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">＋ สร้างงานใหม่</summary>'+
+     '<div class="f"><label class="fl">ชื่องาน</label><input id="evName" placeholder="เช่น งานบ้านและสวน 2026"></div>'+
+     '<div class="f"><label class="fl">ประเภทงาน</label><select id="evSrc"><option value="baanlaesuan">งานบ้านและสวน</option><option value="archexpo">งานสถาปนิก</option></select></div>'+
+     '<div class="two"><div class="f"><label class="fl">วันเริ่ม</label><input type="date" id="evStart"></div><div class="f"><label class="fl">วันจบ</label><input type="date" id="evEnd"></div></div>'+
+     '<div class="f"><label class="fl">รหัสบูธ <span class="opt">(เว้นว่าง = สุ่มเลข 6 หลัก)</span></label><input id="evCode" placeholder="เช่น HG2026" style="text-transform:uppercase"></div>'+
+     '<button class="btn" id="evCreate">สร้างงาน</button></details>'+
+     '<button class="btn sec" id="admOut" style="margin-top:10px">ออกจากโหมดหัวหน้า</button></div>';
+   $('admOut').onclick=function(){admTok='';try{localStorage.removeItem(ADMK);}catch(e){}renderAdmin();};
+   $('evCreate').onclick=function(){api('createEvent',{token:admTok,name:$('evName').value,source:$('evSrc').value,start:$('evStart').value,end:$('evEnd').value,code:$('evCode').value}).then(function(r){toast('สร้างงานแล้ว · รหัสบูธ '+r.code);loadEvents();},function(e){toast('⚠ '+e.message);});};
+   loadEvents();
+ }
+ function loadEvents(){
+   api('events',{token:admTok}).then(function(r){
+     $('evList').innerHTML=r.events.length?r.events.map(function(e){return '<div class="evrow'+(e.active?'':' off')+'"><div><b>'+esc(e.name)+'</b><small>'+esc(srcLabel(e.source))+(e.start?' · '+esc(fmtD(e.start))+(e.end?'–'+esc(fmtD(e.end)):''):'')+' · '+e.leads+' ราย / '+e.sales+' เซลล์</small></div>'+
+       '<div class="evcode">'+esc(e.code)+'</div><div class="evbtn"><button class="btn sec" data-evload="'+esc(e.id)+'">ดูลูกค้า</button><button class="btn sec" data-evtog="'+esc(e.id)+'" data-on="'+(e.active?0:1)+'">'+(e.active?'ปิดงาน':'เปิดอีกครั้ง')+'</button></div></div>';}).join(''):'<p class="sub">ยังไม่มีงาน — สร้างงานใหม่ด้านล่าง แล้วแจกรหัสบูธให้ทีม</p>';
+     $('evList').querySelectorAll('[data-evload]').forEach(function(b){b.onclick=function(){api('entries',{token:admTok,eventId:b.dataset.evload}).then(function(x){merge={leads:x.leads,sources:0,cloud:x.event.name};renderMgr();toast('โหลด '+x.leads.length+' ราย');},function(e){toast('⚠ '+e.message);});};});
+     $('evList').querySelectorAll('[data-evtog]').forEach(function(b){b.onclick=function(){if(b.dataset.on==='0'&&!confirm('ปิดงานนี้? เซลล์จะเข้าด้วยรหัสนี้ไม่ได้อีก (ข้อมูลยังอยู่)'))return;api('setEvent',{token:admTok,id:b.dataset.evtog,active:b.dataset.on==='1'}).then(loadEvents,function(e){toast('⚠ '+e.message);});};});
+   },function(e){if(e.code===401){admTok='';try{localStorage.removeItem(ADMK);}catch(x){}renderAdmin();}else $('evList').innerHTML='<p class="sub">⚠ '+esc(e.message)+'</p>';});
+ }
+ try{admTok=localStorage.getItem(ADMK)||'';}catch(e){}
+
  /* ---------- tabs ---------- */
  $('tabSales').onclick=function(){$('tabSales').classList.add('on');$('tabMgr').classList.remove('on');$('salesView').style.display='';$('mgrView').style.display='none';};
- $('tabMgr').onclick=function(){$('tabMgr').classList.add('on');$('tabSales').classList.remove('on');$('mgrView').style.display='';$('salesView').style.display='none';renderMgr();};
+ $('tabMgr').onclick=function(){$('tabMgr').classList.add('on');$('tabSales').classList.remove('on');$('mgrView').style.display='';$('salesView').style.display='none';renderAdmin();renderMgr();};
 
  /* ---------- init ---------- */
  load();
@@ -740,7 +846,7 @@
  $('fDate').value=todayISO();fillSource();
  if(!st.eventDate)$('sEventDate').value=todayISO();else $('sEventDate').value=st.eventDate;
  $('sName').value=st.sales||'';$('sEvent').value=st.event||'';
- renderWho();showSetupOrMain();
+ renderWho();showSetupOrMain();renderCloud();cloudSync();
  (function(){var ua=navigator.userAgent||'';if(/Line\//i.test(ua)||/FBAN|FBAV|Instagram/i.test(ua)){var w=$('inAppWarn');if(w){w.innerHTML='⚠️ <b>กำลังเปิดในเบราว์เซอร์ของไลน์</b> — ปุ่มแชร์/เซฟรูปอาจใช้ไม่ได้ และข้อมูลอาจไม่ถูกเก็บถาวร<br>👉 แนะนำ: กดเมนู <b>⋯</b> มุมขวาบน → <b>เปิดใน Safari / Chrome</b> แล้วค่อยกรอกงาน (ปุ่มจะทำงาน + ข้อมูลอยู่ครบ) · หรือ <b>แคปหน้าจอ</b>ส่งไลน์ก็ได้';w.style.display='';}}})();
 })();
 </script>
