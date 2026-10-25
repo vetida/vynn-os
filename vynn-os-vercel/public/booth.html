@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 <title>ฟอร์มเก็บลูกค้าหน้าบูธ · VYNN / Vangarde</title>
@@ -173,12 +175,66 @@
   .evrow small{display:block;color:var(--muted);font-size:12px;margin-top:2px}.evrow.off{opacity:.55}
   .evcode{font-family:ui-monospace,Menlo,monospace;font-size:20px;font-weight:700;letter-spacing:2px}
   .evbtn{grid-column:1/-1;display:flex;gap:8px}.evbtn .btn{flex:1;padding:9px}
+  /* ===== VYNN | VANGARDE skin (warm off-white · taupe · deep green · thin serif wordmark) ===== */
+  :root,:root[data-theme="light"]{
+    --accent:#9C8676; --accent-d:#86705F; --accent-soft:#F1EBE5;
+    --vynn:#9C8676; --vangarde:#3F5B4C;
+    --ink:#2B2926; --muted:#857D74; --faint:#B3ABA2;
+    --paper:#F7F5F2; --surface:#FFFFFF; --surface2:#F6F3EF; --border:#ECE6DF; --border2:#E2DBD2;
+    --good:#3F6B4F; --good-bg:#E7F0EA; --warn:#B07A2A; --warn-bg:#F8EEDC; --bad:#B4483B; --bad-bg:#F8E6E2;
+    --sans:"IBM Plex Sans Thai",system-ui,"Segoe UI","Leelawadee UI",Tahoma,sans-serif;
+    --serif:"Cormorant Garamond","Times New Roman",serif;
+    --num:"IBM Plex Sans Thai",system-ui,sans-serif;
+    --sh:0 1px 2px rgba(60,45,30,.04),0 6px 18px rgba(60,45,30,.06);
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --accent:#C4AE9C; --accent-d:#B09A88; --accent-soft:#2E2924; --vynn:#C4AE9C; --vangarde:#86A894;
+    --ink:#F1ECE6; --muted:#A79F96; --faint:#766F68;
+    --paper:#171513; --surface:#211E1B; --surface2:#2A2622; --border:#36312C; --border2:#433D37;
+    --good:#86B898; --good-bg:#1E2B23; --warn:#D9A65A; --warn-bg:#2F2619; --bad:#E08A7C; --bad-bg:#33201C;
+    --sh:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="dark"]{--accent:#C4AE9C;--accent-soft:#2E2924;--vynn:#C4AE9C;--vangarde:#86A894;--ink:#F1ECE6;--muted:#A79F96;--faint:#766F68;--paper:#171513;--surface:#211E1B;--surface2:#2A2622;--border:#36312C;--border2:#433D37;--good:#86B898;--good-bg:#1E2B23;--warn:#D9A65A;--warn-bg:#2F2619;--bad:#E08A7C;--bad-bg:#33201C}
+  body{background:var(--paper)}
+  .appbar{background:var(--surface);border-bottom:1px solid var(--border);box-shadow:none}
+  .appbar-in{padding:14px 18px}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:400}
+  .logo .mk{width:36px;height:36px;border-radius:10px;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:var(--serif);font-size:22px;font-weight:500;flex:none}
+  .logo .wm{display:flex;flex-direction:column;line-height:1.05}
+  .logo .wm b{font-family:var(--serif);font-weight:500;font-size:19px;letter-spacing:.06em;color:var(--ink)}
+  .logo .wm b i{font-style:normal;color:var(--vynn)} .logo .wm b u{text-decoration:none;color:var(--vangarde)}
+  .logo .wm b s{text-decoration:none;color:var(--border2);margin:0 6px}
+  .logo .wm small{font-size:9.5px;letter-spacing:.32em;color:var(--muted);margin-top:3px}
+  .appbar .who b{font-weight:600}
+  .tabs{border-top:0;margin:0 14px 12px;padding:4px;background:var(--surface2);border-radius:14px;gap:4px}
+  .tabs button{border:0;border-radius:11px;padding:10px 6px;font-weight:500;color:var(--muted)}
+  .tabs button.on{background:var(--accent);color:#fff;border:0;box-shadow:0 2px 8px rgba(120,95,75,.25)}
+  .card{border-radius:20px;border:1px solid var(--border);box-shadow:var(--sh);padding:18px}
+  .card h2{font-size:16px;font-weight:600;letter-spacing:-.005em}
+  .eyebrow{color:var(--accent);font-weight:600;letter-spacing:.18em}
+  label.fl{font-weight:500;color:var(--ink);font-size:13px}
+  input,textarea,select{border:1px solid var(--border);background:var(--surface2);border-radius:12px}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .btn{background:var(--accent);border-color:var(--accent);color:#fff;border-radius:14px;font-weight:600;box-shadow:0 4px 14px rgba(120,95,75,.22)}
+  .btn:hover{background:var(--accent-d)}
+  .btn.sec{background:var(--surface);color:var(--ink);border:1px solid var(--border);box-shadow:none}
+  .chip{border-radius:999px;border:1px solid var(--border);background:var(--surface);font-weight:500}
+  .chip.on,.chip.on.bv{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chip.on.bg{background:var(--vangarde);border-color:var(--vangarde);color:#fff}
+  .counter .cbox{background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--sh)}
+  .counter .cn{font-family:var(--sans);font-weight:600;font-size:26px;color:var(--ink)}
+  .counter .cbox.hot .cn{color:var(--warn)}
+  .note-info{background:var(--accent-soft);border:1px solid var(--border);border-radius:16px;color:var(--ink)}
+  .cloud{border-radius:16px;border:1px solid var(--border)}
+  .cloud,.cloud.ok{background:var(--good-bg);color:var(--good)}
+  .evcode{font-family:var(--serif);font-size:24px;letter-spacing:.12em;color:var(--accent);font-weight:600}
+  #toast{border-radius:14px}
 </style>
 
 <div class="wrap">
   <div class="appbar">
     <div class="appbar-in">
-      <div class="logo"><span class="b1">VYNN</span> · <span class="b2">Vangarde</span></div>
+      <div class="logo"><span class="mk">V</span><span class="wm"><b><i>VYNN</i><s>|</s><u>VANGARDE</u></b><small>BOOTH LEADS</small></span></div>
       <div class="who" id="whoBox"></div>
     </div>
     <div class="tabs">
