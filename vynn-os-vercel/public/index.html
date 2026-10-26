@@ -1053,7 +1053,7 @@ async function tryLogin(loginId,pw){
 }
 async function vosVerify(pw){try{return (await vosApi('verify',{password:pw})).ok===true;}catch(e){return false;}}
 function setSession(uid){currentUser=accountByUid(uid);role=currentUser.role;try{localStorage.setItem(SESS,uid);}catch(e){}}
-function logout(){if(viewAs)stopViewAs();clearInterval(attTimer);attOpen=null;if(state&&window.__vosStateReady){autoPresence('offline');logAudit('logout','ออกจากระบบ');}vosApi('logout').catch(()=>{});currentUser=null;window.__vosStateReady=false;try{localStorage.removeItem(SESS);}catch(e){}pendingBrand=null;showLogin();}
+function logout(){if(viewAs)stopViewAs();clearInterval(attTimer);attOpen=null;if(typeof nativeTrack==='function')nativeTrack();if(state&&window.__vosStateReady){autoPresence('offline');logAudit('logout','ออกจากระบบ');}vosApi('logout').catch(()=>{});currentUser=null;window.__vosStateReady=false;try{localStorage.removeItem(SESS);}catch(e){}pendingBrand=null;showLogin();}
 async function restoreSession(){try{const r=await vosApi('me');applyUsers(r.users);setSession(r.me.id);return true;}catch(e){return false;}}
 // apply the active brand: scope + theme + sidebar/topbar labels
 // brand logo image (Settings → company logo; falls back to the built-in VANGARDE logo)
@@ -4153,6 +4153,14 @@ function kitPanelHTML(pt,i){
 
 /* ============ TIME CLOCK + PRESENCE (server clock; location only while clocked in; CEO-only view) ============ */
 let attOpen=null,attTimer=null,attTick=0,attLocNote='';
+// Android app (mobile/): a native service keeps sending GPS while clocked in, also with the screen off
+const VNative=(()=>{try{const C=window.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()?C.registerPlugin('VynnNative'):null;}catch(e){return null;}})();
+let nativeOn=null;
+function nativeTrack(){
+ if(!VNative)return;const on=!!(attOpen&&currentUser);if(on===nativeOn)return;nativeOn=on;
+ (on?VNative.startTracking():VNative.stopTracking()).then(r=>{if(on&&r&&!r.tracking){attLocNote='ไม่ได้อนุญาตตำแหน่ง (GPS)';render(false);}}).catch(()=>{});
+}
+if(VNative)window.print=()=>VNative.print({title:document.title}).catch(()=>{});
 const tHM=s=>s?new Date(s).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Bangkok'}):'—';
 const hrsBetween=(a,b)=>a?((new Date(b||Date.now())-new Date(a))/36e5):0;
 function getLoc(){
@@ -4164,7 +4172,7 @@ function getLoc(){
 }
 async function attPing(withLoc){
  if(!currentUser||document.hidden)return;
- try{const r=await vosApi('ping',withLoc&&attOpen?{loc:await getLoc()}:{});const was=!!attOpen;attOpen=r.open;if(was!==!!attOpen&&view!=='attend')render(false);}catch(e){}
+ try{const r=await vosApi('ping',withLoc&&attOpen?{loc:await getLoc()}:{});const was=!!attOpen;attOpen=r.open;nativeTrack();if(was!==!!attOpen&&view!=='attend')render(false);}catch(e){}
 }
 function startPresence(){
  clearInterval(attTimer);attTick=0;attPing(true);
@@ -4174,14 +4182,14 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&currentUs
 async function clockIO(){
  const btn=document.getElementById('attBtn');if(btn)btn.disabled=true;
  const l=await getLoc();
- try{const r=await vosApi(attOpen?'clockOut':'clockIn',{loc:l});attOpen=r.open;logAudit('clock',attOpen?'ลงเวลาเข้างาน':'ลงเวลาออกงาน');render(false);}
+ try{const r=await vosApi(attOpen?'clockOut':'clockIn',{loc:l});attOpen=r.open;nativeTrack();logAudit('clock',attOpen?'ลงเวลาเข้างาน':'ลงเวลาออกงาน');render(false);}
  catch(e){alert(e.message||'ลงเวลาไม่สำเร็จ');if(btn)btn.disabled=false;}
 }
 function attWidget(){
  const on=!!attOpen;
  return `<div class="att-card${on?' on':''}"><div class="att-h"><b>${on?'🟢 กำลังทำงาน':'⚪ ยังไม่ได้ลงเวลาเข้างาน'}</b><span>${on?'เข้างาน '+tHM(attOpen.in_at)+' · '+hrsBetween(attOpen.in_at).toFixed(1)+' ชม.':'วันนี้'}</span></div>
   <button class="pill-btn wide att-btn" id="attBtn">${on?'🔴 ออกงาน':'🟢 เข้างาน'}</button>
-  <p class="att-note">${on?'📍 ระหว่างเข้างานและเปิดแอพ ระบบบันทึกตำแหน่งประมาณทุก 3 นาที (CEO เห็นเท่านั้น) · หยุดเมื่อกดออกงาน':'กดเข้างานแล้วระบบจะบันทึกเวลาและตำแหน่ง ณ ตอนกด'}${attLocNote?' · ⚠ '+escH(attLocNote):''}</p>
+  <p class="att-note">${on?(VNative?'📍 ระหว่างเข้างาน ระบบบันทึกตำแหน่งประมาณทุก 3 นาที แม้ปิดจอ':'📍 ระหว่างเข้างานและเปิดแอพ ระบบบันทึกตำแหน่งประมาณทุก 3 นาที')+' (CEO เห็นเท่านั้น) · หยุดเมื่อกดออกงาน':'กดเข้างานแล้วระบบจะบันทึกเวลาและตำแหน่ง ณ ตอนกด'}${attLocNote?' · ⚠ '+escH(attLocNote):''}</p>
   <button class="att-hist" id="attHist">ประวัติลงเวลาของฉัน</button></div>`;
 }
 async function openMyAttendance(){

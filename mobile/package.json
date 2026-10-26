@@ -1,0 +1,17 @@
+{
+  "name": "vynn-erp-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VYNN ERP native shell (Capacitor) for Android. Loads the web app from the server; adds background GPS while clocked in.",
+  "scripts": {
+    "sync": "cap sync",
+    "apk": "cap sync android && cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3"
+  }
+}
