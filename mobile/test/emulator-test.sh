@@ -4,7 +4,7 @@
 set -u
 LOG=mobile/test/pings.log
 PKG=com.vynn.erp
-adb install -r VYNN-ERP-test.apk
+timeout 120 adb install -r VYNN-ERP-test.apk
 adb shell pm grant $PKG android.permission.ACCESS_FINE_LOCATION
 adb shell pm grant $PKG android.permission.ACCESS_COARSE_LOCATION
 adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS || true
@@ -13,6 +13,7 @@ adb shell am start -n $PKG/.MainActivity
 sleep 40
 adb emu geo fix 100.5100 13.7600
 echo "--- screen off + doze"
+OFF_AT=$(date -u +%Y-%m-%dT%H:%M:%S)
 adb shell input keyevent KEYCODE_SLEEP
 adb shell dumpsys deviceidle force-idle || true
 sleep 400
@@ -26,6 +27,9 @@ echo "--- log"; cat $LOG
 PINGS=$(grep -c '"u":"/api/auth"' $LOG || true)
 WITH_LOC=$(grep '"u":"/api/auth"' $LOG | grep -c 'lat' || true)
 WITH_COOKIE=$(grep '"u":"/api/auth"' $LOG | grep -c 'TESTTOKEN' || true)
-echo "pings=$PINGS with_loc=$WITH_LOC with_cookie=$WITH_COOKIE service_after_clockout=$RUNNING"
+SCREEN_OFF_PINGS=$(awk -v t="$OFF_AT" -F'"t":"' '/"u":"\/api\/auth"/{split($2,a,"\"");if(a[1]>t)n++}END{print n+0}' $LOG)
+RES="pings=$PINGS with_loc=$WITH_LOC with_cookie=$WITH_COOKIE pings_while_screen_off=$SCREEN_OFF_PINGS service_after_clockout=$RUNNING"
+echo "$RES"
+echo "::notice title=Emulator GPS test::$RES"
 adb logcat -d -s VynnTracker:* Capacitor:E | tail -40
-[ "$PINGS" -ge 3 ] && [ "$WITH_LOC" -ge 2 ] && [ "$WITH_COOKIE" -eq "$PINGS" ] && [ "$RUNNING" -eq 0 ]
+[ "$PINGS" -ge 3 ] && [ "$WITH_LOC" -ge 2 ] && [ "$SCREEN_OFF_PINGS" -ge 2 ] && [ "$WITH_COOKIE" -eq "$PINGS" ] && [ "$RUNNING" -eq 0 ]

@@ -109,4 +109,4 @@ jobs:
           target: google_apis
           arch: x86_64
           disable-animations: true
-          script: (node mobile/test/mock-server.js &) && sleep 2 && bash mobile/test/emulator-test.sh
+          script: (node mobile/test/mock-server.js > /tmp/mock.log 2>&1 < /dev/null &) && sleep 2 && bash mobile/test/emulator-test.sh
