@@ -554,7 +554,7 @@
   /* view-only modules */
   .ro-banner{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-left:4px solid #E0A23A;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:13px}
   .ro-banner .ico{width:18px;height:18px;flex-shrink:0;color:#E0A23A}
-  body.ro #content .btn.primary,body.ro #topAction{display:none!important}
+  body.ro #content .btn.primary,body.ro:not(.ro-add) #topAction{display:none!important}
   .va-pick{display:flex;flex-direction:column;gap:4px;margin:8px 0 2px;font-size:11px;color:var(--text-faint)}
   .va-pick select{width:100%;padding:7px 9px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit;font-size:13px}
   #viewAsBar{position:fixed;top:0;left:0;right:0;z-index:9000;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:7px 14px;background:#F7DA7B;color:#2B2B2B;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
@@ -759,7 +759,10 @@ const personById=id=>SALES.find(s=>s.id===id)||USERS.find(u=>u.id===id)||{name:'
 const SOURCE={line:{l:'LINE OA',i:'msg'},fb:{l:'Facebook',i:'msg'},ig:{l:'Instagram',i:'msg'},tiktok:{l:'TikTok',i:'msg'},baanlaesuan:{l:'งานบ้านและสวน',i:'booth'},archexpo:{l:'งานสถาปนิก',i:'booth'},repeat:{l:'ลูกค้าเก่า',i:'repeat'},designer:{l:'ดีไซเนอร์',i:'palette'},owner:{l:'ลูกค้าพี่นุ๊กพี่นิค',i:'user'},
  booth:{l:'ออกบูธ',i:'booth',old:true},interior:{l:'อินทีเรีย',i:'palette',old:true}};
 const srcOf=s=>SOURCE[s]||{l:s||'—',i:'inbox'};
-const isReferralSrc=s=>s==='designer'||s==='interior';  // designer / interior referrals carry a referral fee
+const isReferralSrc=s=>s==='designer'||s==='interior';
+// online channels: leads from these belong to online sales; field Sales may not add them
+const ONLINE_SRC=['line','fb','ig','tiktok'];
+const isOnlineSrc=s=>ONLINE_SRC.includes(s);  // designer / interior referrals carry a referral fee
 const STAGES=['new','assigned','surveyed','quoted','approved','won','production','installing','done','lost'];
 const SL={new:'ลีดใหม่',assigned:'มอบหมายแล้ว',surveyed:'วัดหน้างานแล้ว',quoted:'เสนอราคาแล้ว',approved:'อนุมัติแล้ว',won:'ปิดการขาย',production:'กำลังผลิต',installing:'รอ/นัดติดตั้ง',done:'จบงาน',lost:'เสียโอกาส'};
 const SP={new:'info',assigned:'accent',surveyed:'warn',quoted:'warn',approved:'accent',won:'good',production:'info',installing:'accent',done:'good',lost:'crit'};
@@ -1001,14 +1004,17 @@ const PERMS={
  admin:   {leads:'E',expenses:'E',install:'E',survey:'V',crm:'E',vgprice:'E',quote:'E',service:'E',kpi:'E'},
  pm:      {leads:'E',expenses:'E',install:'E',survey:'E',crm:'V',vgprice:'V',service:'E',kpi:'E'},
  online:  {leads:'E',expenses:'E',install:'V',survey:'V',crm:'V',vgprice:'V',quote:'E',service:'E',kpi:'E'},  // เซลล์ออนไลน์: quotes/money only for own leads (onlineBy)
- sales:   {leads:'V',expenses:'E',install:'V',survey:'E',vgprice:'V',quote:'V',kpi:'E'},
+ sales:   {leads:'A',expenses:'E',install:'V',survey:'E',vgprice:'V',quote:'V',kpi:'E'},
  staff:   {expenses:'E',install:'V',survey:'V',service:'V',kpi:'E'},
  accounts:{overview:'V',expenses:'E',quote:'V'},
 };
+// 'A' (leads only): view + add new non-online leads, and change only the leads you added yourself (createdBy)
 const permRole=()=>PERM_ROLE[role]||'staff';
 function permOf(v){if(v==='agenda')return 'E';return v==='home'?'V':((PERMS[permRole()]||{})[v]||'');}
 function canView(v){return !!permOf(v);}
 function canEditView(v){return permOf(v)==='E';}
+function canAddLead(){return ['E','A'].includes(permOf('leads'));}
+const ownLead=l=>!!(l&&currentUser&&l.createdBy===currentUser.id&&!isOnlineSrc(l.source));
 // a view belongs to the active brand unless it is brand-gated to the other brand (NAV item's b)
 function brandOK(v){const n=(typeof NAV!=='undefined')&&NAV.find(x=>x.id===v);return !n||!n.b||n.b===brand;}
 function canOpen(v){return canView(v)&&brandOK(v);}
@@ -3165,10 +3171,11 @@ function openAddLead(){
   <div style="padding:20px 22px">
    <div class="field-row"><div class="field"><label>ชื่อลูกค้า</label><input id="f-name" placeholder="เช่น คุณสมชาย"></div><div class="field"><label>สถานที่/โปรเจกต์</label><input id="f-site" placeholder="เช่น คอนโด XYZ"></div></div>
    <div class="field-row"><div class="field"><label>เบอร์</label><input id="f-phone" placeholder="08x-xxx-xxxx"></div><div class="field"><label>แบรนด์</label><select id="f-brand"><option${brand==='VYNN'?' selected':''}>VYNN</option><option${brand==='Vangarde'?' selected':''}>Vangarde</option></select></div></div>
-   <div class="field-row"><div class="field"><label>ช่องทาง</label><select id="f-src">${Object.entries(SOURCE).filter(([k,v])=>!v.old).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('')}</select></div><div class="field"><label>วันติดตั้งที่ต้องการ</label><input id="f-install" type="date"></div></div>
+   <div class="field-row"><div class="field"><label>ช่องทาง</label><select id="f-src">${Object.entries(SOURCE).filter(([k,v])=>!v.old&&!(permOf('leads')==='A'&&isOnlineSrc(k))).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('')}</select></div><div class="field"><label>วันติดตั้งที่ต้องการ</label><input id="f-install" type="date"></div></div>
    <div id="referralWrap" style="display:none"><div class="field-row"><div class="field"><label>ผู้แนะนำ (ดีไซเนอร์)</label><input id="f-ref" placeholder="ชื่อดีไซน์เนอร์/สตูดิโอ"></div><div class="field"><label>ค่าแนะนำ (%)</label><input id="f-refpct" type="number" value="10"></div></div></div>
    ${role==='admin'||role==='sales_support'?`<div class="field"><label>เซลล์ออนไลน์ผู้รับลีด (ถ้ามี)</label><select id="f-online"><option value="">— ไม่มี —</option>${ACCOUNTS.filter(a=>a.role==='online_sales'&&!a.inactive).map(a=>`<option value="${a.id}">${escH(a.name)}</option>`).join('')}</select></div>`:''}
-   <div class="field"><label>${role==='online_sales'?'ส่งต่อให้เซลล์ลงพื้นที่':'มอบหมายเซลล์'}</label><select id="f-sales"><option value="">— รอมอบหมาย —</option>${SALES.filter(s=>!s.inactive).map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+   ${permOf('leads')==='A'?`<div class="mini-note" style="margin:-4px 0 12px">ลีดนี้จะเป็นของคุณ · ลูกค้าจาก LINE OA / Facebook / Instagram / TikTok ให้เซลล์ออนไลน์หรือแอดมินเป็นคนเพิ่ม</div>`:''}
+   <div class="field"${permOf('leads')==='A'?' style="display:none"':''}><label>${role==='online_sales'?'ส่งต่อให้เซลล์ลงพื้นที่':'มอบหมายเซลล์'}</label><select id="f-sales"><option value="">— รอมอบหมาย —</option>${SALES.filter(s=>!s.inactive).map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
    <div class="field"><label>บันทึก</label><textarea id="f-note" rows="2" placeholder="รายละเอียดความต้องการ"></textarea></div>
    <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" id="mCancel">ยกเลิก</button><button class="btn primary" id="mSave">＋ บันทึกลีด</button></div>
   </div>`;
@@ -3176,9 +3183,12 @@ function openAddLead(){
  m.querySelector('#mClose').onclick=close;m.querySelector('#mCancel').onclick=close;
  m.querySelector('#f-src').onchange=e=>{m.querySelector('#referralWrap').style.display=isReferralSrc(e.target.value)?'block':'none';};
  m.querySelector('#mSave').onclick=()=>{
-  const sid=m.querySelector('#f-sales').value;const src=m.querySelector('#f-src').value;const nid='L-'+(state.seq.L++);
+  const selfAdd=permOf('leads')==='A';
+  const sid=selfAdd?currentUser.id:m.querySelector('#f-sales').value;const src=m.querySelector('#f-src').value;
+  if(selfAdd&&isOnlineSrc(src)){alert('⛔ ลูกค้าออนไลน์ (LINE / FB / IG / TikTok) ให้เซลล์ออนไลน์หรือแอดมินเป็นคนเพิ่ม');return;}
+  const nid='L-'+(state.seq.L++);
   const nbrand=m.querySelector('#f-brand').value;
-  state.leads.unshift({id:nid,custCode:nextCustCode(nbrand),name:m.querySelector('#f-name').value.trim()||'ลูกค้าใหม่',site:m.querySelector('#f-site').value||'—',phone:m.querySelector('#f-phone').value||'—',brand:nbrand,source:src,onlineBy:role==='online_sales'?currentUser.id:((m.querySelector('#f-online')||{}).value||null),assignedTo:sid||null,stage:sid?'assigned':'new',created:todayISO(),desiredInstall:m.querySelector('#f-install').value||'',note:m.querySelector('#f-note').value,referrer:isReferralSrc(src)?m.querySelector('#f-ref').value:'',referralPct:isReferralSrc(src)?+m.querySelector('#f-refpct').value:0});
+  state.leads.unshift({id:nid,custCode:nextCustCode(nbrand),name:m.querySelector('#f-name').value.trim()||'ลูกค้าใหม่',site:m.querySelector('#f-site').value||'—',phone:m.querySelector('#f-phone').value||'—',brand:nbrand,source:src,onlineBy:role==='online_sales'?currentUser.id:((m.querySelector('#f-online')||{}).value||null),assignedTo:sid||null,stage:sid?'assigned':'new',created:todayISO(),desiredInstall:m.querySelector('#f-install').value||'',note:m.querySelector('#f-note').value,referrer:isReferralSrc(src)?m.querySelector('#f-ref').value:'',referralPct:isReferralSrc(src)?+m.querySelector('#f-refpct').value:0,createdBy:currentUser?currentUser.id:null});
   logAudit('add_lead','เพิ่มลูกค้า '+(leadById(nid)?leadById(nid).name:nid)+' ('+nid+')');
   save();close();view='leads';render();openLead(nid);
  };
@@ -3296,15 +3306,16 @@ function render(rerenderNav=true){
  document.getElementById('pageTitle').textContent=meta.t;
  document.getElementById('pageSub').textContent=meta.s;
  const tb=document.getElementById('topAction');
- if(meta.act&&canEditView('leads')){tb.style.display='inline-flex';tb.onclick=openAddLead;}else tb.style.display='none';
+ if(meta.act&&canAddLead()){tb.style.display='inline-flex';tb.onclick=openAddLead;}else tb.style.display='none';
  if(rerenderNav)renderNav();
  const ro=isRO();
 const vb=document.getElementById('viewAsBox');if(vb){vb.innerHTML=viewAsPicker();const vs=vb.querySelector('#viewAsSel');if(vs)vs.onchange=e=>startViewAs(e.target.value);}viewAsBanner();
  const dt=document.getElementById('dataTools');if(dt)dt.style.display=(permRole()==='ceo'&&!viewAs)?'flex':'none'; // backup / restore / reset: CEO only
  document.body.classList.toggle('ro',ro);
+ document.body.classList.toggle('ro-add',ro&&permOf(view)==='A');
  roSnap=ro?roStrip(state):null;
  renderView();
- if(ro)document.getElementById('content').insertAdjacentHTML('afterbegin',`<div class="ro-banner">${svg('shield','ico')}<span><b>ดูได้อย่างเดียว</b> · สิทธิ์ ${ROLE_LABEL[role]||role} แก้ไขหัวข้อนี้ไม่ได้ ถ้ากดแก้ ระบบจะไม่บันทึก</span></div>`);
+ if(ro)document.getElementById('content').insertAdjacentHTML('afterbegin',`<div class="ro-banner">${svg('shield','ico')}<span>${permOf(view)==='A'?`<b>เพิ่มลีดใหม่ได้</b> (ยกเว้นลูกค้าออนไลน์ LINE / FB / IG / TikTok) · แก้ได้เฉพาะลีดที่คุณเพิ่มเอง ลีดอื่นดูได้อย่างเดียว`:`<b>ดูได้อย่างเดียว</b> · สิทธิ์ ${ROLE_LABEL[role]||role} แก้ไขหัวข้อนี้ไม่ได้ ถ้ากดแก้ ระบบจะไม่บันทึก`}</span></div>`);
 }
 
 /* ============ VIEW-ONLY GUARD ============
@@ -3323,11 +3334,16 @@ function askLogoutOnBack(){
  m.classList.add('open');sc.classList.add('open');setTimeout(()=>m.querySelector('#bkStay').focus(),30);
 }
 function roStrip(s){const c=Object.assign({},s);delete c.audit;return JSON.stringify(c);}
+// 'A' (add-own) views: the user's own non-online leads and the id counter may change, nothing else
+function roOwnStrip(s){const c=Object.assign({},s);delete c.audit;delete c.seq;c.leads=(c.leads||[]).filter(l=>!ownLead(l));return JSON.stringify(c);}
 function isRO(){return !!currentUser&&view!=='home'&&!canEditView(view);}
 function roBlocked(){
  if(roSnap===null||!isRO())return false;
  if(roStrip(state)===roSnap)return false;
- const audit=state.audit;state=JSON.parse(roSnap);state.audit=audit;
+ const addOwn=permOf(view)==='A',snap=JSON.parse(roSnap);
+ if(addOwn&&roOwnStrip(state)===roOwnStrip(snap)){roSnap=roStrip(state);return false;}
+ const cur=state;state=snap;state.audit=cur.audit;
+ if(addOwn){const mine=cur.leads.filter(ownLead),had=new Set(state.leads.map(l=>l.id)),byId=new Map(mine.map(l=>[l.id,l]));state.leads=[...mine.filter(l=>!had.has(l.id)),...state.leads.map(l=>byId.get(l.id)||l)];state.seq=cur.seq;} // keep the user's own leads
  const t=document.createElement('div');t.className='ro-toast';t.textContent='⛔ ดูได้อย่างเดียว · ไม่ได้บันทึกการแก้ไข';document.body.appendChild(t);setTimeout(()=>t.remove(),2600);
  setTimeout(()=>{document.querySelectorAll('.modal-card.open,.drawer.open,.scrim.open').forEach(e=>e.classList.remove('open'));render();},0);
  return true;
@@ -3522,7 +3538,7 @@ function renderHome(){
   <div class="pastels">${homeStats().map((c,i)=>`<button class="pastel" data-go="${c.mod}" style="--pc:${PASTEL[i]}"><span>${c.t}</span><b>${c.v}</b><i>${svg(c.mod==='agenda'?'trend':(MOD_INFO[c.mod]||{}).ic||'grid')}</i></button>`).join('')}</div>
   <div class="sec-h"><h2>หัวข้อของคุณ</h2><span>${mods.length} หัวข้อ</span></div>
   <div class="mod-grid">${mods.map(v=>{const n=NAV.find(x=>x.id===v),c=n&&n.count?n.count():0,m=MOD_INFO[v];
-   return `<button class="mod" data-go="${v}"><span class="mod-ic">${svg(m.ic)}</span><span class="mod-t">${m.t}${c?`<em>${c}</em>`:''}</span><span class="mod-s">${m.s}</span><span class="mod-perm ${permOf(v)==='E'?'e':'v'}">${permOf(v)==='E'?'ดู + แก้ไข':'ดูอย่างเดียว'}</span></button>`;}).join('')}</div>
+   return `<button class="mod" data-go="${v}"><span class="mod-ic">${svg(m.ic)}</span><span class="mod-t">${m.t}${c?`<em>${c}</em>`:''}</span><span class="mod-s">${m.s}</span><span class="mod-perm ${permOf(v)==='V'?'v':'e'}">${permOf(v)==='E'?'ดู + แก้ไข':permOf(v)==='A'?'ดู + เพิ่มลีด':'ดูอย่างเดียว'}</span></button>`;}).join('')}</div>
   ${recent.length?`<div class="sec-h"><h2>ลีดล่าสุด</h2><button class="pill-btn" data-go="leads">ดูทั้งหมด</button></div>
   <div class="tbl-soft"><div class="ts-head"><span>ลูกค้า</span><span>วันที่</span><span>ช่องทาง</span><span>สถานะ</span></div>
    ${recent.map(l=>`<button class="ts-row" data-lead="${escH(l.id)}"><span class="ts-cust"><span class="av" style="width:30px;height:30px;--avc:var(--brand);font-size:12px"><span>${escH(String(l.name||'?').trim().slice(0,1))}</span></span>${escH(l.name||'-')}</span><span>${l.created?thDate(String(l.created).slice(0,10)):'-'}</span><span>${escH((SOURCE[l.source]||{}).l||'')}</span><span>${stagePill(l.stage)}</span></button>`).join('')}</div>`:''}

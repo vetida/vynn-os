@@ -3,12 +3,27 @@
 const { pool, ensureSchema, composeState, saveState } = require('../lib/db');
 const { sessionUser } = require('../lib/vos');
 
+// field Sales (role 'sales') may add leads, but never online-channel ones: those belong to online sales
+const ONLINE_SRC = ['line', 'fb', 'ig', 'tiktok'];
+async function salesLeadViolation(client, user, leads) {
+  if (user.role !== 'sales') return null;
+  const r = await client.query('SELECT id, source FROM leads');
+  const before = new Map(r.rows.map(x => [x.id, x.source]));
+  for (const l of leads) {
+    if (!l || !ONLINE_SRC.includes(l.source)) continue;
+    if (!before.has(l.id)) return 'sales cannot add online-channel leads';
+    if (!ONLINE_SRC.includes(before.get(l.id))) return 'sales cannot move a lead to an online channel';
+  }
+  return null;
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   try {
     await ensureSchema();
     // all company data requires a logged-in VYNN·OS session (cookie set by /api/auth)
-    if (!(await sessionUser(req))) return res.status(401).json({ error: 'login required' });
+    const user = await sessionUser(req);
+    if (!user) return res.status(401).json({ error: 'login required' });
 
     if (req.method === 'GET') {
       const client = await pool.connect();
@@ -33,6 +48,11 @@ module.exports = async (req, res) => {
       const client = await pool.connect();
       try {
         await client.query('BEGIN');
+        const bad = await salesLeadViolation(client, user, state.leads);
+        if (bad) {
+          await client.query('ROLLBACK');
+          return res.status(403).json({ error: bad });
+        }
         await saveState(client, state);
         await client.query('COMMIT');
         res.status(200).json({ ok: true, savedAt: new Date().toISOString() });
