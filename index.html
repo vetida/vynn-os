@@ -4154,7 +4154,8 @@ function kitPanelHTML(pt,i){
 /* ============ TIME CLOCK + PRESENCE (server clock; location only while clocked in; CEO-only view) ============ */
 let attOpen=null,attTimer=null,attTick=0,attLocNote='';
 // Android app (mobile/): a native service keeps sending GPS while clocked in, also with the screen off
-const VNative=(()=>{try{const C=window.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()?C.registerPlugin('VynnNative'):null;}catch(e){return null;}})();
+const VNative=(()=>{try{const C=window.Capacitor;if(!(C&&C.isNativePlatform&&C.isNativePlatform()&&C.nativePromise))return null;
+ const call=m=>o=>C.nativePromise('VynnNative',m,o||{});return{startTracking:call('startTracking'),stopTracking:call('stopTracking'),print:call('print')};}catch(e){return null;}})();
 let nativeOn=null;
 function nativeTrack(){
  if(!VNative)return;const on=!!(attOpen&&currentUser);if(on===nativeOn)return;nativeOn=on;

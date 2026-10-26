@@ -21,7 +21,7 @@ import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 
 /**
- * JS: Capacitor.registerPlugin('VynnNative')
+ * JS (the page is remote, so no @capacitor/core): Capacitor.nativePromise('VynnNative', method, options)
  *  - startTracking() while the person is clocked in, stopTracking() on clock-out or logout.
  *    Before Android's own permission prompt, explains in Thai why location is needed (PDPA).
  *  - print(): Android's WebView ignores window.print(), so "พิมพ์ / บันทึก PDF" calls this to open

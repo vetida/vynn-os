@@ -6,8 +6,7 @@ const fs = require('fs');
 let open = true;
 const page = `<!doctype html><meta charset="utf-8"><title>TEST</title><body><h1 id="s">TEST</h1><script>
   addEventListener('load', () => {
-    const P = Capacitor.registerPlugin('VynnNative');
-    P.startTracking().then(r => { document.getElementById('s').textContent = 'started ' + JSON.stringify(r); fetch('/log?started=' + r.tracking); });
+    Capacitor.nativePromise('VynnNative', 'startTracking', {}).then(r => { document.getElementById('s').textContent = 'started ' + JSON.stringify(r); fetch('/log?started=' + r.tracking); });
   });
 </script>`;
 http.createServer((req, res) => {
