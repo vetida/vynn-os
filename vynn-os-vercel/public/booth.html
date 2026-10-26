@@ -172,6 +172,16 @@
   .cloud{margin:0 0 12px;padding:11px 14px;border-radius:14px;font-size:13px;display:flex;flex-direction:column;gap:6px;background:var(--good-bg,#E6F2EA);color:var(--good,#2F6B45)}
   .cloud small{opacity:.75}.cloud.wait{background:var(--warn-bg);color:var(--warn)}.cloud.warn{background:var(--warn-bg);color:var(--ink)}
   .cloud.warn b{color:var(--warn)}.cloud .two{margin:4px 0}.cloud input{width:100%}
+  .fhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}.fhead h2{margin:0}
+  .live{font-size:11.5px;color:var(--good)}
+  .fbar{display:flex;gap:8px;margin:10px 0 4px}.fbar select{flex:1}.fbar .btn{width:auto;padding:9px 14px}
+  .fday{position:sticky;top:96px;z-index:2;display:flex;justify-content:space-between;background:var(--surface);padding:12px 0 6px;font-weight:600;font-size:13px;color:var(--accent-d);border-bottom:1px solid var(--border)}
+  .fday span{color:var(--muted);font-weight:400}
+  .frow{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+  .frow.new{background:linear-gradient(90deg,var(--accent-soft),transparent);border-radius:10px;padding-left:8px}
+  .ftime{flex:none;width:44px;font-size:12.5px;color:var(--muted);padding-top:2px}
+  .fbody{flex:1;min-width:0}.fname{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.fname b{font-size:14.5px;font-weight:600}
+  .fmeta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}.fmeta a{color:var(--accent-d);text-decoration:none;font-weight:500}
   .evrow{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border2)}
   .evrow small{display:block;color:var(--muted);font-size:12px;margin-top:2px}.evrow.off{opacity:.55}
   .evcode{font-family:ui-monospace,Menlo,monospace;font-size:20px;font-weight:700;letter-spacing:2px}
@@ -373,6 +383,7 @@
       <label class="btn sec" style="display:block;text-align:center;cursor:pointer">📂 เลือกไฟล์ .json<input type="file" id="mgrFiles" accept=".json,application/json" multiple hidden></label>
       <button class="btn sec" id="mgrClear" style="margin-top:9px;display:none">ล้างข้อมูลที่รวมไว้</button>
     </div>
+    <div id="mgrFeed"></div>
     <div id="mgrSummary"></div>
   </div>
 </div>
@@ -778,7 +789,7 @@
      '<div class="tablewrap"><table><thead><tr><th>เซลล์</th><th class="n">ราย</th><th class="n">VYNN</th><th class="n">VG</th><th class="n">ด่วน</th><th class="n">จอง</th><th class="n">ยอดจอง</th></tr></thead><tbody>'+
      rows.map(function(r){return '<tr><td><b>'+esc(r.s)+'</b><div class="bar"><span style="width:'+Math.round(r.d.n/max*100)+'%"></span></div></td><td class="n">'+r.d.n+'</td><td class="n">'+r.d.v+'</td><td class="n">'+r.d.g+'</td><td class="n">'+r.d.hot+'</td><td class="n">'+r.d.dep+'</td><td class="n">'+(r.d.depSum?money(r.d.depSum):'—')+'</td></tr>';}).join('')+
      '</tbody></table></div></div>'+
-     '<div class="card"><h2>ส่งออกรวม (เข้า ERP)</h2><p class="sub">รวมทุกคนเป็นไฟล์เดียว เอาไปนำเข้า VYNN·OS ภายหลัง</p>'+
+     '<div class="card"><h2>ส่งออกรวม (Excel / ไฟล์)</h2><p class="sub">รวมลูกค้าของทุกคนเป็นไฟล์เดียว ใช้ตามงานต่อ ทำสถิติ หรือทำการตลาด</p>'+
      '<div class="btnrow"><button class="btn sec" id="mgrCSV">⬇️ รวม CSV</button><button class="btn sec" id="mgrJSON">⬇️ รวม JSON</button></div></div>';
    if($('roiCost')){$('roiCost').value=roi.cost||'';$('roiRet').value=roi.returned||'';
      $('roiCost').oninput=function(){roi.cost=this.value;saveRoi();computeRoi();};
@@ -880,11 +891,53 @@
    api('events',{token:admTok}).then(function(r){
      $('evList').innerHTML=r.events.length?r.events.map(function(e){return '<div class="evrow'+(e.active?'':' off')+'"><div><b>'+esc(e.name)+'</b><small>'+esc(srcLabel(e.source))+(e.start?' · '+esc(fmtD(e.start))+(e.end?'–'+esc(fmtD(e.end)):''):'')+' · '+e.leads+' ราย / '+e.sales+' เซลล์</small></div>'+
        '<div class="evcode">'+esc(e.code)+'</div><div class="evbtn"><button class="btn sec" data-evload="'+esc(e.id)+'">ดูลูกค้า</button><button class="btn sec" data-evtog="'+esc(e.id)+'" data-on="'+(e.active?0:1)+'">'+(e.active?'ปิดงาน':'เปิดอีกครั้ง')+'</button></div></div>';}).join(''):'<p class="sub">ยังไม่มีงาน — สร้างงานใหม่ด้านล่าง แล้วแจกรหัสบูธให้ทีม</p>';
-     $('evList').querySelectorAll('[data-evload]').forEach(function(b){b.onclick=function(){api('entries',{token:admTok,eventId:b.dataset.evload}).then(function(x){merge={leads:x.leads,sources:0,cloud:x.event.name};renderMgr();toast('โหลด '+x.leads.length+' ราย');},function(e){toast('⚠ '+e.message);});};});
+     $('evList').querySelectorAll('[data-evload]').forEach(function(b){b.onclick=function(){feedSeen=null;feedSales='';try{localStorage.setItem('vynn_booth_feed',b.dataset.evload);}catch(e){}loadEntries(b.dataset.evload,false).then(function(){var fb=$('mgrFeed');if(fb)fb.scrollIntoView({behavior:'smooth',block:'start'});});};});
+     if(!merge){var last='';try{last=localStorage.getItem('vynn_booth_feed')||'';}catch(e){}var ev=r.events.find(function(e){return e.id===last;})||r.events.find(function(e){return e.active;});if(ev)loadEntries(ev.id,true);}
      $('evList').querySelectorAll('[data-evtog]').forEach(function(b){b.onclick=function(){if(b.dataset.on==='0'&&!confirm('ปิดงานนี้? เซลล์จะเข้าด้วยรหัสนี้ไม่ได้อีก (ข้อมูลยังอยู่)'))return;api('setEvent',{token:admTok,id:b.dataset.evtog,active:b.dataset.on==='1'}).then(loadEvents,function(e){toast('⚠ '+e.message);});};});
    },function(e){if(e.code===401){admTok='';try{localStorage.removeItem(ADMK);}catch(x){}renderAdmin();}else $('evList').innerHTML='<p class="sub">⚠ '+esc(e.message)+'</p>';});
  }
  try{admTok=localStorage.getItem(ADMK)||'';}catch(e){}
+
+ /* ---------- manager live feed: everyone's customers, newest first, refreshes every 20 s ---------- */
+ var feedEv='',feedTimer=null,feedSeen=null,feedSales='';
+ function leadTime(L){return L.ts||((L.date||'')+'T00:00:00');}
+ function hhmm(iso){var d=new Date(iso);return isNaN(d)?'':String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+ function dayLabel(d){if(!d)return 'ไม่ระบุวัน';var t=todayISO(),y=new Date();y.setDate(y.getDate()-1);var ys=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');
+   var p=d.split('-'),TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'],s=(+p[2])+' '+TH[(+p[1])-1];return d===t?'วันนี้ · '+s:d===ys?'เมื่อวาน · '+s:s;}
+ function loadEntries(id,silent){
+   feedEv=id;
+   return api('entries',{token:admTok,eventId:id}).then(function(x){
+     var fresh={};if(feedSeen)x.leads.forEach(function(L){if(!feedSeen[L.id])fresh[L.id]=1;});
+     feedSeen={};x.leads.forEach(function(L){feedSeen[L.id]=1;});
+     merge={leads:x.leads,sources:0,cloud:x.event.name,fresh:fresh,at:new Date()};
+     renderFeed();renderMgr();if(!silent)toast('โหลด '+x.leads.length+' ราย');
+     if(Object.keys(fresh).length&&silent)toast('🔔 ลูกค้าใหม่ '+Object.keys(fresh).length+' ราย');
+   },function(e){if(!silent)toast('⚠ '+e.message);});
+ }
+ function feedTick(){if(feedEv&&admTok&&$('mgrView').style.display!=='none'&&!document.hidden)loadEntries(feedEv,true);}
+ clearInterval(feedTimer);feedTimer=setInterval(feedTick,20000);
+ document.addEventListener('visibilitychange',function(){if(!document.hidden)feedTick();});
+ function renderFeed(){
+   var box=$('mgrFeed');if(!box)return;
+   if(!merge||!merge.cloud){box.innerHTML='';return;}
+   var all=merge.leads.slice().sort(function(a,b){return leadTime(b).localeCompare(leadTime(a));});
+   var names={};all.forEach(function(L){names[L.sales||'(ไม่ระบุ)']=1;});
+   var list=feedSales?all.filter(function(L){return (L.sales||'(ไม่ระบุ)')===feedSales;}):all;
+   var html='',lastDay=null,count={};list.forEach(function(L){count[L.date||'']=(count[L.date||'']||0)+1;});
+   list.forEach(function(L){
+     if(L.date!==lastDay){lastDay=L.date;html+='<div class="fday">'+esc(dayLabel(L.date))+'<span>'+count[L.date||'']+' ราย</span></div>';}
+     var prods=(L.products||[]).map(function(p){return p.name;}).join(', ');
+     html+='<div class="frow'+(merge.fresh&&merge.fresh[L.id]?' new':'')+'"><div class="ftime">'+esc(hhmm(L.ts))+'</div><div class="fbody">'+
+       '<div class="fname"><b>'+esc(L.name)+'</b>'+(L.rate?'<span class="tag" style="background:var(--accent-soft);color:var(--accent-d)">'+esc(L.rate)+'</span>':'')+((L.useWhen||'').indexOf('ด่วน')>=0?'<span class="tag" style="background:var(--warn-bg);color:var(--warn)">ด่วน 🔥</span>':'')+(L.deposit>0?'<span class="tag" style="background:var(--good-bg);color:var(--good)">จอง ฿'+money(L.deposit)+'</span>':'')+'</div>'+
+       '<div class="fmeta"><a href="tel:'+esc(digits(L.phone))+'">📞 '+esc(L.phone)+'</a><span>👤 '+esc(L.sales||'-')+'</span>'+(L.address?'<span>📍 '+esc(L.address)+'</span>':'')+'</div>'+
+       (prods||L.note?'<div class="fmeta">'+(prods?'<span>🛒 '+esc(prods)+'</span>':'')+(L.note?'<span>📝 '+esc(L.note)+'</span>':'')+'</div>':'')+'</div></div>';
+   });
+   box.innerHTML='<div class="card"><div class="fhead"><h2>ลูกค้าทั้งหมด · '+esc(merge.cloud)+'</h2><span class="live">● อัปเดตอัตโนมัติ · '+esc(hhmm(merge.at.toISOString()))+'</span></div>'+
+     '<div class="fbar"><select id="feedSales"><option value="">เซลล์ทุกคน ('+all.length+')</option>'+Object.keys(names).sort().map(function(n){return '<option'+(n===feedSales?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select><button class="btn sec" id="feedReload">↻</button></div>'+
+     (html||'<p class="sub">ยังไม่มีลูกค้าในงานนี้</p>')+'</div>';
+   $('feedSales').onchange=function(){feedSales=this.value;renderFeed();};
+   $('feedReload').onclick=function(){loadEntries(feedEv,false);};
+ }
 
  /* ---------- tabs ---------- */
  $('tabSales').onclick=function(){$('tabSales').classList.add('on');$('tabMgr').classList.remove('on');$('salesView').style.display='';$('mgrView').style.display='none';};
