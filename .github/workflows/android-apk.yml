@@ -94,6 +94,7 @@ jobs:
           npm ci
           jq '.server.url="http://10.0.2.2:8080" | .server.cleartext=true' capacitor.config.json > c.json && mv c.json capacitor.config.json
           npx cap sync android
+          sed -i 's#<application#<application android:usesCleartextTraffic="true"#' android/app/src/main/AndroidManifest.xml
           cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
           cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/VYNN-ERP-test.apk"
 

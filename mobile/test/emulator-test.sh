@@ -31,5 +31,7 @@ SCREEN_OFF_PINGS=$(awk -v t="$OFF_AT" -F'"t":"' '/"u":"\/api\/auth"/{split($2,a,
 RES="pings=$PINGS with_loc=$WITH_LOC with_cookie=$WITH_COOKIE pings_while_screen_off=$SCREEN_OFF_PINGS service_after_clockout=$RUNNING"
 echo "$RES"
 echo "::notice title=Emulator GPS test::$RES"
-adb logcat -d -s VynnTracker:* Capacitor:E | tail -40
+DIAG="requests=$(wc -l < $LOG 2>/dev/null || echo 0) | $(tail -5 $LOG 2>/dev/null | cut -c1-160 | tr '\n' ' ') | $(adb logcat -d -s VynnTracker:* Capacitor:* Capacitor/Console:* AndroidRuntime:E | tail -15 | cut -c1-200 | tr '\n' ' ')"
+echo "$DIAG"
+echo "::notice title=Emulator diagnostics::${DIAG//%/%25}"
 [ "$PINGS" -ge 3 ] && [ "$WITH_LOC" -ge 2 ] && [ "$SCREEN_OFF_PINGS" -ge 2 ] && [ "$WITH_COOKIE" -eq "$PINGS" ] && [ "$RUNNING" -eq 0 ]
