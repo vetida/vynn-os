@@ -1,0 +1,12 @@
+{
+  "appId": "com.vynn.erp",
+  "appName": "VYNN ERP",
+  "webDir": "www",
+  "server": {
+    "url": "https://vynn-os.vercel.app",
+    "errorPath": "offline.html"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

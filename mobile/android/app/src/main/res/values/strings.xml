@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">VYNN ERP</string>
+    <string name="title_activity_main">VYNN ERP</string>
+    <string name="package_name">com.vynn.erp</string>
+    <string name="custom_url_scheme">com.vynn.erp</string>
+</resources>
