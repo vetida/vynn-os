@@ -69,3 +69,44 @@ jobs:
           else
             gh release create "$TAG" VYNN-ERP.apk --prerelease --target "$GITHUB_SHA" --title "VYNN ERP Android ($GITHUB_REF_NAME)" --notes "$NOTES"
           fi
+
+  # Emulator check against a fake local server (never the real database):
+  # tracking starts, keeps sending GPS with the screen off and in Doze, and stops after clock-out.
+  emulator-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build test APK pointing at the fake server
+        working-directory: mobile
+        run: |
+          npm ci
+          jq '.server.url="http://10.0.2.2:8080" | .server.cleartext=true' capacitor.config.json > c.json && mv c.json capacitor.config.json
+          npx cap sync android
+          cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/VYNN-ERP-test.apk"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: (node mobile/test/mock-server.js &) && sleep 2 && bash mobile/test/emulator-test.sh
