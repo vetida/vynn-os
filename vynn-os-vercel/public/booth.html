@@ -921,7 +921,7 @@
    var box=$('mgrFeed');if(!box)return;
    if(!merge||!merge.cloud){box.innerHTML='';return;}
    var all=merge.leads.slice().sort(function(a,b){return leadTime(b).localeCompare(leadTime(a));});
-   var names={};all.forEach(function(L){names[L.sales||'(ไม่ระบุ)']=1;});
+   var names={};all.forEach(function(L){var k=L.sales||'(ไม่ระบุ)';names[k]=(names[k]||0)+1;});
    var list=feedSales?all.filter(function(L){return (L.sales||'(ไม่ระบุ)')===feedSales;}):all;
    var html='',lastDay=null,count={};list.forEach(function(L){count[L.date||'']=(count[L.date||'']||0)+1;});
    list.forEach(function(L){
@@ -933,7 +933,7 @@
        (prods||L.note?'<div class="fmeta">'+(prods?'<span>🛒 '+esc(prods)+'</span>':'')+(L.note?'<span>📝 '+esc(L.note)+'</span>':'')+'</div>':'')+'</div></div>';
    });
    box.innerHTML='<div class="card"><div class="fhead"><h2>ลูกค้าทั้งหมด · '+esc(merge.cloud)+'</h2><span class="live">● อัปเดตอัตโนมัติ · '+esc(hhmm(merge.at.toISOString()))+'</span></div>'+
-     '<div class="fbar"><select id="feedSales"><option value="">เซลล์ทุกคน ('+all.length+')</option>'+Object.keys(names).sort().map(function(n){return '<option'+(n===feedSales?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select><button class="btn sec" id="feedReload">↻</button></div>'+
+     '<div class="fbar"><select id="feedSales"><option value="">เซลล์ทุกคน ('+Object.keys(names).length+' คน) · ลูกค้า '+all.length+' ราย</option>'+Object.keys(names).sort().map(function(n){return '<option value="'+esc(n)+'"'+(n===feedSales?' selected':'')+'>'+esc(n)+' · '+names[n]+' ราย</option>';}).join('')+'</select><button class="btn sec" id="feedReload">↻</button></div>'+
      (html||'<p class="sub">ยังไม่มีลูกค้าในงานนี้</p>')+'</div>';
    $('feedSales').onchange=function(){feedSales=this.value;renderFeed();};
    $('feedReload').onclick=function(){loadEntries(feedEv,false);};
