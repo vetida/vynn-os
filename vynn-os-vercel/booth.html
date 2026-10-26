@@ -815,6 +815,10 @@
    Object.keys(sent).forEach(function(id){if(!seen[id]&&sent[id]!=='x')out.push({id:id,data:{id:id},deleted:true});});
    return out;
  }
+ // on open: is this phone still allowed in (booth code changed / event closed)?
+ function cloudCheck(){if(!st.cloud||!st.cloud.token)return cloudSync();api('me',{token:st.cloud.token}).then(function(r){if(r.event&&r.event.name)st.cloud.eventName=r.event.name;saveLocal();cloudSync();},function(e){if(e.code===401){st.cloud.token='';cloudErr='';saveLocal();renderCloud();}else cloudSync();});}
+ setInterval(function(){if(!document.hidden)cloudCheck();},300000);
+ document.addEventListener('visibilitychange',function(){if(!document.hidden&&st.cloud&&st.cloud.token)cloudCheck();});
  function cloudKick(){clearTimeout(cloudTimer);cloudTimer=setTimeout(cloudSync,1200);}
  function cloudSync(){
    if(cloudBusy||!st.cloud||!st.cloud.token)return renderCloud();
@@ -834,7 +838,7 @@
  function renderCloud(){
    var box=$('cloudBox');if(!box)return;
    if(!st.cloud||!st.cloud.token){
-     box.innerHTML='<div class="cloud warn"><b>☁ ยังไม่ได้เชื่อมระบบสำรองข้อมูล</b><span>ใส่รหัสบูธของงาน (ขอจากหัวหน้า) ลูกค้าที่บันทึกไว้ในเครื่องทั้งหมดจะถูกสำรองขึ้นระบบ</span>'+
+     var was=st.cloud&&st.cloud.eventName;box.innerHTML='<div class="cloud warn"><b>'+(was?'🔒 รหัสบูธถูกเปลี่ยน หรือหมดเวลาเข้าใช้':'☁ ยังไม่ได้เชื่อมระบบสำรองข้อมูล')+'</b><span>'+(was?'ขอรหัสบูธใหม่จากหัวหน้า แล้วใส่ด้านล่าง ลูกค้าที่บันทึกไว้ในเครื่องยังอยู่ครบ และจะสำรองขึ้นระบบต่อทันที':'ใส่รหัสบูธของงาน (ขอจากหัวหน้า) ลูกค้าที่บันทึกไว้ในเครื่องทั้งหมดจะถูกสำรองขึ้นระบบ')+'</span>'+
        '<div class="two"><input id="cCode" placeholder="รหัสบูธ" autocomplete="off" inputmode="text" style="text-transform:uppercase"><input id="cName" placeholder="ชื่อจริงของคุณ" value="'+esc(st.sales||'')+'" autocomplete="off"></div>'+
        '<button class="btn" id="cJoin">เชื่อมและสำรองข้อมูล</button></div>';
      $('cJoin').onclick=function(){doJoin($('cCode').value,$('cName').value,$('cJoin'));};
@@ -890,9 +894,10 @@
  function loadEvents(){
    api('events',{token:admTok}).then(function(r){
      $('evList').innerHTML=r.events.length?r.events.map(function(e){return '<div class="evrow'+(e.active?'':' off')+'"><div><b>'+esc(e.name)+'</b><small>'+esc(srcLabel(e.source))+(e.start?' · '+esc(fmtD(e.start))+(e.end?'–'+esc(fmtD(e.end)):''):'')+' · '+e.leads+' ราย / '+e.sales+' เซลล์</small></div>'+
-       '<div class="evcode">'+esc(e.code)+'</div><div class="evbtn"><button class="btn sec" data-evload="'+esc(e.id)+'">ดูลูกค้า</button><button class="btn sec" data-evtog="'+esc(e.id)+'" data-on="'+(e.active?0:1)+'">'+(e.active?'ปิดงาน':'เปิดอีกครั้ง')+'</button></div></div>';}).join(''):'<p class="sub">ยังไม่มีงาน — สร้างงานใหม่ด้านล่าง แล้วแจกรหัสบูธให้ทีม</p>';
+       '<div class="evcode">'+esc(e.code)+'</div><div class="evbtn"><button class="btn sec" data-evload="'+esc(e.id)+'">ดูลูกค้า</button><button class="btn sec" data-evcode="'+esc(e.id)+'">เปลี่ยนรหัส</button><button class="btn sec" data-evtog="'+esc(e.id)+'" data-on="'+(e.active?0:1)+'">'+(e.active?'ปิดงาน':'เปิดอีกครั้ง')+'</button></div></div>';}).join(''):'<p class="sub">ยังไม่มีงาน — สร้างงานใหม่ด้านล่าง แล้วแจกรหัสบูธให้ทีม</p>';
      $('evList').querySelectorAll('[data-evload]').forEach(function(b){b.onclick=function(){feedSeen=null;feedSales='';try{localStorage.setItem('vynn_booth_feed',b.dataset.evload);}catch(e){}loadEntries(b.dataset.evload,false).then(function(){var fb=$('mgrFeed');if(fb)fb.scrollIntoView({behavior:'smooth',block:'start'});});};});
      if(!merge){var last='';try{last=localStorage.getItem('vynn_booth_feed')||'';}catch(e){}var ev=r.events.find(function(e){return e.id===last;})||r.events.find(function(e){return e.active;});if(ev)loadEntries(ev.id,true);}
+     $('evList').querySelectorAll('[data-evcode]').forEach(function(b){b.onclick=function(){var nc=prompt('ตั้งรหัสบูธใหม่ (A-Z / 0-9 ยาว 4–12 ตัว)\nเว้นว่างแล้วกด OK = สุ่มเลข 6 หลัก\n\nทุกเครื่องที่ใช้รหัสเดิมจะถูกตัดออก พนักงานต้องใส่รหัสใหม่ (ลูกค้าในเครื่องไม่หาย)','');if(nc===null)return;api('changeCode',{token:admTok,id:b.dataset.evcode,code:nc}).then(function(r){loadEvents();alert('รหัสบูธใหม่: '+r.code+'\n\nตัดเครื่องที่ใช้รหัสเดิมออกแล้ว '+r.signedOut+' เครื่อง\nส่งรหัสใหม่ให้พนักงานที่ยังอยู่ได้เลย');},function(e){toast('⚠ '+e.message);});};});
      $('evList').querySelectorAll('[data-evtog]').forEach(function(b){b.onclick=function(){if(b.dataset.on==='0'&&!confirm('ปิดงานนี้? เซลล์จะเข้าด้วยรหัสนี้ไม่ได้อีก (ข้อมูลยังอยู่)'))return;api('setEvent',{token:admTok,id:b.dataset.evtog,active:b.dataset.on==='1'}).then(loadEvents,function(e){toast('⚠ '+e.message);});};});
    },function(e){if(e.code===401){admTok='';try{localStorage.removeItem(ADMK);}catch(x){}renderAdmin();}else $('evList').innerHTML='<p class="sub">⚠ '+esc(e.message)+'</p>';});
  }
@@ -949,7 +954,7 @@
  $('fDate').value=todayISO();fillSource();
  if(!st.eventDate)$('sEventDate').value=todayISO();else $('sEventDate').value=st.eventDate;
  $('sName').value=st.sales||'';$('sEvent').value=st.event||'';
- renderWho();showSetupOrMain();renderCloud();cloudSync();
+ renderWho();showSetupOrMain();renderCloud();cloudCheck();
  (function(){var ua=navigator.userAgent||'';if(/Line\//i.test(ua)||/FBAN|FBAV|Instagram/i.test(ua)){var w=$('inAppWarn');if(w){w.innerHTML='⚠️ <b>กำลังเปิดในเบราว์เซอร์ของไลน์</b> — ปุ่มแชร์/เซฟรูปอาจใช้ไม่ได้ และข้อมูลอาจไม่ถูกเก็บถาวร<br>👉 แนะนำ: กดเมนู <b>⋯</b> มุมขวาบน → <b>เปิดใน Safari / Chrome</b> แล้วค่อยกรอกงาน (ปุ่มจะทำงาน + ข้อมูลอยู่ครบ) · หรือ <b>แคปหน้าจอ</b>ส่งไลน์ก็ได้';w.style.display='';}}})();
 })();
 </script>
