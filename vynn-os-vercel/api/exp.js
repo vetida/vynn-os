@@ -227,7 +227,7 @@ A.cancel = async (req, res, me, b) => {
 };
 
 A.saveCfg = async (req, res, me, b) => {
-  need(X.canManageUsers(me), 403, 'forbidden');
+  need(X.canConfig(me), 403, 'forbidden');
   const list = (v, n) => (Array.isArray(v) ? v : []).map(x => str(x, 60)).filter(Boolean).slice(0, n);
   const cfg = { departments: list(b.departments, 40), categories: list(b.categories, 40), dealDay: Math.min(28, Math.max(1, parseInt(b.dealDay, 10) || 25)) };
   need(cfg.departments.length && cfg.categories.length, 400, 'need at least one');
