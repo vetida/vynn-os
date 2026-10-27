@@ -53,14 +53,22 @@ A.changePassword = async (req, res, me, b) => {
   return { ok: true };
 };
 
-/* ---------- CEO-only employee directory ---------- */
+/* ---------- employee directory: CEO edits · Admin and Accounts view (owner sheet H-01..H-06) ---------- */
+const DIR_VIEW = ['admin', 'sales_support', 'accounting'];
+const DOC_ROLES = ['admin', 'sales_support'];            // ID card / house registration
+const PAY_ROLES = ['admin', 'accounting'];               // salary / benefits
 A.dir = async (req, res, me) => {
-  need(V.isCEO(me), 403, 'เฉพาะ CEO');
+  need(DIR_VIEW.includes(me.role), 403, 'ไม่มีสิทธิ์ดูรายชื่อพนักงาน');
   const [u, d] = await Promise.all([
     pool.query('SELECT * FROM vos_users ORDER BY created_at, id'),
     pool.query('SELECT id,user_id,kind,name,mime,size,created_at FROM vos_docs ORDER BY created_at'),
   ]);
-  return { users: u.rows.map(x => Object.assign(V.lite(x), { profile: x.profile || {}, docs: d.rows.filter(f => f.user_id === x.id) })) };
+  const pay = PAY_ROLES.includes(me.role), docs = DOC_ROLES.includes(me.role);
+  return { users: u.rows.map(x => {
+    const profile = Object.assign({}, x.profile || {});
+    if (!pay) { delete profile.salary; delete profile.benefits; }
+    return Object.assign(V.lite(x), { profile, docs: docs ? d.rows.filter(f => f.user_id === x.id && f.kind !== 'signature') : [] });
+  }) };
 };
 
 A.saveUser = async (req, res, me, b) => {
@@ -93,7 +101,7 @@ A.saveUser = async (req, res, me, b) => {
 };
 
 A.uploadDoc = async (req, res, me, b) => {
-  need(V.isCEO(me), 403, 'เฉพาะ CEO');
+  need(DOC_ROLES.includes(me.role), 403, 'เฉพาะ CEO และ Admin');
   const mime = str(b.mime, 40), kind = DOC_KINDS.includes(b.kind) ? b.kind : 'other';
   need(DOC_MIMES.includes(mime), 400, 'รองรับเฉพาะ JPG / PNG / WebP / PDF');
   const buf = Buffer.from(String(b.data || ''), 'base64');
@@ -106,7 +114,7 @@ A.uploadDoc = async (req, res, me, b) => {
 };
 
 A.deleteDoc = async (req, res, me, b) => {
-  need(V.isCEO(me), 403, 'เฉพาะ CEO');
+  need(DOC_ROLES.includes(me.role), 403, 'เฉพาะ CEO และ Admin');
   await pool.query("DELETE FROM vos_docs WHERE id=$1 AND kind<>'signature'", [String(b.id || '')]);
   return { ok: true };
 };
@@ -187,7 +195,9 @@ A.ping = async (req, res, me, b) => {
   }
   return { open };
 };
+const NO_CLOCK = ['accounting'];   // owner sheet A-01 / A-02: Accounts does not use the time clock
 A.clockIn = async (req, res, me, b) => {
+  need(!NO_CLOCK.includes(me.role), 403, 'บทบาทนี้ไม่ต้องลงเวลาเข้า-ออกงาน');
   need(!(await openShift(me.id)), 409, 'ลงเวลาเข้างานไว้แล้ว');
   const [lat, lng, acc] = loc(b);
   const r = await pool.query(`INSERT INTO vos_attendance(user_id,day,in_lat,in_lng,in_acc) VALUES($1,${BKK_DAY},$2,$3,$4) RETURNING *`, [me.id, lat, lng, acc]);
@@ -203,7 +213,7 @@ A.clockOut = async (req, res, me, b) => {
   await pool.query('UPDATE vos_attendance SET out_at=now(), out_lat=$2, out_lng=$3, out_acc=$4 WHERE id=$1', [open.id, lat, lng, acc]);
   return { open: null };
 };
-A.myAttendance = async (req, res, me) => ({
+A.myAttendance = async (req, res, me) => (NO_CLOCK.includes(me.role) ? { rows: [] } : {
   rows: (await pool.query(`SELECT * FROM vos_attendance WHERE user_id=$1 AND day >= ${BKK_DAY} - 31 ORDER BY in_at DESC`, [me.id])).rows,
 });
 // CEO: everyone's presence + one day's clock records + latest location
@@ -225,7 +235,7 @@ A.track = async (req, res, me, b) => {
     AND (at AT TIME ZONE 'Asia/Bangkok')::date = coalesce($2::date, ${BKK_DAY}) ORDER BY at`, [String(b.uid || ''), day])).rows };
 };
 async function sendDoc(req, res, me) {
-  need(V.isCEO(me), 404, 'not found');
+  need(DOC_ROLES.includes(me.role), 404, 'not found');
   const f = (await pool.query('SELECT * FROM vos_docs WHERE id=$1', [String(req.query.id || '')])).rows[0];
   need(f, 404, 'not found');
   res.setHeader('Content-Type', f.mime);

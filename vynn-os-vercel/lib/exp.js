@@ -37,9 +37,10 @@ function ensureExpSchema() {
 
 const ROLES = ['owner', 'admin', 'finance', 'staff'];
 const isManager = u => u && (u.role === 'owner' || u.role === 'admin' || u.role === 'finance');
-const canApprove = u => u && (u.role === 'owner' || u.role === 'admin');
+const canApprove = u => isManager(u);   // CEO, Admin, Accounts
 const canPay = u => isManager(u);
 const canManageUsers = u => u && (u.role === 'owner' || u.role === 'admin');
+const canConfig = u => isManager(u);    // departments / categories / pay day: CEO, Admin, Accounts
 
 const newId = (p) => (p || '') + crypto.randomBytes(9).toString('base64url');
 const sha256 = s => crypto.createHash('sha256').update(s).digest('hex');
@@ -102,6 +103,6 @@ function publicUser(u, viewer) {
 }
 
 module.exports = {
-  pool, ensureExpSchema, ROLES, isManager, canApprove, canPay, canManageUsers,
+  pool, ensureExpSchema, ROLES, isManager, canApprove, canPay, canManageUsers, canConfig,
   newId, hashPin, checkPin, createSession, currentUser, setSessionCookie, parseCookies, sha256, COOKIE, publicUser,
 };

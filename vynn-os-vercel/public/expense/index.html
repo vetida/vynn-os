@@ -576,7 +576,7 @@ const jobOf=c=>c.job||c.jobRef||"";
 const isApprover=()=>["owner","admin","finance"].includes(myRole());
 const canPayRole=()=>isApprover();
 const canHead=c=>false;
-const canFinal=c=>(c.status==="pending_owner"||c.status==="pending_head")&&(myRole()==="owner"||myRole()==="admin");
+const canFinal=c=>(c.status==="pending_owner"||c.status==="pending_head")&&isApprover();
 const fileUrl=id=>"/api/exp?a=file&id="+encodeURIComponent(id);
 function avatarData(uid){
   const n=nm(uid).trim(),ch=esc(Array.from(n)[0]||"?").replace(/'/g,"");
@@ -909,7 +909,7 @@ function viewSettings(){
     <p class="hint">${t("bank_hint2")}</p>
     <div><button class="btn primary" id="p-save">${t("save")}</button></div></section>
   <section class="card"><p class="muted small">${t("vos_note")}</p></section>`;
-  if(!(myRole()==="owner"||myRole()==="admin"))return h;
+  if(!isApprover())return h;
   h+=`<section class="card"><h2>${t("co_h")}</h2><div class="grid2">
     <div class="field"><label for="o-depts">${t("l_depts")}</label><textarea id="o-depts" rows="6">${esc(depts().join("\n"))}</textarea></div>
     <div class="field"><label for="o-cats">${t("l_cats")}</label><textarea id="o-cats" rows="6">${esc(cats().join("\n"))}</textarea></div>
