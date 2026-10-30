@@ -233,7 +233,7 @@
   .cloud{border-radius:16px;border:1px solid var(--border)}
   .cloud,.cloud.ok{background:var(--good-bg);color:var(--good)}
   .evcode{font-family:var(--serif);font-size:24px;letter-spacing:.12em;color:var(--accent);font-weight:600}
-  #toast{border-radius:14px}
+  #toast{border-radius:14px;z-index:300;bottom:96px;max-width:calc(100% - 32px);text-align:center;line-height:1.4}
 </style>
 
 <div class="wrap">
@@ -626,9 +626,14 @@
    ov.classList.add('show');document.body.style.overflow='hidden';
    document.getElementById('irClose').onclick=function(){ov.classList.remove('show');ov.innerHTML='';document.body.style.overflow='';};
    document.getElementById('irShare').onclick=function(){
-     var file=null;try{file=new File([blob],'ใบจอง-'+String((L&&L.name)||'').replace(/[^\wก-๙]+/g,'_')+'.png',{type:'image/png'});}catch(e){}
-     if(file&&navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'ใบหลักฐานการจอง',text:'ใบจอง '+((L&&L.name)||'')}).catch(function(){});}
-     else{toast('กดค้างที่รูปด้านบน แล้วเลือกส่งเข้าไลน์');}
+     // iPhone + LINE: share the image file ONLY (no title/text) and use a plain ASCII file name, otherwise the share sheet silently fails
+     var inApp=/Line\/|FBAN|FBAV|Instagram/i.test(navigator.userAgent||'');
+     var file=null;try{file=new File([blob],'booking-'+String((L&&L.id)||Date.now()).replace(/[^\w-]/g,'')+'.png',{type:'image/png'});}catch(e){}
+     if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
+       navigator.share({files:[file]}).catch(function(err){if(err&&err.name==='AbortError')return;toast('แชร์ไม่สำเร็จ — กดค้างที่รูปด้านบน แล้วเลือก "แชร์" → LINE');});
+     }
+     else if(inApp){toast('เปิดอยู่ในแอพไลน์/เฟซบุ๊ก แชร์ตรงไม่ได้ — กดค้างที่รูป แล้วเลือกบันทึก/แชร์ หรือเปิดลิงก์ใน Safari');}
+     else{toast('มือถือนี้แชร์ตรงไม่ได้ — กดค้างที่รูปด้านบน แล้วเลือก "แชร์" → LINE');}
    };
  }
  function shareReceiptImage(L){
