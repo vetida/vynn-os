@@ -92,6 +92,29 @@ A.setEvent = async (req, b) => {
   await pool.query('UPDATE booth_events SET active=$2 WHERE id=$1', [str(b.id, 40), !!b.active]);
   return { ok: true };
 };
+// new booth code for an event; every phone that joined with the old code is signed out
+A.changeCode = async (req, b) => {
+  const me = await who(b); need(me.admin, 403, 'เฉพาะหัวหน้า');
+  const id = str(b.id, 40);
+  need((await pool.query('SELECT 1 FROM booth_events WHERE id=$1', [id])).rows.length, 404, 'ไม่พบงาน');
+  let code = str(b.code, 12).toUpperCase();
+  need(!code || /^[A-Z0-9]{4,12}$/.test(code), 400, 'รหัสบูธใช้ A-Z / 0-9 ยาว 4–12 ตัว');
+  for (let i = 0; !code && i < 20; i++) {
+    const c = String(crypto.randomInt(100000, 1000000));
+    if (!(await pool.query('SELECT 1 FROM booth_events WHERE active AND code=$1', [c])).rows.length) code = c;
+  }
+  need(!(await pool.query('SELECT 1 FROM booth_events WHERE active AND code=$1 AND id<>$2', [code, id])).rows.length, 409, 'รหัสนี้มีงานอื่นใช้อยู่');
+  await pool.query('UPDATE booth_events SET code=$2 WHERE id=$1', [id, code]);
+  const r = await pool.query('DELETE FROM booth_tokens WHERE event_id=$1 AND NOT admin', [id]);
+  return { code, signedOut: r.rowCount };
+};
+// is this phone still allowed in? (checked when the form opens)
+A.me = async (req, b) => {
+  const me = await who(b); need(!me.admin, 400, 'ใช้รหัสบูธของงาน');
+  const e = (await pool.query('SELECT * FROM booth_events WHERE id=$1', [me.event_id])).rows[0];
+  need(e && e.active, 401, 'งานนี้ปิดแล้ว');
+  return { ok: true, event: evOut(e), name: me.sales_name };
+};
 A.join = async (req, b) => {
   await guardFails(req);
   const code = str(b.code, 12).toUpperCase(), name = str(b.name, 80);

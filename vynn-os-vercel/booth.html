@@ -179,6 +179,7 @@
   .fday span{color:var(--muted);font-weight:400}
   .frow{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
   .frow.new{background:linear-gradient(90deg,var(--accent-soft),transparent);border-radius:10px;padding-left:8px}
+  .frcp{margin-top:8px;padding:7px 14px;border-radius:999px;border:1px solid var(--accent);background:var(--surface);color:var(--accent-d);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
   .ftime{flex:none;width:44px;font-size:12.5px;color:var(--muted);padding-top:2px}
   .fbody{flex:1;min-width:0}.fname{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.fname b{font-size:14.5px;font-weight:600}
   .fmeta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}.fmeta a{color:var(--accent-d);text-decoration:none;font-weight:500}
@@ -588,7 +589,9 @@
      var ctx=c.getContext('2d');ctx.scale(SC,SC);
      ctx.fillStyle='#fff';ctx.fillRect(0,0,W,maxH);ctx.textBaseline='top';
      function F(s){return s+' "Leelawadee UI", Tahoma, "Sarabun", sans-serif';}
-     function text(t,font,color,xx,align){ctx.font=F(font);ctx.fillStyle=color;ctx.textAlign=align||'left';ctx.fillText(t,xx,y);}
+     // iOS Safari ignores textAlign for Thai / ฿ text, so position every string ourselves (and shrink to fit)
+     function put(t,font,color,xx,yy,align,maxw){var px=+(String(font).match(/(\d+)px/)||[0,16])[1],w;do{ctx.font=F(String(font).replace(/\d+px/,px+'px'));w=ctx.measureText(t).width;px--;}while(maxw&&w>maxw&&px>9);ctx.fillStyle=color;ctx.textAlign='left';ctx.fillText(t,align==='center'?xx-w/2:align==='right'?xx-w:xx,yy);}
+     function text(t,font,color,xx,align){put(t,font,color,xx,y,align,align==='center'?W-pad*2:align==='right'?xx-pad:W-xx-pad);}
      function wrap(t,font,color,xx,maxw,lh){ctx.font=F(font);ctx.fillStyle=color;ctx.textAlign='left';var s=String(t||''),ln='';for(var i=0;i<s.length;i++){var tt=ln+s[i];if(ctx.measureText(tt).width>maxw&&ln){ctx.fillText(ln,xx,y);y+=lh;ln=s[i];}else ln=tt;}if(ln){ctx.fillText(ln,xx,y);y+=lh;}}
      text('VYNN Collection · Vangarde','bold 26px','#14203a',pad);y+=34;
      ['บริษัท วีวายเอ็นเอ็น คอลเล็คชั่น แอนด์ดีไซน์ จำกัด','710 พัฒนาการ สวนหลวง กรุงเทพฯ 10250 · โทร 082-989-8984','www.VYNNCollection.com'].forEach(function(l){text(l,'15px','#66738a',pad);y+=21;});
@@ -602,7 +605,7 @@
      field('สินค้าที่จอง',prods);
      y+=4;var bh=60;ctx.fillStyle='#eef5ff';roundRect(ctx,pad,y,W-pad*2,bh,10);ctx.fill();ctx.strokeStyle='#cfe0fb';ctx.lineWidth=1;roundRect(ctx,pad,y,W-pad*2,bh,10);ctx.stroke();
      ctx.font=F('bold 15px');ctx.fillStyle='#3a5680';ctx.textAlign='left';ctx.fillText('ยอดเงินจอง / มัดจำ',pad+16,y+21);
-     ctx.font=F('bold 30px');ctx.fillStyle='#1d4ed8';ctx.textAlign='right';ctx.fillText('฿'+money(L.deposit),W-pad-16,y+15);
+     put('฿'+money(L.deposit),'bold 30px','#1d4ed8',W-pad-16,y+15,'right',W/2-pad);
      y+=bh+16;
      field('วิธีชำระ',L.payMethod);field('พนักงานขาย',L.sales);
      if(slipImg){text('หลักฐานการโอน/ชำระ','14px','#8b98ad',pad);y+=23;var iw=W-pad*2,ih=slipImg.height*(iw/slipImg.width);if(ih>600){ih=600;iw=slipImg.width*(ih/slipImg.height);}ctx.drawImage(slipImg,pad,y,iw,ih);y+=ih+14;}
@@ -638,7 +641,8 @@
    }catch(e){toast('สร้างรูปไม่สำเร็จ ใช้ปุ่ม PDF แทน');}
  }
  window._receipt=function(id){
-   var L=st.leads.find(function(x){return x.id===id;});if(!L)return;
+   // own leads on this phone, or (manager view) any lead loaded from the server
+   var L=st.leads.find(function(x){return x.id===id;})||((merge&&merge.leads)||[]).find(function(x){return x.id===id;});if(!L)return;
    var ov=document.getElementById('rcpOverlay');
    if(!ov){ov=document.createElement('div');ov.id='rcpOverlay';document.body.appendChild(ov);}
    ov.innerHTML=rcpHtml(L)+'<div class="rcp-tools"><button class="btn" id="rcpLine">📲 ส่งเข้าไลน์ (รูปใบจอง)</button><button class="btn sec" id="rcpPrint">📄 PDF</button><button class="btn sec" id="rcpClose">ปิด</button></div>';
@@ -815,6 +819,10 @@
    Object.keys(sent).forEach(function(id){if(!seen[id]&&sent[id]!=='x')out.push({id:id,data:{id:id},deleted:true});});
    return out;
  }
+ // on open: is this phone still allowed in (booth code changed / event closed)?
+ function cloudCheck(){if(!st.cloud||!st.cloud.token)return cloudSync();api('me',{token:st.cloud.token}).then(function(r){if(r.event&&r.event.name)st.cloud.eventName=r.event.name;saveLocal();cloudSync();},function(e){if(e.code===401){st.cloud.token='';cloudErr='';saveLocal();renderCloud();}else cloudSync();});}
+ setInterval(function(){if(!document.hidden)cloudCheck();},300000);
+ document.addEventListener('visibilitychange',function(){if(!document.hidden&&st.cloud&&st.cloud.token)cloudCheck();});
  function cloudKick(){clearTimeout(cloudTimer);cloudTimer=setTimeout(cloudSync,1200);}
  function cloudSync(){
    if(cloudBusy||!st.cloud||!st.cloud.token)return renderCloud();
@@ -834,7 +842,7 @@
  function renderCloud(){
    var box=$('cloudBox');if(!box)return;
    if(!st.cloud||!st.cloud.token){
-     box.innerHTML='<div class="cloud warn"><b>☁ ยังไม่ได้เชื่อมระบบสำรองข้อมูล</b><span>ใส่รหัสบูธของงาน (ขอจากหัวหน้า) ลูกค้าที่บันทึกไว้ในเครื่องทั้งหมดจะถูกสำรองขึ้นระบบ</span>'+
+     var was=st.cloud&&st.cloud.eventName;box.innerHTML='<div class="cloud warn"><b>'+(was?'🔒 รหัสบูธถูกเปลี่ยน หรือหมดเวลาเข้าใช้':'☁ ยังไม่ได้เชื่อมระบบสำรองข้อมูล')+'</b><span>'+(was?'ขอรหัสบูธใหม่จากหัวหน้า แล้วใส่ด้านล่าง ลูกค้าที่บันทึกไว้ในเครื่องยังอยู่ครบ และจะสำรองขึ้นระบบต่อทันที':'ใส่รหัสบูธของงาน (ขอจากหัวหน้า) ลูกค้าที่บันทึกไว้ในเครื่องทั้งหมดจะถูกสำรองขึ้นระบบ')+'</span>'+
        '<div class="two"><input id="cCode" placeholder="รหัสบูธ" autocomplete="off" inputmode="text" style="text-transform:uppercase"><input id="cName" placeholder="ชื่อจริงของคุณ" value="'+esc(st.sales||'')+'" autocomplete="off"></div>'+
        '<button class="btn" id="cJoin">เชื่อมและสำรองข้อมูล</button></div>';
      $('cJoin').onclick=function(){doJoin($('cCode').value,$('cName').value,$('cJoin'));};
@@ -890,9 +898,10 @@
  function loadEvents(){
    api('events',{token:admTok}).then(function(r){
      $('evList').innerHTML=r.events.length?r.events.map(function(e){return '<div class="evrow'+(e.active?'':' off')+'"><div><b>'+esc(e.name)+'</b><small>'+esc(srcLabel(e.source))+(e.start?' · '+esc(fmtD(e.start))+(e.end?'–'+esc(fmtD(e.end)):''):'')+' · '+e.leads+' ราย / '+e.sales+' เซลล์</small></div>'+
-       '<div class="evcode">'+esc(e.code)+'</div><div class="evbtn"><button class="btn sec" data-evload="'+esc(e.id)+'">ดูลูกค้า</button><button class="btn sec" data-evtog="'+esc(e.id)+'" data-on="'+(e.active?0:1)+'">'+(e.active?'ปิดงาน':'เปิดอีกครั้ง')+'</button></div></div>';}).join(''):'<p class="sub">ยังไม่มีงาน — สร้างงานใหม่ด้านล่าง แล้วแจกรหัสบูธให้ทีม</p>';
+       '<div class="evcode">'+esc(e.code)+'</div><div class="evbtn"><button class="btn sec" data-evload="'+esc(e.id)+'">ดูลูกค้า</button><button class="btn sec" data-evcode="'+esc(e.id)+'">เปลี่ยนรหัส</button><button class="btn sec" data-evtog="'+esc(e.id)+'" data-on="'+(e.active?0:1)+'">'+(e.active?'ปิดงาน':'เปิดอีกครั้ง')+'</button></div></div>';}).join(''):'<p class="sub">ยังไม่มีงาน — สร้างงานใหม่ด้านล่าง แล้วแจกรหัสบูธให้ทีม</p>';
      $('evList').querySelectorAll('[data-evload]').forEach(function(b){b.onclick=function(){feedSeen=null;feedSales='';try{localStorage.setItem('vynn_booth_feed',b.dataset.evload);}catch(e){}loadEntries(b.dataset.evload,false).then(function(){var fb=$('mgrFeed');if(fb)fb.scrollIntoView({behavior:'smooth',block:'start'});});};});
      if(!merge){var last='';try{last=localStorage.getItem('vynn_booth_feed')||'';}catch(e){}var ev=r.events.find(function(e){return e.id===last;})||r.events.find(function(e){return e.active;});if(ev)loadEntries(ev.id,true);}
+     $('evList').querySelectorAll('[data-evcode]').forEach(function(b){b.onclick=function(){var nc=prompt('ตั้งรหัสบูธใหม่ (A-Z / 0-9 ยาว 4–12 ตัว)\nเว้นว่างแล้วกด OK = สุ่มเลข 6 หลัก\n\nทุกเครื่องที่ใช้รหัสเดิมจะถูกตัดออก พนักงานต้องใส่รหัสใหม่ (ลูกค้าในเครื่องไม่หาย)','');if(nc===null)return;api('changeCode',{token:admTok,id:b.dataset.evcode,code:nc}).then(function(r){loadEvents();alert('รหัสบูธใหม่: '+r.code+'\n\nตัดเครื่องที่ใช้รหัสเดิมออกแล้ว '+r.signedOut+' เครื่อง\nส่งรหัสใหม่ให้พนักงานที่ยังอยู่ได้เลย');},function(e){toast('⚠ '+e.message);});};});
      $('evList').querySelectorAll('[data-evtog]').forEach(function(b){b.onclick=function(){if(b.dataset.on==='0'&&!confirm('ปิดงานนี้? เซลล์จะเข้าด้วยรหัสนี้ไม่ได้อีก (ข้อมูลยังอยู่)'))return;api('setEvent',{token:admTok,id:b.dataset.evtog,active:b.dataset.on==='1'}).then(loadEvents,function(e){toast('⚠ '+e.message);});};});
    },function(e){if(e.code===401){admTok='';try{localStorage.removeItem(ADMK);}catch(x){}renderAdmin();}else $('evList').innerHTML='<p class="sub">⚠ '+esc(e.message)+'</p>';});
  }
@@ -921,7 +930,7 @@
    var box=$('mgrFeed');if(!box)return;
    if(!merge||!merge.cloud){box.innerHTML='';return;}
    var all=merge.leads.slice().sort(function(a,b){return leadTime(b).localeCompare(leadTime(a));});
-   var names={};all.forEach(function(L){names[L.sales||'(ไม่ระบุ)']=1;});
+   var names={};all.forEach(function(L){var k=L.sales||'(ไม่ระบุ)';names[k]=(names[k]||0)+1;});
    var list=feedSales?all.filter(function(L){return (L.sales||'(ไม่ระบุ)')===feedSales;}):all;
    var html='',lastDay=null,count={};list.forEach(function(L){count[L.date||'']=(count[L.date||'']||0)+1;});
    list.forEach(function(L){
@@ -930,13 +939,14 @@
      html+='<div class="frow'+(merge.fresh&&merge.fresh[L.id]?' new':'')+'"><div class="ftime">'+esc(hhmm(L.ts))+'</div><div class="fbody">'+
        '<div class="fname"><b>'+esc(L.name)+'</b>'+(L.rate?'<span class="tag" style="background:var(--accent-soft);color:var(--accent-d)">'+esc(L.rate)+'</span>':'')+((L.useWhen||'').indexOf('ด่วน')>=0?'<span class="tag" style="background:var(--warn-bg);color:var(--warn)">ด่วน 🔥</span>':'')+(L.deposit>0?'<span class="tag" style="background:var(--good-bg);color:var(--good)">จอง ฿'+money(L.deposit)+'</span>':'')+'</div>'+
        '<div class="fmeta"><a href="tel:'+esc(digits(L.phone))+'">📞 '+esc(L.phone)+'</a><span>👤 '+esc(L.sales||'-')+'</span>'+(L.address?'<span>📍 '+esc(L.address)+'</span>':'')+'</div>'+
-       (prods||L.note?'<div class="fmeta">'+(prods?'<span>🛒 '+esc(prods)+'</span>':'')+(L.note?'<span>📝 '+esc(L.note)+'</span>':'')+'</div>':'')+'</div></div>';
+       (prods||L.note?'<div class="fmeta">'+(prods?'<span>🛒 '+esc(prods)+'</span>':'')+(L.note?'<span>📝 '+esc(L.note)+'</span>':'')+'</div>':'')+(L.deposit>0||(L.slips&&L.slips.length)?'<button class="frcp" data-rcp="'+esc(L.id)+'">🧾 ดูใบจอง / สลิป</button>':'')+'</div></div>';
    });
    box.innerHTML='<div class="card"><div class="fhead"><h2>ลูกค้าทั้งหมด · '+esc(merge.cloud)+'</h2><span class="live">● อัปเดตอัตโนมัติ · '+esc(hhmm(merge.at.toISOString()))+'</span></div>'+
-     '<div class="fbar"><select id="feedSales"><option value="">เซลล์ทุกคน ('+all.length+')</option>'+Object.keys(names).sort().map(function(n){return '<option'+(n===feedSales?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select><button class="btn sec" id="feedReload">↻</button></div>'+
+     '<div class="fbar"><select id="feedSales"><option value="">เซลล์ทุกคน ('+Object.keys(names).length+' คน) · ลูกค้า '+all.length+' ราย</option>'+Object.keys(names).sort().map(function(n){return '<option value="'+esc(n)+'"'+(n===feedSales?' selected':'')+'>'+esc(n)+' · '+names[n]+' ราย</option>';}).join('')+'</select><button class="btn sec" id="feedReload">↻</button></div>'+
      (html||'<p class="sub">ยังไม่มีลูกค้าในงานนี้</p>')+'</div>';
    $('feedSales').onchange=function(){feedSales=this.value;renderFeed();};
    $('feedReload').onclick=function(){loadEntries(feedEv,false);};
+   box.querySelectorAll('[data-rcp]').forEach(function(b){b.onclick=function(){window._receipt(b.dataset.rcp);};});
  }
 
  /* ---------- tabs ---------- */
@@ -949,7 +959,7 @@
  $('fDate').value=todayISO();fillSource();
  if(!st.eventDate)$('sEventDate').value=todayISO();else $('sEventDate').value=st.eventDate;
  $('sName').value=st.sales||'';$('sEvent').value=st.event||'';
- renderWho();showSetupOrMain();renderCloud();cloudSync();
+ renderWho();showSetupOrMain();renderCloud();cloudCheck();
  (function(){var ua=navigator.userAgent||'';if(/Line\//i.test(ua)||/FBAN|FBAV|Instagram/i.test(ua)){var w=$('inAppWarn');if(w){w.innerHTML='⚠️ <b>กำลังเปิดในเบราว์เซอร์ของไลน์</b> — ปุ่มแชร์/เซฟรูปอาจใช้ไม่ได้ และข้อมูลอาจไม่ถูกเก็บถาวร<br>👉 แนะนำ: กดเมนู <b>⋯</b> มุมขวาบน → <b>เปิดใน Safari / Chrome</b> แล้วค่อยกรอกงาน (ปุ่มจะทำงาน + ข้อมูลอยู่ครบ) · หรือ <b>แคปหน้าจอ</b>ส่งไลน์ก็ได้';w.style.display='';}}})();
 })();
 </script>
