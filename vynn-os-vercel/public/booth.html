@@ -179,6 +179,7 @@
   .fday span{color:var(--muted);font-weight:400}
   .frow{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
   .frow.new{background:linear-gradient(90deg,var(--accent-soft),transparent);border-radius:10px;padding-left:8px}
+  .frcp{margin-top:8px;padding:7px 14px;border-radius:999px;border:1px solid var(--accent);background:var(--surface);color:var(--accent-d);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
   .ftime{flex:none;width:44px;font-size:12.5px;color:var(--muted);padding-top:2px}
   .fbody{flex:1;min-width:0}.fname{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.fname b{font-size:14.5px;font-weight:600}
   .fmeta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}.fmeta a{color:var(--accent-d);text-decoration:none;font-weight:500}
@@ -640,7 +641,8 @@
    }catch(e){toast('สร้างรูปไม่สำเร็จ ใช้ปุ่ม PDF แทน');}
  }
  window._receipt=function(id){
-   var L=st.leads.find(function(x){return x.id===id;});if(!L)return;
+   // own leads on this phone, or (manager view) any lead loaded from the server
+   var L=st.leads.find(function(x){return x.id===id;})||((merge&&merge.leads)||[]).find(function(x){return x.id===id;});if(!L)return;
    var ov=document.getElementById('rcpOverlay');
    if(!ov){ov=document.createElement('div');ov.id='rcpOverlay';document.body.appendChild(ov);}
    ov.innerHTML=rcpHtml(L)+'<div class="rcp-tools"><button class="btn" id="rcpLine">📲 ส่งเข้าไลน์ (รูปใบจอง)</button><button class="btn sec" id="rcpPrint">📄 PDF</button><button class="btn sec" id="rcpClose">ปิด</button></div>';
@@ -937,13 +939,14 @@
      html+='<div class="frow'+(merge.fresh&&merge.fresh[L.id]?' new':'')+'"><div class="ftime">'+esc(hhmm(L.ts))+'</div><div class="fbody">'+
        '<div class="fname"><b>'+esc(L.name)+'</b>'+(L.rate?'<span class="tag" style="background:var(--accent-soft);color:var(--accent-d)">'+esc(L.rate)+'</span>':'')+((L.useWhen||'').indexOf('ด่วน')>=0?'<span class="tag" style="background:var(--warn-bg);color:var(--warn)">ด่วน 🔥</span>':'')+(L.deposit>0?'<span class="tag" style="background:var(--good-bg);color:var(--good)">จอง ฿'+money(L.deposit)+'</span>':'')+'</div>'+
        '<div class="fmeta"><a href="tel:'+esc(digits(L.phone))+'">📞 '+esc(L.phone)+'</a><span>👤 '+esc(L.sales||'-')+'</span>'+(L.address?'<span>📍 '+esc(L.address)+'</span>':'')+'</div>'+
-       (prods||L.note?'<div class="fmeta">'+(prods?'<span>🛒 '+esc(prods)+'</span>':'')+(L.note?'<span>📝 '+esc(L.note)+'</span>':'')+'</div>':'')+'</div></div>';
+       (prods||L.note?'<div class="fmeta">'+(prods?'<span>🛒 '+esc(prods)+'</span>':'')+(L.note?'<span>📝 '+esc(L.note)+'</span>':'')+'</div>':'')+(L.deposit>0||(L.slips&&L.slips.length)?'<button class="frcp" data-rcp="'+esc(L.id)+'">🧾 ดูใบจอง / สลิป</button>':'')+'</div></div>';
    });
    box.innerHTML='<div class="card"><div class="fhead"><h2>ลูกค้าทั้งหมด · '+esc(merge.cloud)+'</h2><span class="live">● อัปเดตอัตโนมัติ · '+esc(hhmm(merge.at.toISOString()))+'</span></div>'+
      '<div class="fbar"><select id="feedSales"><option value="">เซลล์ทุกคน ('+Object.keys(names).length+' คน) · ลูกค้า '+all.length+' ราย</option>'+Object.keys(names).sort().map(function(n){return '<option value="'+esc(n)+'"'+(n===feedSales?' selected':'')+'>'+esc(n)+' · '+names[n]+' ราย</option>';}).join('')+'</select><button class="btn sec" id="feedReload">↻</button></div>'+
      (html||'<p class="sub">ยังไม่มีลูกค้าในงานนี้</p>')+'</div>';
    $('feedSales').onchange=function(){feedSales=this.value;renderFeed();};
    $('feedReload').onclick=function(){loadEntries(feedEv,false);};
+   box.querySelectorAll('[data-rcp]').forEach(function(b){b.onclick=function(){window._receipt(b.dataset.rcp);};});
  }
 
  /* ---------- tabs ---------- */
