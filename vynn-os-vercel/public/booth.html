@@ -588,7 +588,9 @@
      var ctx=c.getContext('2d');ctx.scale(SC,SC);
      ctx.fillStyle='#fff';ctx.fillRect(0,0,W,maxH);ctx.textBaseline='top';
      function F(s){return s+' "Leelawadee UI", Tahoma, "Sarabun", sans-serif';}
-     function text(t,font,color,xx,align){ctx.font=F(font);ctx.fillStyle=color;ctx.textAlign=align||'left';ctx.fillText(t,xx,y);}
+     // iOS Safari ignores textAlign for Thai / ฿ text, so position every string ourselves (and shrink to fit)
+     function put(t,font,color,xx,yy,align,maxw){var px=+(String(font).match(/(\d+)px/)||[0,16])[1],w;do{ctx.font=F(String(font).replace(/\d+px/,px+'px'));w=ctx.measureText(t).width;px--;}while(maxw&&w>maxw&&px>9);ctx.fillStyle=color;ctx.textAlign='left';ctx.fillText(t,align==='center'?xx-w/2:align==='right'?xx-w:xx,yy);}
+     function text(t,font,color,xx,align){put(t,font,color,xx,y,align,align==='center'?W-pad*2:align==='right'?xx-pad:W-xx-pad);}
      function wrap(t,font,color,xx,maxw,lh){ctx.font=F(font);ctx.fillStyle=color;ctx.textAlign='left';var s=String(t||''),ln='';for(var i=0;i<s.length;i++){var tt=ln+s[i];if(ctx.measureText(tt).width>maxw&&ln){ctx.fillText(ln,xx,y);y+=lh;ln=s[i];}else ln=tt;}if(ln){ctx.fillText(ln,xx,y);y+=lh;}}
      text('VYNN Collection · Vangarde','bold 26px','#14203a',pad);y+=34;
      ['บริษัท วีวายเอ็นเอ็น คอลเล็คชั่น แอนด์ดีไซน์ จำกัด','710 พัฒนาการ สวนหลวง กรุงเทพฯ 10250 · โทร 082-989-8984','www.VYNNCollection.com'].forEach(function(l){text(l,'15px','#66738a',pad);y+=21;});
@@ -602,7 +604,7 @@
      field('สินค้าที่จอง',prods);
      y+=4;var bh=60;ctx.fillStyle='#eef5ff';roundRect(ctx,pad,y,W-pad*2,bh,10);ctx.fill();ctx.strokeStyle='#cfe0fb';ctx.lineWidth=1;roundRect(ctx,pad,y,W-pad*2,bh,10);ctx.stroke();
      ctx.font=F('bold 15px');ctx.fillStyle='#3a5680';ctx.textAlign='left';ctx.fillText('ยอดเงินจอง / มัดจำ',pad+16,y+21);
-     ctx.font=F('bold 30px');ctx.fillStyle='#1d4ed8';ctx.textAlign='right';ctx.fillText('฿'+money(L.deposit),W-pad-16,y+15);
+     put('฿'+money(L.deposit),'bold 30px','#1d4ed8',W-pad-16,y+15,'right',W/2-pad);
      y+=bh+16;
      field('วิธีชำระ',L.payMethod);field('พนักงานขาย',L.sales);
      if(slipImg){text('หลักฐานการโอน/ชำระ','14px','#8b98ad',pad);y+=23;var iw=W-pad*2,ih=slipImg.height*(iw/slipImg.width);if(ih>600){ih=600;iw=slipImg.width*(ih/slipImg.height);}ctx.drawImage(slipImg,pad,y,iw,ih);y+=ih+14;}
