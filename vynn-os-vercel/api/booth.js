@@ -142,6 +142,15 @@ A.sync = async (req, b) => {
   }
   return { saved, active: ev.active };
 };
+// every booking (deposit > 0) across ALL events, open or closed — for looking receipts up any time later
+A.bookings = async (req, b) => {
+  const me = await who(b); need(me.admin, 403, 'เฉพาะหัวหน้า');
+  const rs = (await pool.query(`SELECT e.id, e.sales_name, e.data, e.created_at, ev.name AS event_name
+    FROM booth_entries e JOIN booth_events ev ON ev.id = e.event_id
+    WHERE NOT e.deleted AND (e.data->>'deposit') ~ '^[0-9]+([.][0-9]+)?$' AND (e.data->>'deposit')::numeric > 0
+    ORDER BY e.created_at DESC LIMIT 3000`)).rows;
+  return { bookings: rs.map(r => Object.assign({}, r.data, { id: r.id, sales: r.data.sales || r.sales_name, event: r.data.event || r.event_name, eventName: r.event_name })) };
+};
 A.entries = async (req, b) => {
   const me = await who(b); need(me.admin, 403, 'เฉพาะหัวหน้า');
   const e = (await pool.query('SELECT * FROM booth_events WHERE id=$1', [str(b.eventId, 40)])).rows[0];

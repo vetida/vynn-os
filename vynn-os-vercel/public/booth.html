@@ -378,6 +378,7 @@
   <div id="mgrView" class="pad" style="display:none">
     <div class="note-info">📊 หน้านี้สำหรับ <b>หัวหน้า</b>: สร้างงานและรหัสบูธ แล้วดูลูกค้าของเซลล์ทุกคนจากระบบได้ทันที (ไม่ต้องรอไฟล์) · ข้อมูลนี้แยกจาก VYNN ERP</div>
     <div id="admBox"></div>
+    <div id="bkBox"></div>
     <div class="card">
       <h2>หรือรวมจากไฟล์ (แบบเดิม)</h2>
       <p class="sub">เลือกไฟล์ .json ที่เซลล์ส่งมา (เลือกได้หลายไฟล์)</p>
@@ -647,7 +648,7 @@
  }
  window._receipt=function(id){
    // own leads on this phone, or (manager view) any lead loaded from the server
-   var L=st.leads.find(function(x){return x.id===id;})||((merge&&merge.leads)||[]).find(function(x){return x.id===id;});if(!L)return;
+   var L=st.leads.find(function(x){return x.id===id;})||((merge&&merge.leads)||[]).find(function(x){return x.id===id;})||(bkList||[]).find(function(x){return x.id===id;});if(!L)return;
    var ov=document.getElementById('rcpOverlay');
    if(!ov){ov=document.createElement('div');ov.id='rcpOverlay';document.body.appendChild(ov);}
    ov.innerHTML=rcpHtml(L)+'<div class="rcp-tools"><button class="btn" id="rcpLine">📲 ส่งเข้าไลน์ (รูปใบจอง)</button><button class="btn sec" id="rcpPrint">📄 PDF</button><button class="btn sec" id="rcpClose">ปิด</button></div>';
@@ -896,7 +897,8 @@
      '<div class="f"><label class="fl">รหัสบูธ <span class="opt">(เว้นว่าง = สุ่มเลข 6 หลัก)</span></label><input id="evCode" placeholder="เช่น HG2026" style="text-transform:uppercase"></div>'+
      '<button class="btn" id="evCreate">สร้างงาน</button></details>'+
      '<button class="btn sec" id="admOut" style="margin-top:10px">ออกจากโหมดหัวหน้า</button></div>';
-   $('admOut').onclick=function(){admTok='';try{localStorage.removeItem(ADMK);}catch(e){}renderAdmin();};
+   $('admOut').onclick=function(){admTok='';bkList=null;try{localStorage.removeItem(ADMK);}catch(e){}renderAdmin();renderBookings();};
+   renderBookings();
    $('evCreate').onclick=function(){api('createEvent',{token:admTok,name:$('evName').value,source:$('evSrc').value,start:$('evStart').value,end:$('evEnd').value,code:$('evCode').value}).then(function(r){toast('สร้างงานแล้ว · รหัสบูธ '+r.code);loadEvents();},function(e){toast('⚠ '+e.message);});};
    loadEvents();
  }
@@ -952,6 +954,32 @@
    $('feedSales').onchange=function(){feedSales=this.value;renderFeed();};
    $('feedReload').onclick=function(){loadEntries(feedEv,false);};
    box.querySelectorAll('[data-rcp]').forEach(function(b){b.onclick=function(){window._receipt(b.dataset.rcp);};});
+ }
+
+ /* ---------- manager: look up any booking from any event, any time ---------- */
+ var bkList=null,bkQ='',bkErr='';
+ function bookNoOf(L){return 'BK-'+String(L.date||'').replace(/-/g,'').slice(2)+'-'+String(L.id||'').slice(-4).toUpperCase();}
+ function loadBookings(){bkErr='';api('bookings',{token:admTok}).then(function(r){bkList=r.bookings;renderBookings();},function(e){bkErr=e.message;renderBookings();});}
+ function renderBookings(){
+   var box=$('bkBox');if(!box)return;
+   if(!admTok){box.innerHTML='';return;}
+   if(!bkList&&!bkErr){box.innerHTML='<div class="card"><h2>🧾 ค้นหาใบจองย้อนหลัง</h2><p class="sub">กำลังโหลด…</p></div>';loadBookings();return;}
+   var q=bkQ.trim().toLowerCase(),qd=q.replace(/\D/g,'');
+   var L=(bkList||[]).filter(function(x){if(!q)return true;return (x.name||'').toLowerCase().indexOf(q)>=0||(qd.length>=3&&digits(x.phone).indexOf(qd)>=0)||bookNoOf(x).toLowerCase().indexOf(q)>=0||(x.sales||'').toLowerCase().indexOf(q)>=0;});
+   var sum=L.reduce(function(a,x){return a+(+x.deposit||0);},0);
+   box.innerHTML='<div class="card"><div class="fhead"><h2>🧾 ค้นหาใบจองย้อนหลัง</h2><span class="live">ทุกงาน · '+(bkList||[]).length+' ใบ</span></div>'+
+     '<p class="sub">ดูได้ตลอด รวมงานที่ปิดแล้ว · ค้นจากชื่อลูกค้า เบอร์โทร เลขใบจอง หรือชื่อเซลล์</p>'+
+     '<div class="fbar"><input id="bkQ" type="search" placeholder="เช่น อภิวัฒน์ / 0868 / BK-261029" value="'+esc(bkQ)+'"><button class="btn sec" id="bkReload">↻</button></div>'+
+     (bkErr?'<p class="sub">⚠ '+esc(bkErr)+'</p>':'')+
+     '<p class="sub" style="margin:6px 0">'+L.length+' ใบ · รวมเงินจอง ฿'+money(sum)+'</p>'+
+     L.slice(0,200).map(function(x){return '<div class="frow"><div class="ftime">'+esc(fmtD(x.date))+'</div><div class="fbody">'+
+       '<div class="fname"><b>'+esc(x.name)+'</b><span class="tag" style="background:var(--good-bg);color:var(--good)">฿'+money(x.deposit)+'</span></div>'+
+       '<div class="fmeta"><span>'+esc(bookNoOf(x))+'</span><a href="tel:'+esc(digits(x.phone))+'">📞 '+esc(x.phone)+'</a><span>👤 '+esc(x.sales||'-')+'</span><span>🎪 '+esc(x.eventName||x.event||'-')+'</span></div>'+
+       '<button class="frcp" data-bk="'+esc(x.id)+'">🧾 ดูใบจอง / สลิป</button></div></div>';}).join('')+
+     (L.length>200?'<p class="sub">แสดง 200 ใบแรก — พิมพ์ค้นหาให้แคบลง</p>':'')+(!L.length&&bkList?'<p class="sub">ไม่พบใบจอง</p>':'')+'</div>';
+   var qi=$('bkQ');qi.oninput=function(){bkQ=this.value;var pos=this.selectionStart;renderBookings();var n=$('bkQ');n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}};
+   $('bkReload').onclick=function(){bkList=null;renderBookings();};
+   box.querySelectorAll('[data-bk]').forEach(function(b){b.onclick=function(){window._receipt(b.dataset.bk);};});
  }
 
  /* ---------- tabs ---------- */
